@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defaultClientConditions, defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -12,4 +13,5 @@ export default defineConfig({
     alias: process.env.PROFILE ? { 'react-dom/client': 'react-dom/profiling' } : {},
   },
   server: { port: 5173, host: '127.0.0.1' },
+  test: { environment: 'jsdom', include: ['test/**/*.test.tsx'] },
 });

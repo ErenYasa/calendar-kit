@@ -11,7 +11,7 @@
     "build": "npm run build -w calendar-kit && npm run build -w demo",
     "build:package": "npm run build -w calendar-kit",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w calendar-kit",
+    "test": "npm run test -w calendar-kit && npm run test -w demo",
     "size": "npm run size -w calendar-kit",
     "check": "npm run typecheck && npm test && npm run build:package && npm run smoke:ssr -w calendar-kit"
   }
