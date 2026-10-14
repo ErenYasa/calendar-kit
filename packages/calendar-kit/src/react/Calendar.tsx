@@ -443,10 +443,14 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         date,
         band && date >= band.start! && date <= band.end! ? (date === band.start ? 'start' : date === band.end ? 'end' : 'mid') : null,
       );
+      // Memo key over every DayState field, so no rendered state can go stale.
       let key = '';
-      for (const f of ['today', 'past', 'disabled', 'unavailable', 'selected', 'selectedStart', 'selectedEnd', 'inRange', 'included', 'inPreviewRange', 'previewStart', 'previewEnd', 'focused', 'hovered', 'loading', 'readOnly', 'outOfSchedule'] as const)
-        key += base[f] ? '1' : '0';
-      key += `|${plan.kind}|${base.reasonText ?? ''}|${status}|${Object.keys(base.modifiers).join(',')}|${base.label}`;
+      for (const f in base) {
+        const v = base[f as keyof DayState];
+        if (f === 'reason') key += `|${reason ? `${reason.code}/${reason.dayReason ?? ''}/${reason.message ?? ''}/${JSON.stringify(reason.params ?? null)}` : ''}`;
+        else if (f === 'modifiers') key += `|${Object.keys(v as object).join(',')}`;
+        else key += `|${v as string | number | boolean | null}`;
+      }
       dayKeys.set(date, key);
       const data = props.getDayData?.(date);
       dayData.set(date, data);

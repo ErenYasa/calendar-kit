@@ -15,7 +15,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F02 | 2 | `combineRules`: sonraki kural setindeki açık `undefined` değer önceki kuralı siliyor (validator, availability, rangeSemantics…) | kanıtlandı | düzeltildi |
 | F03 | 3 | `relaxRules(combineRules(A, B))`: aynı günde program kısıtı + gerçek kısmi kısıt varsa gün tamamen kapalı kalıyor | kanıtlandı | düzeltildi |
 | F04 | 4 | `maxRenderedMonths`: bir güne bir kez odaklanıldıktan/tıklandıktan sonra sınır uygulanmıyor | kanıtlandı | düzeltildi |
-| F05 | 5 | Gün hücresi memo anahtarı eksik: `firstDayOfWeek`, `canStart/canEnd/canPassThrough` vb. değişince hücre eski kalıyor | kanıtlandı (belirli koşulda) | açık |
+| F05 | 5 | Gün hücresi memo anahtarı eksik: `firstDayOfWeek`, `canStart/canEnd/canPassThrough` vb. değişince hücre eski kalıyor | kanıtlandı (belirli koşulda) | düzeltildi |
 | F06 | 6 | Bugünün tarihinde klavye odak halkası görünmüyor (CSS özgüllüğü) | kanıtlandı (özgüllük) | açık |
 | F07 | 6 | Controlled `visibleMonth` ebeveyn tarafından güncellenmezse bekleyen focus sonra odağı çalıyor; roving tabindex senkron dışı | kanıtlandı | açık |
 | F08 | 6 | `focusDate(d)` / `goToMonth(m,{focus})` hedef zaten odak tarihi ise hiçbir şey yapmıyor; bekleyen focus sonra tetiklenebiliyor | kanıtlandı | açık |

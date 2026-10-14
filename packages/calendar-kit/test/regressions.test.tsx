@@ -9,6 +9,7 @@ import {
   Calendar,
   type CalendarController,
   type CalendarDate,
+  type DayRenderContext,
   type Selection,
   type SelectionRules,
   closedDates,
@@ -102,5 +103,28 @@ describe('F04 maxRenderedMonths keeps bounding the DOM after interaction', () =>
     act(() => document.querySelector<HTMLElement>('input')!.focus());
     act(() => ref.current!.loadMore('next'));
     expect(months()).toHaveLength(3);
+  });
+});
+
+describe('F05 day cells re-render when any rendered day state changes', () => {
+  const cell = (date: string) => document.querySelector<HTMLElement>(`button[data-date="${date}"]`)!.closest('.cal-day')!;
+
+  it('firstDayOfWeek change updates week start/end markers on every cell', () => {
+    const { rerender } = render(<Calendar mode="single" today={TODAY} firstDayOfWeek={1} />);
+    expect(cell('2026-10-12').hasAttribute('data-week-start')).toBe(true); // Monday
+    rerender(<Calendar mode="single" today={TODAY} firstDayOfWeek={0} />);
+    expect(cell('2026-10-12').hasAttribute('data-week-start')).toBe(false);
+    expect(cell('2026-10-11').hasAttribute('data-week-start')).toBe(true); // Sunday
+    expect(cell('2026-10-17').hasAttribute('data-week-end')).toBe(true); // Saturday
+  });
+
+  it('canStart change reaches stable renderDayContent while the click outcome is unchanged', () => {
+    const content = ({ day }: DayRenderContext) => `${day.dayOfMonth}:${day.canStart ? 'S' : '-'}`;
+    const value = { start: d('2026-10-14'), end: null };
+    const { rerender } = render(<Calendar mode="range" today={TODAY} value={value} renderDayContent={content} rules={{}} />);
+    expect(document.querySelector('button[data-date="2026-10-20"]')!.textContent).toBe('20:S');
+    const rules: SelectionRules = { getDayAvailability: (x) => (x === '2026-10-20' ? { canStart: false } : undefined) };
+    rerender(<Calendar mode="range" today={TODAY} value={value} renderDayContent={content} rules={rules} />);
+    expect(document.querySelector('button[data-date="2026-10-20"]')!.textContent).toBe('20:-');
   });
 });
