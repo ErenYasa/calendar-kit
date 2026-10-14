@@ -66,3 +66,18 @@ describe('F15 direction styles follow the calendar instance, not an ancestor', (
     expect(matched.length).toBe(rtlRules.length);
   });
 });
+
+describe('F17 / F33 skeleton day styles', () => {
+  const skeleton = find((r) => !r.media && r.selector.includes('data-status') && r.selector.includes('.cal-day-button::before'), 'skeleton rule');
+  const focus = find((r) => !r.media && r.selector.includes('.cal-day-button:focus-visible::before'), 'focus rule').sort((a, b) => b.order - a.order)[0]!;
+
+  it('F17 prefers-reduced-motion stops the skeleton shimmer', () => {
+    const reduced = find((r) => (r.media ?? '').includes('prefers-reduced-motion') && /animation:\s*none/.test(r.body) && r.selector.includes('.cal-day-button::before'), 'reduced-motion rule');
+    for (const s of skeleton.filter((r) => /animation:/.test(r.body)))
+      expect(reduced.some((rm) => wins(rm, s)), s.selector).toBe(true);
+  });
+
+  it('F33 keyboard focus ring stays visible on loading (skeleton) days', () => {
+    for (const s of skeleton.filter((r) => /box-shadow/.test(r.body))) expect(wins(focus, s), `${focus.selector} vs ${s.selector}`).toBe(true);
+  });
+});
