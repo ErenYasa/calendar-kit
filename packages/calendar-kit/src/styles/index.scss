@@ -212,11 +212,14 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
 
 .#{$p}-day-label,
 .#{$p}-day-badge {
-  max-width: calc(100cqw - 4px);
+  // Sized to the circle (not the cell) so labels never cross the selection
+  // circle or the today ring, down to the minimum cell size.
+  max-width: calc(var(--cal-circle) * 66cqmin);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: clamp(9px, 18cqmin, 11px);
+  font-size: clamp(7px, 17cqmin, 11px);
+  line-height: 1;
   font-weight: 500;
 }
 

@@ -40,7 +40,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F27 | düşük | `stayRules({ allowSameDay: true, minNights: 1 })` aynı gün konaklamaya izin vermiyor | kanıtlandı | sözleşme (belgelendi) |
 | F28 | düşük | Çoklu modda tekrarlanan tarihlerde `plan()` ve `validate()` sayımı tutarsız | kanıtlandı | düzeltildi |
 | F29 | düşük | `onVisibleMonthChange` için load-more sebebi yok | kanıtlandı (okuma) | sözleşme (belgelendi) |
-| F30 | düşük | Etiket genişliği daire yerine hücreye göre; küçük hücrede bugün halkasına değebilir | şüphe | açık |
+| F30 | düşük | Etiket genişliği daire yerine hücreye göre; 40 px hücrede etiket köşeleri bugün halkasına değiyor | kanıtlandı (Chrome ölçümü: 61/61 etiket) | düzeltildi |
 | F31 | düşük | `addDays` yıl 1–9999 dışına çıkabiliyor; `eachMonth` 9999'da tekrar ay üretiyor; geçersiz `timeZone` hata fırlatıyor | kanıtlandı | sözleşme (belgelendi) |
 | F32 | düşük | Kontrolsüz modda mod değişimi eski seçimi geri getiriyor; `today` prop'u yokken görünen ay gece yarısı kayıyor | kanıtlandı | sözleşme (belgelendi) |
 | F33 | 6 | İskelet (yükleme) günlerinde klavye odak halkası gizleniyor (iskelet kuralı 0,5,1 > odak 0,4,1); F17 düzeltmesi sırasında bulundu | kanıtlandı (özgüllük) | düzeltildi |
@@ -48,3 +48,10 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | şüphe | açık |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | şüphe | açık |
 | S04 | şüphe | `aria-selected` + `aria-pressed` ile durumun iki kez okunması; boş hücrelerin kolon indeksini kaydırması | şüphe | açık |
+
+## Tarayıcı regresyon kontrolleri
+
+`npm run test:browser` (playwright-core + sistem Chrome, demo üzerinde) jsdom'un
+doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F17,
+F21, F30. Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
+altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da geçiyor.
