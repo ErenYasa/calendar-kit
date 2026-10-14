@@ -2,7 +2,7 @@
  * Regression tests for docs/verification-findings.md. Each block names the
  * finding id; every test failed before its fix.
  */
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { createRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -20,6 +20,7 @@ import {
   stayRules,
   toCalendarDate as d,
 } from '../src';
+import { computeTooltipPosition } from '../src/react/Tooltip';
 
 const TODAY = d('2026-10-12');
 const range = (start: string | null, end: string | null): Selection => ({
@@ -190,5 +191,105 @@ describe('F09 continuous goToMonth scrolls every time, never later', () => {
     fireEvent.pointerEnter(document.querySelector<HTMLElement>('button[data-date="2026-11-05"]')!, { pointerType: 'mouse' });
     expect(spy).toHaveBeenCalledTimes(2);
     spy.mockRestore();
+  });
+});
+
+describe('F10 calendar-boundary tooltip never covers the month header/weekday row', () => {
+  it('flips below a first-row day instead of covering the weekday row', () => {
+    // jsdom has no layout: give the relevant elements a geometry.
+    const rects = new Map<Element, DOMRect>();
+    const rect = (top: number, left: number, width: number, height: number) => ({ top, left, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON() {} }) as DOMRect;
+    const orig = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function () {
+      return rects.get(this) ?? rect(0, 0, 0, 0);
+    };
+    const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 120 });
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 30 });
+    try {
+      render(<Calendar mode="single" today={TODAY} getDayTooltip={({ day }) => (day.date === '2026-10-01' ? { content: 'tip', persistent: true } : null)} />);
+      const vp = document.querySelector('.cal-viewport')!;
+      const weekdays = document.querySelector('.cal-weekdays')!;
+      const section = document.querySelector('section[data-month]')!;
+      rects.set(vp, rect(0, 0, 400, 600));
+      rects.set(section, rect(0, 0, 400, 400));
+      rects.set(document.querySelector('.cal-month-header')!, rect(0, 0, 400, 44));
+      rects.set(weekdays, rect(52, 0, 400, 30));
+      rects.set(document.querySelector('button[data-date="2026-10-01"]')!, rect(90, 160, 50, 50));
+      // Re-run positioning with the stubbed geometry.
+      act(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      const tip = screen.getByRole('tooltip');
+      const y = Number(/translate3d\([-\d.]+px, ([-\d.]+)px/.exec(tip.style.transform)![1]);
+      expect(tip.getAttribute('data-placement')).toBe('bottom');
+      expect(y).toBeGreaterThanOrEqual(82); // never above the weekday row's bottom
+    } finally {
+      Element.prototype.getBoundingClientRect = orig;
+      if (ow) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', ow);
+      if (oh) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', oh);
+    }
+  });
+});
+
+describe('F11 tooltip stays inside bounds when no side fits', () => {
+  it('clamps the main axis instead of leaving the bounds', () => {
+    const bounds = { left: 0, top: 0, right: 300, bottom: 200 };
+    const p = computeTooltipPosition({ left: 100, top: 80, width: 40, height: 40 }, { width: 280, height: 150 }, bounds, 'top', 8);
+    expect(p.y).toBeGreaterThanOrEqual(8);
+    expect(p.y + 150).toBeLessThanOrEqual(200 - 8 + 0.5);
+    expect(p.x).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe('F12 Escape dismisses the open tooltip without moving focus', () => {
+  it('closes a focus tooltip and a persistent one', () => {
+    render(<Calendar mode="single" today={TODAY} />);
+    const day = (x: string) => document.querySelector<HTMLElement>(`button[data-date="${x}"]`)!;
+    act(() => day('2026-10-11').focus());
+    fireEvent.keyDown(day('2026-10-11'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(day('2026-10-12'));
+    expect(screen.getByRole('tooltip').textContent).toBe('Today');
+    fireEvent.keyDown(day('2026-10-12'), { key: 'Escape' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(document.activeElement).toBe(day('2026-10-12'));
+  });
+
+  it('closes a persistent tooltip on Escape', () => {
+    render(<Calendar mode="single" today={TODAY} getDayTooltip={({ day }) => (day.date === '2026-10-20' ? { content: 'guide', persistent: true } : null)} />);
+    expect(screen.getByRole('tooltip').textContent).toBe('guide');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+});
+
+describe('F13 a touch tooltip closes on an outside tap without onOutsideClick', () => {
+  it('closes when tapping outside', () => {
+    render(
+      <>
+        <button>outside</button>
+        <Calendar mode="single" today={TODAY} />
+      </>,
+    );
+    fireEvent.pointerDown(document.querySelector('button[data-date="2026-10-12"]')!, { pointerType: 'touch' });
+    expect(screen.getByRole('tooltip').textContent).toBe('Today');
+    fireEvent.pointerDown(screen.getByText('outside'), { pointerType: 'touch' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+});
+
+describe('F14 tabbing in from outside counts as keyboard focus', () => {
+  it('shows the focus tooltip after Tab from another element', () => {
+    render(
+      <>
+        <input aria-label="before" />
+        <Calendar mode="single" today={TODAY} />
+      </>,
+    );
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    fireEvent.keyDown(document.querySelector('input')!, { key: 'Tab' });
+    act(() => document.querySelector<HTMLElement>('button[data-date="2026-10-12"]')!.focus());
+    expect(screen.getByRole('tooltip').textContent).toBe('Today');
   });
 });

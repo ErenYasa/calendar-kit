@@ -295,10 +295,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const [focusVisible, setFocusVisible] = useState(false);
   const [hovered, setHovered] = useState<CalendarDate | null>(null);
   const [touchTip, setTouchTip] = useState<CalendarDate | null>(null);
+  const [dismissedTip, setDismissedTip] = useState<CalendarDate | null>(null);
+  const monthChromeRefs = useRef(new Map<CalendarMonth, HTMLElement>());
   const [announcement, setAnnouncement] = useState('');
   const modalityRef = useRef<'keyboard' | 'pointer'>('pointer');
   const pointerTypeRef = useRef('mouse');
-  const insideEventRef = useRef(false);
+  // The last pointerdown seen inside the React tree (incl. portals); compared by identity.
+  const insideEventRef = useRef<Event | null>(null);
   const dayRefs = useRef(new Map<CalendarDate, HTMLElement>());
   const monthRefs = useRef(new Map<CalendarMonth, HTMLElement>());
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -511,6 +514,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         break;
       }
   }
+  // Escape dismisses the open (uncontrolled) tooltip until the user moves on.
+  if (openTip && openTip.trigger !== 'controlled' && openTip.date === dismissedTip) openTip = null;
   const tooltipId = `${instanceId}-tooltip`;
   const [tooltipAnchor, setTooltipAnchor] = useState<HTMLElement | null>(null);
   useIsomorphicLayoutEffect(() => {
@@ -781,9 +786,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         next = addMonths(date, e.shiftKey ? 12 : 1);
         break;
       case 'Escape':
-        if (touchTip || hovered) {
-          setTouchTip(null);
-          setHovered(null);
+        // Dismiss the open tooltip without moving focus (WCAG 1.4.13). The key
+        // is consumed only when there is something to dismiss.
+        if (openTip && openTip.trigger !== 'controlled') {
+          e.preventDefault();
+          e.stopPropagation();
+          setDismissedTip(openTip.date);
         }
         return;
       case 'Enter':
@@ -838,6 +846,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     mode,
     step,
     singleDayFirst: !!rules.singleDayFirst,
+    openTipDate: openTip?.date ?? null,
     focusedDate,
     hasFocus,
     tooltips,
@@ -1063,13 +1072,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   // Outside click: React's synthetic capture marks events from inside the tree
   // (including portals such as the tooltip or slot popovers) before the
   // document listener sees them.
-  const wantsOutside = !!props.onOutsideClick || !!props.onEvent;
+  const wantsOutside = !!props.onOutsideClick || !!props.onEvent || !!touchTip;
   useEffect(() => {
     if (!wantsOutside) return;
     const onDown = (e: PointerEvent) => {
-      const inside = insideEventRef.current;
-      insideEventRef.current = false;
-      if (inside) return;
+      if (insideEventRef.current === e) return;
       const t = e.target as Node | null;
       if (t && (rootRef.current?.contains(t) || tooltipElRef.current?.contains(t))) return;
       emit({ type: 'outsideClick', instanceId, nativeEvent: e });
@@ -1078,6 +1085,33 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     document.addEventListener('pointerdown', onDown);
     return () => document.removeEventListener('pointerdown', onDown);
   }, [wantsOutside, emit, instanceId]);
+
+  // Input modality for the whole document, so focus arriving via Tab from
+  // outside the calendar counts as keyboard focus.
+  useEffect(() => {
+    const onKey = () => (modalityRef.current = 'keyboard');
+    const onPointer = () => (modalityRef.current = 'pointer');
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('pointerdown', onPointer, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('pointerdown', onPointer, true);
+    };
+  }, []);
+
+  // A dismissed tooltip may reappear once the user hovers/focuses/touches again.
+  useEffect(() => setDismissedTip(null), [hovered, focusedDate, touchTip]);
+
+  // Escape while the pointer (not focus) is on the calendar.
+  const tipOpen = !!openTip && openTip.trigger !== 'controlled';
+  useEffect(() => {
+    if (!tipOpen) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') setDismissedTip(live.current.openTipDate);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [tipOpen, live]);
 
   // ------------------------------------------------ state-change events
   // Each effect compares against the previously reported value; React
@@ -1203,8 +1237,17 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
 
   const weekdays = useMemo(() => getWeekdayNames(locale, firstDayOfWeek, props.weekdayFormat ?? 'short'), [locale, firstDayOfWeek, props.weekdayFormat]);
   const sharedWeekdays = navigation === 'continuous' && layout.columns === 1;
-  const renderWeekdayRow = (asGridRow: boolean) => (
-    <div role={asGridRow ? 'row' : 'presentation'} className={cx(p('weekdays'), cn?.weekdays)} aria-hidden={asGridRow ? undefined : true}>
+  const chromeRef = (month: CalendarMonth) => (el: HTMLElement | null) => {
+    if (el) monthChromeRefs.current.set(month, el);
+    else monthChromeRefs.current.delete(month);
+  };
+  const renderWeekdayRow = (asGridRow: boolean, month?: CalendarMonth) => (
+    <div
+      ref={month ? chromeRef(month) : undefined}
+      role={asGridRow ? 'row' : 'presentation'}
+      className={cx(p('weekdays'), cn?.weekdays)}
+      aria-hidden={asGridRow ? undefined : true}
+    >
       {weekdays.map((w) => (
         <span key={w.weekday} role={asGridRow ? 'columnheader' : undefined} aria-label={w.long} className={cx(p('weekday'), cn?.weekday)} title={w.long}>
           {props.formatWeekday ? props.formatWeekday(w.weekday, locale) : w.short}
@@ -1251,7 +1294,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const header = props.renderMonthHeader ? (
       props.renderMonthHeader({ month, title, index, navigation: navNode, status }, slotCtx)
     ) : (
-      <div className={cx(p('month-header'), cn?.monthHeader)}>
+      <div ref={sharedWeekdays ? chromeRef(month) : undefined} className={cx(p('month-header'), cn?.monthHeader)}>
         {defaultNav && index === 0 && navButton('previous')}
         <h2 id={titleId} className={cx(p('month-title'), cn?.monthTitle)} aria-live={navigation === 'paged' && index === 0 ? 'polite' : undefined}>
           {title}
@@ -1327,7 +1370,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           aria-multiselectable={mode === 'multiple' || mode === 'range' || undefined}
           className={cx(p('grid'), cn?.grid)}
         >
-          {!sharedWeekdays && renderWeekdayRow(true)}
+          {!sharedWeekdays && renderWeekdayRow(true, month)}
           {weeks}
         </div>
         {/* Default month loading UI is the day skeleton; text only for assistive tech. */}
@@ -1421,8 +1464,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       data-overflow={layout.activeOverflow}
       data-at-min-size={layout.atMinDaySize ? '' : undefined}
       data-measured={measured ? '' : undefined}
-      onPointerDownCapture={() => {
-        insideEventRef.current = true;
+      onPointerDownCapture={(e) => {
+        insideEventRef.current = e.nativeEvent;
         modalityRef.current = 'pointer';
       }}
       onKeyDownCapture={() => {
@@ -1503,6 +1546,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           id={tooltipId}
           anchor={tooltipAnchor}
           clipElement={viewportRef.current}
+          getArea={() => {
+            // The anchor's month below its header/weekday row.
+            const m = getMonth(openTip!.date);
+            const top = monthChromeRefs.current.get(m)?.getBoundingClientRect().bottom;
+            const bottom = monthRefs.current.get(m)?.getBoundingClientRect().bottom;
+            return { top, bottom };
+          }}
           boundary={tooltipOpts.boundary ?? 'calendar'}
           placement={tooltipOpts.placement ?? 'top'}
           offset={tooltipOpts.offset ?? 8}

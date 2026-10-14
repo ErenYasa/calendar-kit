@@ -61,6 +61,7 @@ export function computeTooltipPosition(
   const side: TooltipPlacement[] = preferred === 'left' || preferred === 'right' ? ['top', 'bottom'] : ['right', 'left'];
   const order = [preferred, OPPOSITE[preferred], ...side];
   let placement = order.find((p) => fits(place(p)));
+  let { x, y } = placement ? place(placement) : { x: 0, y: 0 };
   if (!placement) {
     const room: Record<TooltipPlacement, number> = {
       top: anchor.top - bounds.top,
@@ -69,8 +70,11 @@ export function computeTooltipPosition(
       right: bounds.right - anchor.left - anchor.width,
     };
     placement = (['top', 'bottom'] as const).reduce((a, b) => (room[b] > room[a] ? b : a), preferred === 'bottom' ? 'bottom' : 'top');
+    // Nothing fits: keep the whole tooltip inside the bounds (it may then
+    // overlap the anchor, but its text is never cut off).
+    ({ x, y } = place(placement));
+    y = clampY(y);
   }
-  const { x, y } = place(placement);
   const vertical = placement === 'top' || placement === 'bottom';
   const arrow = vertical ? Math.min(Math.max(cx - x, 10), Math.max(10, tip.width - 10)) : Math.min(Math.max(cy - y, 10), Math.max(10, tip.height - 10));
   return { x, y, placement, arrow, hidden };
@@ -81,6 +85,8 @@ export interface TooltipProps {
   anchor: HTMLElement | null;
   /** Element that clips the anchor (the months viewport); also the `calendar` boundary. */
   clipElement?: HTMLElement | null;
+  /** Vertical limits (viewport px) of the area the tooltip may use in `calendar` mode. */
+  getArea?: () => { top?: number; bottom?: number };
   boundary: TooltipBoundary;
   placement: TooltipPlacement;
   offset: number;
@@ -120,7 +126,11 @@ export function Tooltip(props: TooltipProps) {
       if (!el || !anchor.isConnected) return;
       const viewport: Rect = { left: 0, top: 0, right: document.documentElement.clientWidth || window.innerWidth, bottom: window.innerHeight };
       const clip = clipElement?.getBoundingClientRect();
-      const bounds = boundary === 'calendar' && clip ? intersect(viewport, clip) : viewport;
+      let bounds = boundary === 'calendar' && clip ? intersect(viewport, clip) : viewport;
+      if (boundary === 'calendar') {
+        const area = props.getArea?.();
+        if (area) bounds = { ...bounds, top: Math.max(bounds.top, area.top ?? -Infinity), bottom: Math.min(bounds.bottom, area.bottom ?? Infinity) };
+      }
       const maxWidth = Math.max(80, Math.floor(bounds.right - bounds.left - 2 * PAD));
       const next = computeTooltipPosition(
         anchor.getBoundingClientRect(),
