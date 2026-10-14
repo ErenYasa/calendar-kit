@@ -67,7 +67,8 @@ describe('range selection and events', () => {
     expect(events).toEqual(['dateClick', 'dayFocusChange', 'change', 'activeEndpointChange']);
     events.length = 0;
     fireEvent.click(day('2026-11-20'), { detail: 1 });
-    expect(events.slice(0, 5)).toEqual(['dateClick', 'dayFocusChange', 'change', 'activeEndpointChange', 'selectionComplete']);
+    // Uncontrolled activeEndpoint: its real transition is reported after commit.
+    expect(events.slice(0, 5)).toEqual(['dateClick', 'dayFocusChange', 'change', 'selectionComplete', 'activeEndpointChange']);
     expect(onChange).toHaveBeenLastCalledWith({ start: '2026-11-13', end: '2026-11-20' }, expect.objectContaining({ reason: 'complete', source: 'pointer', phase: 'complete' }));
     expect(day('2026-11-13').getAttribute('data-range-start')).toBe('');
     expect(day('2026-11-16').getAttribute('data-in-range')).toBe('');

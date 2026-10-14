@@ -315,6 +315,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   // renders, the request is dropped instead of stealing focus.
   const pendingFocusRef = useRef<{ date: CalendarDate; active: Element | null; source: EventSource } | null>(null);
   const focusSourceRef = useRef<EventSource | null>(null);
+  const endpointSourceRef = useRef<EventSource | null>(null);
   const pendingScrollRef = useRef<{ month: CalendarMonth; behavior: ScrollBehavior } | null>(null);
   const preserveRef = useRef<{ month: CalendarMonth; top: number } | null>(null);
   const lastLoadRef = useRef<{ direction: LoadDirection; months: CalendarMonth[] } | null>(null);
@@ -572,7 +573,10 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       phase: nextPhase,
       validation: nextValidation,
     });
-    if (mode === 'range' && next.activeEndpoint !== prevEndpoint)
+    // Controlled endpoint: the event is a request (like onChange). Uncontrolled:
+    // the real transition is reported after commit (see effect below).
+    endpointSourceRef.current = source;
+    if (mode === 'range' && endpointProp !== undefined && next.activeEndpoint !== prevEndpoint)
       emit({ type: 'activeEndpointChange', instanceId, previous: prevEndpoint, current: next.activeEndpoint, source });
     const completes =
       (reason === 'select' || reason === 'complete' || reason === 'set') && nextPhase === 'complete'
@@ -858,7 +862,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setActiveEndpoint(endpoint: RangeEndpoint) {
       if (mode !== 'range' || endpoint === activeEndpoint) return;
       setInternalEndpoint({ value: endpoint, key: selKey });
-      emit({ type: 'activeEndpointChange', instanceId, previous: activeEndpoint, current: endpoint, source: 'programmatic' });
+      endpointSourceRef.current = 'programmatic';
+      if (endpointProp !== undefined)
+        emit({ type: 'activeEndpointChange', instanceId, previous: activeEndpoint, current: endpoint, source: 'programmatic' });
     },
   });
 
@@ -1115,6 +1121,21 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [tipOpen, live]);
+
+  // Real activeEndpoint transitions (uncontrolled endpoint only).
+  const prevEndpointRef = useRef<RangeEndpoint | null>(null);
+  useEffect(() => {
+    const prev = prevEndpointRef.current;
+    prevEndpointRef.current = activeEndpoint;
+    const source = endpointSourceRef.current ?? 'prop';
+    endpointSourceRef.current = null;
+    if (prev === null || prev === activeEndpoint || mode !== 'range' || endpointProp !== undefined) return;
+    emit({ type: 'activeEndpointChange', instanceId, previous: prev, current: activeEndpoint, source });
+  }, [activeEndpoint]); // eslint-disable-line react-hooks/exhaustive-deps
+  // An action whose value the parent rejected must not label a later change.
+  useEffect(() => {
+    endpointSourceRef.current = null;
+  });
 
   // ------------------------------------------------ state-change events
   // Each effect compares against the previously reported value; React

@@ -309,3 +309,44 @@ describe('F18 continuous list respects changed min/max dates', () => {
     expect(months()).toEqual(['2026-12']);
   });
 });
+
+describe('F19 onActiveEndpointChange reports real transitions only (uncontrolled endpoint)', () => {
+  const day = (x: string) => document.querySelector<HTMLElement>(`button[data-date="${x}"]`)!;
+
+  it('emits nothing when the parent rejects the proposed value', () => {
+    const events: string[] = [];
+    render(
+      <Calendar
+        mode="range"
+        today={TODAY}
+        value={{ start: d('2026-10-14'), end: null }}
+        onChange={() => {}}
+        onActiveEndpointChange={(ep) => events.push(ep)}
+      />,
+    );
+    fireEvent.click(day('2026-10-16'), { detail: 1 });
+    fireEvent.click(day('2026-10-18'), { detail: 1 });
+    expect(events).toEqual([]);
+  });
+
+  it('reports accepted transitions with the action source, and parent-driven ones as prop', () => {
+    const events: { current: string; source: string }[] = [];
+    function Host() {
+      const [value, setValue] = useState<{ start: CalendarDate | null; end: CalendarDate | null }>({ start: null, end: null });
+      return (
+        <>
+          <button onClick={() => setValue({ start: null, end: null })}>reset</button>
+          <Calendar mode="range" today={TODAY} value={value} onChange={setValue} onActiveEndpointChange={(_, e) => events.push({ current: e.current, source: e.source })} />
+        </>
+      );
+    }
+    render(<Host />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    expect(events).toEqual([{ current: 'end', source: 'pointer' }]);
+    fireEvent.click(screen.getByText('reset'));
+    expect(events).toEqual([
+      { current: 'end', source: 'pointer' },
+      { current: 'start', source: 'prop' },
+    ]);
+  });
+});
