@@ -1,0 +1,553 @@
+// Default theme. Import once: `import 'calendar-kit/styles.css'`.
+// Everything is driven by CSS custom properties on `.cal-root`; override them
+// on the root (or any ancestor) instead of fighting selectors.
+// Sizing variables (--cal-day-min-*, --cal-day-max, --cal-month-*) are set
+// inline by the component from its props.
+
+$p: 'cal'; // must match PREFIX in src/react/utils.ts
+
+.#{$p}-root {
+  --cal-font: inherit;
+  --cal-color: #1f2328;
+  --cal-muted: #8b9198;
+  --cal-bg: #fff;
+  --cal-accent: #1f2328;
+  --cal-accent-contrast: #fff;
+  --cal-range: #eef0f2;
+  --cal-preview: #f4f5f6;
+  --cal-hover: #d0d4d9;
+  --cal-focus: #2563eb;
+  --cal-today: #9aa0a6; // outline of today's circle
+  --cal-ring: #c4c7cc; // outer half-ring of range endpoints
+  --cal-danger: #b42318;
+  --cal-radius: 12px;
+  --cal-circle: 0.84; // circle size relative to the cell's shorter side
+  --cal-tooltip-bg: #fff;
+  --cal-tooltip-color: #1f2328;
+  --cal-tooltip-shadow: 0 4px 16px rgb(0 0 0 / 0.14);
+
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--cal-font);
+  color: var(--cal-color);
+  background: var(--cal-bg);
+  -webkit-tap-highlight-color: transparent;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: inherit;
+  }
+}
+
+.#{$p}-viewport {
+  // Room for focus rings and selection circles at the scroll edges.
+  padding: 4px;
+  overscroll-behavior-x: contain;
+}
+
+.#{$p}-months {
+  column-gap: var(--cal-month-gap);
+  row-gap: 24px;
+}
+
+.#{$p}-month {
+  position: relative;
+  min-width: 0;
+  padding-inline: var(--cal-month-padding);
+  container-type: inline-size;
+}
+
+.#{$p}-month-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  grid-template-areas: 'prev title next';
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: 8px;
+}
+
+.#{$p}-month-title {
+  grid-area: title;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  overflow-wrap: anywhere;
+  text-transform: capitalize;
+}
+
+.#{$p}-nav-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &[data-direction='previous'] {
+    grid-area: prev;
+  }
+  &[data-direction='next'] {
+    grid-area: next;
+  }
+  &:hover:not(:disabled) {
+    background: var(--cal-range);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--cal-focus);
+    outline-offset: 2px;
+  }
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+  [dir='rtl'] & svg {
+    transform: scaleX(-1);
+  }
+}
+
+.#{$p}-weekdays,
+.#{$p}-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(var(--cal-day-min-w), 1fr));
+}
+
+.#{$p}-weekdays {
+  margin-bottom: 4px;
+  color: var(--cal-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  // Continuous mode renders one shared row above the scroll area.
+  .#{$p}-root > & {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 8px calc(4px + var(--cal-month-padding));
+    background: var(--cal-bg);
+    border-bottom: 1px solid var(--cal-range);
+  }
+}
+
+.#{$p}-weekday {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-block: 6px;
+}
+
+// --- day cell ---------------------------------------------------------------
+
+.#{$p}-day,
+.#{$p}-day-empty {
+  position: relative;
+  // Explicit width: the column decides the width, aspect-ratio + min/max the height.
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: var(--cal-day-min-h);
+  max-height: var(--cal-day-max);
+}
+
+.#{$p}-day {
+  // Size container: circles and text scale with the cell's shorter side.
+  container-type: size;
+}
+
+.#{$p}-day-button {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--cal-circle) * 100cqmin);
+    height: calc(var(--cal-circle) * 100cqmin);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: background-color 0.12s, box-shadow 0.12s;
+  }
+
+  &:focus {
+    outline: none;
+  }
+  &:focus-visible::before {
+    box-shadow: 0 0 0 2px var(--cal-bg), 0 0 0 4px var(--cal-focus);
+  }
+}
+
+.#{$p}-day-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  line-height: 1.1;
+  font-size: clamp(12px, 32cqmin, 17px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.#{$p}-day-label,
+.#{$p}-day-badge {
+  max-width: calc(100cqw - 4px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(9px, 18cqmin, 11px);
+  font-weight: 500;
+}
+
+.#{$p}-day-badge {
+  position: absolute;
+  top: calc(-14cqmin);
+  inset-inline-end: calc(-14cqmin);
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--cal-accent);
+  color: var(--cal-accent-contrast);
+}
+
+.#{$p}-day-icon {
+  display: flex;
+  font-size: clamp(9px, 20cqmin, 13px);
+  line-height: 1;
+}
+
+.#{$p}-day-markers {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.#{$p}-day-marker {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+// States -----------------------------------------------------------------
+
+.#{$p}-root[data-highlight-today] .#{$p}-day[data-today] .#{$p}-day-button::before {
+  // Today: thin outline (no colour or underline on the number, so labels never
+  // collide). Explained by the default "Today" tooltip and the aria-label.
+  box-shadow: inset 0 0 0 1.5px var(--cal-today);
+}
+
+.#{$p}-root:not([data-mode='readonly']) .#{$p}-day:not([data-disabled]):not([data-selected]) .#{$p}-day-button:hover::before {
+  box-shadow: inset 0 0 0 1.5px var(--cal-hover);
+}
+
+.#{$p}-day[data-disabled] .#{$p}-day-button,
+.#{$p}-day[data-unavailable] .#{$p}-day-button {
+  color: var(--cal-muted);
+  cursor: default;
+}
+
+.#{$p}-day[data-disabled] .#{$p}-day-content,
+.#{$p}-day[data-unavailable] .#{$p}-day-content {
+  font-weight: 400;
+}
+
+.#{$p}-day[data-unavailable]:not([data-past]):not([data-status]):not([data-out-of-schedule]) .#{$p}-day-number {
+  text-decoration: line-through;
+}
+
+.#{$p}-root[data-mode='readonly'] {
+  .#{$p}-day-button {
+    cursor: default;
+  }
+  .#{$p}-day-content {
+    font-weight: 400;
+  }
+}
+
+.#{$p}-readonly-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 4px 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--cal-preview);
+  color: var(--cal-muted);
+  font-size: 0.85rem;
+}
+
+.#{$p}-day[data-selected] .#{$p}-day-button {
+  color: var(--cal-accent-contrast);
+  &::before {
+    background: var(--cal-accent);
+    box-shadow: none;
+  }
+}
+
+// Range endpoints: a half-ring on the outer side tells start from end;
+// the band covers the inner side. Single-day selections stay a plain circle.
+.#{$p}-day[data-band='start'][data-range-start]::before,
+.#{$p}-day[data-band='end'][data-range-end]::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--cal-circle) * 100cqmin + 8px);
+  height: calc(var(--cal-circle) * 100cqmin + 8px);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(to right, var(--cal-ring) 50%, transparent 50%);
+}
+.#{$p}-day[data-band='end'][data-range-end]::before,
+[dir='rtl'] .#{$p}-day[data-band='start'][data-range-start]::before {
+  background: linear-gradient(to left, var(--cal-ring) 50%, transparent 50%);
+}
+[dir='rtl'] .#{$p}-day[data-band='end'][data-range-end]::before {
+  background: linear-gradient(to right, var(--cal-ring) 50%, transparent 50%);
+}
+
+// Hover/keyboard preview of the end: outlined circle.
+.#{$p}-day[data-preview-end]:not([data-selected]) .#{$p}-day-button::before {
+  box-shadow: inset 0 0 0 2px var(--cal-accent);
+}
+
+// Range band: spans cell to cell, starts/ends at the endpoint's centre.
+.#{$p}-range-bg {
+  position: absolute;
+  top: 50%;
+  inset-inline: 0;
+  height: calc(var(--cal-circle) * 100cqmin);
+  transform: translateY(-50%);
+  background: var(--cal-range);
+
+  [data-band='start'] > & {
+    inset-inline-start: 50%;
+  }
+  [data-band='end'] > & {
+    inset-inline-end: 50%;
+  }
+  [data-band-preview] > & {
+    background: var(--cal-preview);
+  }
+  [data-week-start] > &,
+  [data-month-start] > & {
+    border-start-start-radius: var(--cal-radius);
+    border-end-start-radius: var(--cal-radius);
+  }
+  [data-week-end] > &,
+  [data-month-end] > & {
+    border-start-end-radius: var(--cal-radius);
+    border-end-end-radius: var(--cal-radius);
+  }
+}
+
+// Loading / error -----------------------------------------------------------
+
+// Skeleton: identical pills for every day (independent of digit widths).
+.#{$p}-month[data-status='loading'],
+.#{$p}-month[data-status='unknown'] {
+  .#{$p}-day:not([data-selected]) .#{$p}-day-content {
+    visibility: hidden;
+  }
+  .#{$p}-day:not([data-selected]) .#{$p}-day-button::before {
+    width: calc(var(--cal-circle) * 62cqmin);
+    height: calc(var(--cal-circle) * 40cqmin);
+    border-radius: 999px;
+    box-shadow: none;
+    background: linear-gradient(90deg, var(--cal-range) 0%, var(--cal-preview) 50%, var(--cal-range) 100%) 0 0 / 200% 100%;
+    animation: #{$p}-shimmer 1.4s linear infinite;
+  }
+}
+
+@keyframes #{$p}-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.#{$p}-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--cal-muted);
+  font-size: 0.85rem;
+
+  &[data-scope='month'] {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: calc(var(--cal-month-padding) + 44px);
+  }
+  &[data-scope='initial'] {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: color-mix(in srgb, var(--cal-bg) 70%, transparent);
+  }
+  &[data-scope='load-more'] {
+    padding: 8px;
+  }
+}
+
+.#{$p}-months > .#{$p}-loading[data-scope='initial'] {
+  position: static;
+  min-height: 280px;
+  grid-column: 1 / -1;
+}
+
+.#{$p}-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: #{$p}-spin 0.8s linear infinite;
+}
+
+@keyframes #{$p}-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .#{$p}-root .#{$p}-spinner,
+  .#{$p}-root .#{$p}-month[data-status] .#{$p}-day-button::before {
+    animation: none;
+  }
+}
+
+.#{$p}-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cal-danger) 8%, transparent);
+  color: var(--cal-danger);
+  font-size: 0.85rem;
+}
+
+.#{$p}-retry,
+.#{$p}-load-more {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 10px;
+  &:focus-visible {
+    outline: 2px solid var(--cal-focus);
+    outline-offset: 2px;
+  }
+}
+
+.#{$p}-retry {
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+  background: transparent;
+}
+
+.#{$p}-load-more-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block: 8px;
+}
+
+.#{$p}-load-more {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid currentColor;
+  background: transparent;
+  font-weight: 600;
+  &:hover {
+    background: var(--cal-range);
+  }
+}
+
+// Slots -----------------------------------------------------------------------
+
+.#{$p}-header,
+.#{$p}-footer,
+.#{$p}-navigation {
+  padding: 8px 4px;
+}
+.#{$p}-footer {
+  border-top: 1px solid var(--cal-range);
+}
+
+// Tooltip ---------------------------------------------------------------------
+
+.#{$p}-tooltip {
+  --cal-tooltip-bg: #fff;
+  // Portalled outside .cal-root, so it does not inherit the root's box-sizing.
+  box-sizing: border-box;
+  z-index: 1000;
+  max-width: min(var(--cal-tooltip-max-width, 280px), calc(100vw - 16px));
+  padding: 8px 12px;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+  background: var(--cal-tooltip-bg);
+  color: var(--cal-tooltip-color, #1f2328);
+  box-shadow: var(--cal-tooltip-shadow, 0 4px 16px rgb(0 0 0 / 0.14));
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+.#{$p}-tooltip-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+
+  [data-placement='top'] > &,
+  [data-placement='bottom'] > & {
+    left: var(--cal-tooltip-arrow);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  [data-placement='left'] > &,
+  [data-placement='right'] > & {
+    top: var(--cal-tooltip-arrow);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  [data-placement='top'] > & {
+    bottom: -5px;
+  }
+  [data-placement='bottom'] > & {
+    top: -5px;
+  }
+  [data-placement='left'] > & {
+    right: -5px;
+  }
+  [data-placement='right'] > & {
+    left: -5px;
+  }
+}
+
+// Keyboard focus wins over state styles.
+.#{$p}-root .#{$p}-day .#{$p}-day-button:focus-visible::before {
+  box-shadow: 0 0 0 2px var(--cal-bg), 0 0 0 4px var(--cal-focus);
+}

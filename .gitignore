@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+.vite/
+
+# Test coverage
+coverage/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS / local tooling
+.DS_Store
+.idea/
+.vscode/
+.claude/
