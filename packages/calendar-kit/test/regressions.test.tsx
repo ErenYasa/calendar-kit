@@ -385,3 +385,31 @@ describe('F24 documented event order for a rejected click', () => {
     expect(events.filter((t) => !['validationChange', 'tooltipOpenChange'].includes(t))).toEqual(['dateClick', 'dayFocusChange', 'invalidSelection']);
   });
 });
+
+describe('F25 an unreachable start reports the real blocker', () => {
+  it('reports the bound, not "Minimum 2 nights", when maxDate is the blocker', () => {
+    const e = engine(stayRules({ minNights: 2, maxDate: d('2026-11-14') }));
+    expect(e.checkStart(d('2026-11-13'))?.code).toBe('after-max');
+  });
+
+  it('never reports a minimum below the natural one ("Minimum 0 nights")', () => {
+    const e = engine(stayRules({ minNights: 0, getDayStatus: (x) => (x === '2026-11-14' ? 'closed' : undefined) }));
+    const issue = e.checkStart(d('2026-11-13'));
+    expect(issue).not.toBeNull();
+    expect(issue!.code).not.toBe('min-length');
+  });
+
+  it('still reports min-length when the configured minimum is the reason', () => {
+    const e = engine(stayRules({ minNights: 2, getDayStatus: (x) => (x === '2026-11-14' ? 'booked' : undefined) }));
+    expect(e.checkStart(d('2026-11-13'))).toMatchObject({ code: 'min-length', params: { min: 2 } });
+  });
+});
+
+describe('F28 multiple mode counts unique dates consistently', () => {
+  it('plan() and validate() agree when the value contains duplicates', () => {
+    const sel: Selection = { mode: 'multiple', value: [d('2026-11-13'), d('2026-11-13')] };
+    const e = createSelectionEngine({ rules: { maxSelections: 2 }, state: { selection: sel, activeEndpoint: 'start' }, today: TODAY });
+    expect(e.validate({ mode: 'multiple', value: [d('2026-11-13'), d('2026-11-13'), d('2026-11-14')] }).valid).toBe(true);
+    expect(e.plan(d('2026-11-14')).kind).toBe('toggle-on');
+  });
+});

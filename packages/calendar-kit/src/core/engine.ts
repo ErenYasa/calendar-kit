@@ -294,8 +294,11 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
       // Once the interior is blocked, no later end can work.
       if (issue.code === 'blocked-in-range' || issue.code.startsWith('data-')) break;
     }
-    if (lastIssue?.code.startsWith('data-')) return lastIssue;
-    if (rules.minLength != null && minLen > 0)
+    // Bounds, past/future and data problems are reported as such. "Minimum N"
+    // only when a configured minimum above the natural one is the reason.
+    if (lastIssue && /^(before-min|after-max|past|future|data-)/.test(lastIssue.code)) return lastIssue;
+    const naturalMin = semantics === 'inclusive' ? 1 : allowSameDay ? 0 : 1;
+    if (rules.minLength != null && rules.minLength > naturalMin)
       return { code: 'min-length', date: start, params: { min: rules.minLength, unit }, ...(lastIssue?.dayReason ? { dayReason: lastIssue.dayReason } : {}) };
     return lastIssue;
   }
@@ -392,8 +395,8 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
           return planned('toggle-off', date, { mode: 'multiple', value: sel.value.filter((d) => d !== date) });
         const issue =
           checkStartBasic(date) ??
-          (rules.maxSelections != null && sel.value.length >= rules.maxSelections
-            ? { code: 'max-selections' as const, date, params: { max: rules.maxSelections, actual: sel.value.length + 1 } }
+          (rules.maxSelections != null && new Set(sel.value).size >= rules.maxSelections
+            ? { code: 'max-selections' as const, date, params: { max: rules.maxSelections, actual: new Set(sel.value).size + 1 } }
             : null);
         return planned('toggle-on', date, { mode: 'multiple', value: [...sel.value, date] }, issue);
       }
