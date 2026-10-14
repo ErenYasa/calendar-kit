@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import { type CalendarDate, getToday, parseDate } from '../date/calendarDate';
+import { type CalendarDate, getToday, parseDate } from '../date/calendarDate.js';
 
 /**
  * Resolves "today".

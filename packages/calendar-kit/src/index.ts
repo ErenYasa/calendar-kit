@@ -37,8 +37,8 @@ export {
   toCalendarDate,
   toCalendarMonth,
   toUTCDate,
-} from './date/calendarDate';
-export { formatDate, formatMonth, getDefaultFirstDayOfWeek, getLocaleDirection, getWeekdayNames } from './date/locale';
+} from './date/calendarDate.js';
+export { formatDate, formatMonth, getDefaultFirstDayOfWeek, getLocaleDirection, getWeekdayNames } from './date/locale.js';
 
 // Selection core
 export type {
@@ -59,7 +59,7 @@ export type {
   SelectionState,
   ValidationIssue,
   ValidationResult,
-} from './core/types';
+} from './core/types.js';
 export {
   type SelectionEngine,
   type SelectionEngineInput,
@@ -69,8 +69,8 @@ export {
   getIncludedDays,
   getRangeLength,
   getSelectionPhase,
-} from './core/engine';
-export { type RelaxScheduleOptions, combineRules, relaxRules } from './core/rules';
+} from './core/engine.js';
+export { type RelaxScheduleOptions, combineRules, relaxRules } from './core/rules.js';
 
 // Adapters
 export {
@@ -82,7 +82,7 @@ export {
   closedDates,
   dayRangeRules,
   stayRules,
-} from './adapters';
+} from './adapters/index.js';
 
 // i18n
 export {
@@ -94,9 +94,9 @@ export {
   mergeMessages,
   messagesEn,
   messagesTr,
-} from './i18n/messages';
-export { messagesAr, messagesDe, messagesEs, messagesFr, messagesIt, messagesNl } from './i18n/locales';
+} from './i18n/messages.js';
+export { messagesAr, messagesDe, messagesEs, messagesFr, messagesIt, messagesNl } from './i18n/locales.js';
 
 // React
-export { Calendar } from './react/Calendar';
-export type * from './react/types';
+export { Calendar } from './react/Calendar.js';
+export type * from './react/types.js';

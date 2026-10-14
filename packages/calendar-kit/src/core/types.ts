@@ -1,4 +1,4 @@
-import type { CalendarDate, CalendarMonth, Weekday } from '../date/calendarDate';
+import type { CalendarDate, CalendarMonth, Weekday } from '../date/calendarDate.js';
 
 export type SelectionMode = 'single' | 'range' | 'multiple' | 'readonly';
 

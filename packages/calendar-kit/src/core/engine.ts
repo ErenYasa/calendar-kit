@@ -7,7 +7,7 @@ import {
   parseDate,
   toEpochDay,
   fromEpochDay,
-} from '../date/calendarDate';
+} from '../date/calendarDate.js';
 import type {
   ActivationPlan,
   DataStatus,
@@ -22,7 +22,7 @@ import type {
   SelectionState,
   ValidationIssue,
   ValidationResult,
-} from './types';
+} from './types.js';
 
 export interface ResolvedAvailability {
   closed: boolean;

@@ -25,3 +25,6 @@ npm-debug.log*
 .idea/
 .vscode/
 .claude/
+
+# Test scratch output
+.tmp-node16/

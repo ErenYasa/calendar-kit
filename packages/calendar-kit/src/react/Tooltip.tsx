@@ -1,7 +1,7 @@
 import { type ReactNode, type Ref, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { TooltipBoundary, TooltipPlacement } from './types';
-import { mergeRefs, useIsomorphicLayoutEffect } from './utils';
+import type { TooltipBoundary, TooltipPlacement } from './types.js';
+import { mergeRefs, useIsomorphicLayoutEffect } from './utils.js';
 
 const PAD = 8;
 

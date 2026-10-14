@@ -1,4 +1,4 @@
-import { type CalendarDate, type CalendarMonth, type Weekday, firstDayOfMonth, toUTCDate } from './calendarDate';
+import { type CalendarDate, type CalendarMonth, type Weekday, firstDayOfMonth, toUTCDate } from './calendarDate.js';
 
 /**
  * Locale helpers built on `Intl.DateTimeFormat`. Dates are always formatted

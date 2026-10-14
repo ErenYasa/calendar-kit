@@ -1,4 +1,4 @@
-import type { IssueParams, ReasonCode, ValidationIssue } from '../core/types';
+import type { IssueParams, ReasonCode, ValidationIssue } from '../core/types.js';
 
 /** Helpers handed to message functions so they can format dates/numbers in the active locale. */
 export interface MessageFormatHelpers {

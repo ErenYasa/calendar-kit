@@ -3,8 +3,8 @@
  * (nights, check-in-only, …) into the generic `SelectionRules` of the core.
  * The core itself never knows about stays, boats or events.
  */
-import { type CalendarDate, type Weekday, addDays } from '../date/calendarDate';
-import type { DayAvailability, RuleContext, SelectionRules } from '../core/types';
+import { type CalendarDate, type Weekday, addDays } from '../date/calendarDate.js';
+import type { DayAvailability, RuleContext, SelectionRules } from '../core/types.js';
 
 type BaseRules<TContext> = Pick<
   SelectionRules<TContext>,

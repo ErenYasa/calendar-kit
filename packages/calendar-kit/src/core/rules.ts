@@ -1,5 +1,5 @@
-import { type CalendarDate } from '../date/calendarDate';
-import type { DayAvailability, SelectionRules } from './types';
+import { type CalendarDate } from '../date/calendarDate.js';
+import type { DayAvailability, SelectionRules } from './types.js';
 
 const maxOf = (a?: CalendarDate | null, b?: CalendarDate | null) => (a && b ? (a > b ? a : b) : (a ?? b ?? null));
 const minOf = (a?: CalendarDate | null, b?: CalendarDate | null) => (a && b ? (a < b ? a : b) : (a ?? b ?? null));

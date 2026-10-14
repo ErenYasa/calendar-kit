@@ -29,13 +29,13 @@ import {
   getWeekday,
   parseDate,
   parseMonth,
-} from '../date/calendarDate';
-import { formatDate, formatMonth, getDefaultFirstDayOfWeek, getLocaleDirection, getWeekdayNames } from '../date/locale';
-import { EMPTY_RANGE, createSelectionEngine, emptySelection, getSelectionPhase } from '../core/engine';
-import { combineRules, relaxRules } from '../core/rules';
-import type { DateRange, RangeEndpoint, Selection, SelectionRules, SelectionState, ValidationIssue, ValidationResult } from '../core/types';
-import { type CalendarMessages, type MessageFormatHelpers, formatIssue, mergeMessages, messagesEn } from '../i18n/messages';
-import { DayCell, type DayActions } from './Day';
+} from '../date/calendarDate.js';
+import { formatDate, formatMonth, getDefaultFirstDayOfWeek, getLocaleDirection, getWeekdayNames } from '../date/locale.js';
+import { EMPTY_RANGE, createSelectionEngine, emptySelection, getSelectionPhase } from '../core/engine.js';
+import { combineRules, relaxRules } from '../core/rules.js';
+import type { DateRange, RangeEndpoint, Selection, SelectionRules, SelectionState, ValidationIssue, ValidationResult } from '../core/types.js';
+import { type CalendarMessages, type MessageFormatHelpers, formatIssue, mergeMessages, messagesEn } from '../i18n/messages.js';
+import { DayCell, type DayActions } from './Day.js';
 import {
   DEFAULT_MAX_DAY_SIZE,
   DEFAULT_MIN_DAY_SIZE,
@@ -45,8 +45,8 @@ import {
   computeMonthWindow,
   layoutKey,
   sanitizeCount,
-} from './layout';
-import { Tooltip } from './Tooltip';
+} from './layout.js';
+import { Tooltip } from './Tooltip.js';
 import type {
   CalendarController,
   CalendarEvent,
@@ -65,9 +65,9 @@ import type {
   SlotContext,
   TooltipContent,
   TooltipTrigger,
-} from './types';
-import { PREFIX, cx, prefersReducedMotion, shallowEqualArray, srOnlyStyle, useIsomorphicLayoutEffect, useLatest } from './utils';
-import { useToday } from './useToday';
+} from './types.js';
+import { PREFIX, cx, prefersReducedMotion, shallowEqualArray, srOnlyStyle, useIsomorphicLayoutEffect, useLatest } from './utils.js';
+import { useToday } from './useToday.js';
 
 // ----------------------------------------------------------------- helpers
 

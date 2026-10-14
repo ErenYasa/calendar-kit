@@ -1,5 +1,5 @@
-import { type CalendarMonth, addMonthsToMonth, diffMonths, eachMonth } from '../date/calendarDate';
-import type { CalendarLayout, NavigationMode, Orientation, OverflowStrategy } from './types';
+import { type CalendarMonth, addMonthsToMonth, diffMonths, eachMonth } from '../date/calendarDate.js';
+import type { CalendarLayout, NavigationMode, Orientation, OverflowStrategy } from './types.js';
 
 /** Inline padding of a month (px). Mirrored to CSS through `--cal-month-padding`. */
 export const MONTH_PADDING_INLINE = 8;
