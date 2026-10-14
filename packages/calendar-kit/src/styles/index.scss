@@ -251,13 +251,14 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
 
 // States -----------------------------------------------------------------
 
-.#{$p}-root[data-highlight-today] .#{$p}-day[data-today] .#{$p}-day-button::before {
+// State styles use :where() so the keyboard focus ring (end of file) always wins.
+.#{$p}-root:where([data-highlight-today]) .#{$p}-day:where([data-today]) .#{$p}-day-button::before {
   // Today: thin outline (no colour or underline on the number, so labels never
   // collide). Explained by the default "Today" tooltip and the aria-label.
   box-shadow: inset 0 0 0 1.5px var(--cal-today);
 }
 
-.#{$p}-root:not([data-mode='readonly']) .#{$p}-day:not([data-disabled]):not([data-selected]) .#{$p}-day-button:hover::before {
+.#{$p}-root:where(:not([data-mode='readonly'])) .#{$p}-day:where(:not([data-disabled]):not([data-selected])) .#{$p}-day-button:hover::before {
   box-shadow: inset 0 0 0 1.5px var(--cal-hover);
 }
 
