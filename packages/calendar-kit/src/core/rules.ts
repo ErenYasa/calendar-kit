@@ -17,8 +17,12 @@ const intersect = <T,>(a?: readonly T[], b?: readonly T[]) => (a && b ? a.filter
 export function combineRules<TContext = unknown>(
   ...sets: (SelectionRules<TContext> | null | undefined | false)[]
 ): SelectionRules<TContext> {
-  return sets.reduce<SelectionRules<TContext>>((acc, next) => {
-    if (!next) return acc;
+  return sets.reduce<SelectionRules<TContext>>((acc, set) => {
+    if (!set) return acc;
+    // An explicit `undefined` (e.g. `validateSelection: props.validate`) means
+    // "not defined here" and must not erase what an earlier set defined.
+    const next: SelectionRules<TContext> = {};
+    for (const k in set) if (set[k as keyof typeof set] !== undefined) (next as Record<string, unknown>)[k] = set[k as keyof typeof set];
     const a = acc.getDayAvailability;
     const b = next.getDayAvailability;
     const va = acc.validateSelection;
