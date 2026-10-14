@@ -5,8 +5,8 @@ React + TypeScript için hafif, erişilebilir, responsive ve genişletilebilir t
 > `calendar-kit` geçici addır. Bileşen adları (`Calendar`) ve CSS önekleri (`cal-`) paket adından bağımsızdır: önek tek yerden değişir (`src/react/utils.ts` → `PREFIX`, `src/styles/index.scss` → `$p`). Paket `private: true`; npm'e yayımlanmadı.
 
 - Bağımlılık yok (React/ReactDOM peer). Moment, react-dates veya başka tarih kütüphanesi kullanılmaz.
-- Tipik kullanım **19.1 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
-- 81 test (tarih, motor, bileşen, SSR, etkileşim maliyeti) + dist üzerinden SSR duman testi.
+- Tipik kullanım **20.1 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
+- 119 paket testi + 2 demo testi, gerçek Chrome'da 8 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
 
 ---
 
@@ -37,6 +37,8 @@ Demo: **http://127.0.0.1:5173**
 | `npm run build` | Paket + demo production build'i. |
 | `npm run size` | Minify + gzip/brotli boyut ölçümü. |
 | `npm run check` | typecheck + test + paket build + dist üzerinden SSR duman testi. |
+| `npm run test:browser` | Gerçek Chrome'da (playwright-core, sistem Chrome'u) görsel/cascade regresyon kontrolleri. |
+| `npm run perf` | Gerçek Chrome'da etkileşim ölçümü (render / işleme / sonraki kare, CPU yavaşlatmalı). |
 
 Demo production önizleme: `npm run build -w demo` ardından `npx vite preview` (`apps/demo` içinde). React Profiler süreleriyle production ölçümü için `PROFILE=1 npm run build -w demo`.
 
@@ -418,23 +420,31 @@ Bilinçli farklar: react-dates `focusedInput=startDate` iken bitişten önceki t
 
 | | min | gzip | brotli |
 |---|---|---|---|
-| Tümü (`export *`) | 65.7 kB | 22.5 kB | 20.0 kB |
-| Tipik: `Calendar` + `stayRules` + `messagesTr` | 55.7 kB | 19.1 kB | 17.4 kB |
-| Yalnız çekirdek (motor + adaptör + tarih) | 8.3 kB | 3.0 kB | 2.8 kB |
-| `styles.css` | 9.8 kB | 2.6 kB | 2.2 kB |
+| Tümü (`export *`) | 68.5 kB | 23.5 kB | 20.9 kB |
+| Tipik: `Calendar` + `stayRules` + `messagesTr` | 58.5 kB | 20.1 kB | 18.2 kB |
+| Yalnız çekirdek (motor + adaptör + tarih) | 8.4 kB | 3.1 kB | 2.8 kB |
+| `styles.css` | 9.5 kB | 2.6 kB | 2.2 kB |
 
-**Etkileşim** — Chrome, production React (`PROFILE=1` build), React Profiler `actualDuration` (takvim alt ağacının render+commit işi), 5 tekrarın medyanı:
+**Etkileşim** (`npm run perf`): demonun `bench.html` sayfası (yalnızca takvim + React Profiler) `react-dom/profiling` ile production modunda build edilir, sistem Chrome'u (155) gerçek fare/klavye girdisiyle sürülür; CPU yavaşlatma CDP `Emulation.setCPUThrottlingRate` ile yapılır. Ölçüm makinesi: Apple M5 Pro, macOS 26.6. Her eylem 10 kez (hover 30 kez); değerler medyan / p95, ms.
 
-| Ay / gün | Başlangıç tıklaması | Hover önizleme | Sonraki ay |
-|---|---|---|---|
-| 1 / 31 | 1.1 ms | 0.9 ms | 1.7 ms |
-| 2 / 61 | 2.3 ms | 1.4 ms | 2.1 ms |
-| 3 / 91 | 2.9 ms | 1.5 ms | 2.4 ms |
-| 12 / 365 | 15.9 ms | 5.9 ms | 10.1 ms |
+Sütunlar birbirinin yerine kullanılamaz:
+- **render**: etkileşimin yol açtığı commit'lerin React Profiler `actualDuration` toplamı — takvim alt ağacının render süresi (yalnızca render fazı; memo ile atlanan hücreler ve DOM yazımı dahil değil).
+- **işleme**: olayın sayfaya dağıtılmasından React'in DOM'u güncelleyip senkron işini bitirmesine (ilk MutationObserver geri çağrısı) kadar: zamanlama + render + commit (DOM yazımı, layout effect'ler).
+- **sonraki kare**: olayın zaman damgasından bir sonraki karenin ardındaki ilk göreve kadar (rAF + `setTimeout 0`) — girdiden sonraki çizime yaklaşık gecikme; tarayıcının stil/layout/paint işi ve kare hizalaması dahildir.
+- Ayrıca **girdi gecikmesi** (olay zaman damgası → dağıtım) ölçülür: Chrome sürekli girdiyi (hover) kareye hizaladığı için hover'da ~12–16 ms görünür; takvimden kaynaklanmaz ve "sonraki kare"ye dahildir.
 
-Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir (2 veya 12 ay fark etmez). Başlangıç seçimi tüm günlerin uygunluğunu değiştirdiği için tam geçiş yapar (beklenen). Tarih motoru 365 gün için ~0.34 ms (Node mikro ölçüm).
+| Ay / gün | CPU | Başlangıç tıklaması: render · işleme · sonraki kare | Hover: render · işleme | Bitiş tıklaması: render · işleme | Ok tuşu: render · işleme | Sonraki ay: render · işleme |
+|---|---|---|---|---|---|---|
+| 2 / 61 | 1× | 1.9 · 1.3 · 6.0 | 0.9 · 1.9 | 2.0 · 1.3 | 0.8 · 2.1 | 1.4 · 1.4 |
+| 2 / 61 | 4× | 3.8 · 2.6 · 11.3 | 1.4 · 2.8 | 4.0 · 2.3 | 1.6 · 2.7 | 3.4 · 3.7 |
+| 2 / 61 | 6× | 6.0 · 3.5 · 17.8 | 2.2 · 4.2 | 8.2 · 3.8 | 2.0 · 4.2 | 5.4 · 5.2 |
+| 12 / 365 | 1× | 6.2 · 2.7 · 12.9 | 2.3 · 3.7 | 10.1 · 3.8 | 1.9 · 3.1 | 4.0 · 4.8 |
+| 12 / 365 | 4× | 16.0 · 6.6 · 33.5 | 4.7 · 7.6 | 21.9 · 7.6 | 4.3 · 7.2 | 9.3 · 11.0 |
+| 12 / 365 | 6× | 24.8 · 10.7 · 56.7 | 6.8 · 11.4 | 30.1 · 10.5 | 6.3 · 9.8 | 13.4 · 17.0 |
 
-Ölçüm notu: 12 ayda tıklama ~16 ms'dir; çok uzun listeler için `navigation="continuous"` + makul `maxRenderedMonths` önerilir.
+(Medyanlar; p95 değerleri betik çıktısında.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
+
+Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 30 ms, p95 51 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
 
 ## 21. Dağıtım, destek, lisans
 
