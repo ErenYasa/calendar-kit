@@ -108,7 +108,7 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
     opacity: 0.3;
     cursor: default;
   }
-  [dir='rtl'] & svg {
+  .#{$p}-root[dir='rtl'] & svg {
     transform: scaleX(-1);
   }
 }
@@ -321,10 +321,10 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
   background: linear-gradient(to right, var(--cal-ring) 50%, transparent 50%);
 }
 .#{$p}-day[data-band='end'][data-range-end]::before,
-[dir='rtl'] .#{$p}-day[data-band='start'][data-range-start]::before {
+.#{$p}-root[dir='rtl'] .#{$p}-day[data-band='start'][data-range-start]::before {
   background: linear-gradient(to left, var(--cal-ring) 50%, transparent 50%);
 }
-[dir='rtl'] .#{$p}-day[data-band='end'][data-range-end]::before {
+.#{$p}-root[dir='rtl'] .#{$p}-day[data-band='end'][data-range-end]::before {
   background: linear-gradient(to right, var(--cal-ring) 50%, transparent 50%);
 }
 
