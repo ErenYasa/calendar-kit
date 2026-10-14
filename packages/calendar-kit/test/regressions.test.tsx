@@ -375,3 +375,13 @@ describe('F20 focus survives a custom load-more control disappearing at the boun
     expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-01"]'));
   });
 });
+
+describe('F24 documented event order for a rejected click', () => {
+  it('dateClick → dayFocusChange → invalidSelection, no change', () => {
+    const events: string[] = [];
+    render(<Calendar mode="range" today={TODAY} rules={stayRules({ minNights: 2 })} defaultValue={{ start: d('2026-10-14'), end: null }} onEvent={(e) => events.push(e.type)} />);
+    events.length = 0;
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-15"]')!, { detail: 1 });
+    expect(events.filter((t) => !['validationChange', 'tooltipOpenChange'].includes(t))).toEqual(['dateClick', 'dayFocusChange', 'invalidSelection']);
+  });
+});

@@ -73,7 +73,7 @@ describe('range selection and events', () => {
     expect(day('2026-11-13').getAttribute('data-range-start')).toBe('');
     expect(day('2026-11-16').getAttribute('data-in-range')).toBe('');
     expect(day('2026-11-20').getAttribute('data-range-end')).toBe('');
-    // Exclusive semantics: end drawn but not included.
+    // Default (inclusive) semantics: the end day is drawn and included.
     expect(day('2026-11-20').getAttribute('data-included')).toBe('');
   });
 

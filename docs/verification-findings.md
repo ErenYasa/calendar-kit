@@ -34,7 +34,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F21 | 9 | Tooltip tema değişkenleri portala ulaşmıyor; `.cal-tooltip` `--cal-tooltip-bg`'yi kendisi sıfırlıyor | kanıtlandı (kod) | düzeltildi |
 | F22 | 9 | Demo: konaklama "Özel tarih" anahtarı ve mobil `loadMoreLabels` kayıp (dosya dışarıdan üzerine yazılmış) | kanıtlandı | düzeltildi |
 | F23 | 9 | Yayımlanan `exports`'taki `source` koşulu tarball'da olmayan `src/`'yi gösteriyor | kanıtlandı (pack) | düzeltildi |
-| F24 | 9 | README: reddedilen tıklama olay sırası "test edildi" deniyor ama test yok; Escape iddiası; DayState listesinde `outOfSchedule` yok; test yorumu yanlış ("Exclusive semantics") | kanıtlandı (okuma) | açık |
+| F24 | 9 | README: reddedilen tıklama olay sırası "test edildi" deniyor ama test yok; Escape iddiası; DayState listesinde `outOfSchedule` yok; test yorumu yanlış ("Exclusive semantics") | kanıtlandı (okuma) | düzeltildi |
 | F25 | düşük | `reachableEndIssue` gerçek sebep ne olursa olsun `min-length` raporluyor ("Minimum 0 gece" dahil) | kanıtlandı | açık |
 | F26 | düşük | Ulaşılabilir bitiş araması en fazla 63 bitiş adayına bakıyor | kanıtlandı | sözleşme |
 | F27 | düşük | `stayRules({ allowSameDay: true, minNights: 1 })` aynı gün konaklamaya izin vermiyor | kanıtlandı | sözleşme |

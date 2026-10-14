@@ -211,7 +211,7 @@ Kendi `getDayAvailability` kodunuzda program kaynaklı kısıtlamaları `schedul
 
 **İç içe etkileşim sınırı:** gün zaten bir `<button>`'dır. `renderDayContent` içine buton/link koymayın (geçersiz HTML, klavye sorunları). Gün içinde ayrı bir eylem gerekiyorsa `renderDay` ile kabuğu kendiniz kurup eylemi hücrenin dışına (ör. tooltip/slot) taşıyın.
 
-`DayState` alanları: `date, month, dayOfMonth, dayText, weekday, column, label, today, past, future, disabled, unavailable, readOnly, selected, selectedSingle, selectedStart, selectedEnd, inRange, included, inPreviewRange, previewStart, previewEnd, focused, hovered, action, canStart, canEnd, canPassThrough, dataStatus, loading, reason, reasonText, modifiers, weekStart, weekEnd, monthStart, monthEnd`.
+`DayState` alanları: `date, month, dayOfMonth, dayText, weekday, column, label, today, past, future, disabled, unavailable, readOnly, selected, selectedSingle, selectedStart, selectedEnd, inRange, included, inPreviewRange, previewStart, previewEnd, focused, hovered, action, canStart, canEnd, canPassThrough, outOfSchedule, dataStatus, loading, reason, reasonText, modifiers, weekStart, weekEnd, monthStart, monthEnd`.
 
 ## 9. Yerleşim (container'a göre)
 
@@ -248,7 +248,7 @@ Kendi `getDayAvailability` kodunuzda program kaynaklı kısıtlamaları `schedul
 
 **"Daha fazla tarih" kontrolleri:** varsayılan buton kalır; yalnızca içeriği değiştirmek için `loadMoreLabels={{ previous: <…/>, next: <…/> }}` (ReactNode), tamamen farklı bir kontrol için `renderLoadMore({ direction, canLoad, loading, loadMore, label })`, kontrolü takvimin dışına (ör. footer) taşımak için `loadMore="manual"` + `ref.loadMore('next')`.
 
-**Continuous mod:** başlangıçta yalnızca `numberOfMonths` ay render edilir; `monthsPerLoad` kadar önceki/sonraki ay eklenir, min/max'ta durur. Önceki aylar eklenirken scroll konumu korunur. DOM sınırı `maxRenderedMonths` (varsayılan 24) — aşılınca karşı uçtan ay düşülür (odaktaki ay asla). Render edilmemiş uzak bir aya `goToMonth`, ara ayları render etmeden listeyi o aya göre yeniden kurar. Liste var olan aylar arasında atlanırsa yeniden merkezlenmez; yalnızca kaydırılır.
+**Continuous mod:** başlangıçta yalnızca `numberOfMonths` ay render edilir; `monthsPerLoad` kadar önceki/sonraki ay eklenir, min/max'ta durur. Önceki aylar eklenirken scroll konumu korunur. DOM sınırı `maxRenderedMonths` (varsayılan 24) — aşılınca karşı uçtan ay düşülür. O anda DOM odağını taşıyan ay asla düşülmez; kırpma o aya kadar yapılır ve odak takvimden ayrılınca sınır tekrar tam uygulanır. Render edilmemiş uzak bir aya `goToMonth`, ara ayları render etmeden listeyi o aya göre yeniden kurar. Liste var olan aylar arasında atlanırsa yeniden merkezlenmez; yalnızca kaydırılır.
 
 ## 11. Veri yükleme (sahibi uygulama)
 
@@ -265,7 +265,9 @@ Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unk
 
 `getDayTooltip({ day, data })` → `ReactNode | { content, persistent }`; `renderDayTooltip({ day, content, trigger, placement })`; `tooltip={{ placement, boundary, offset, className, container, openDate }}` (controlled açık tarih). Varsayılan: devre dışı/müsait olmayan günlerde sebep metni (geçmiş/sınır dışı hariç), bugün için "Bugün".
 
-- `boundary: 'calendar'` (varsayılan): tooltip takvimin ay alanının içinde kalır — takvimin dışına taşmaz, ay alanının üstündeki başlık/hafta günü satırının üzerine çıkmaz. `'viewport'`: takvim dışına taşabilir, pencere içinde kalır.
+- `boundary: 'calendar'` (varsayılan): tooltip, ait olduğu ayın başlık/hafta günü satırının altındaki ve o ayın içindeki alanda kalır; takvimin dışına taşmaz. `'viewport'`: takvim dışına taşabilir, pencere içinde kalır (bu modda takvim başlıklarının üzerine gelebilir).
+- Tema: tooltip `document.body`'ye portallanır; takvim köküne verilen `--cal-tooltip-bg`, `--cal-tooltip-color`, `--cal-tooltip-shadow`, `--cal-tooltip-max-width` ve yazı tipi tooltip açılırken ona kopyalanır.
+- Dokunmatikte açılan tooltip dışarıya dokununca kapanır (`onOutsideClick` gerekmez). Dışarıdan Tab ile gelinen odak klavye odağı sayılır.
 - Yerleşim sırası: tercih edilen taraf (`placement`, varsayılan `top`) → karşı taraf → sağ → sol; tamamen sığan ilk taraf seçilir, diğer eksende sınır içine kaydırılır. Genişlik sınıra göre ayarlanır ve metin satır kırar; metin asla kesilmez. Hiçbir taraf tam sığmazsa en çok yer olan üst/alt taraf kullanılır.
 
 - Tetikleyiciler: hover, klavye focus'u, dokunmatikte dokunma (reddedilen güne dokununca açıklama açılır), `persistent` (ör. başlangıç seçildikten sonra "Çıkış tarihini seçin").
@@ -350,7 +352,7 @@ Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo
 ## 17. Erişilebilirlik
 
 - Her ay `role="grid"`, haftalar `row`, günler `gridcell` + `<button>`; tek `tabIndex=0` (roving).
-- Klavye: oklar (RTL'de yatay oklar ters), `Home`/`End` (hafta başı/sonu), `PageUp`/`PageDown` (ay), `Shift+PageUp/Down` (yıl), `Enter`/`Space` (seç), `Escape` (geçici tooltip/hover kapat). Pencere dışına çıkan focus ay değiştirir ve focus kaybolmaz.
+- Klavye: oklar (RTL'de yatay oklar ters), `Home`/`End` (hafta başı/sonu), `PageUp`/`PageDown` (ay), `Shift+PageUp/Down` (yıl), `Enter`/`Space` (seç), `Escape` (açık tooltip'i — hover, odak, dokunma veya persistent — odağı taşımadan kapatır; tuş yalnızca kapatılacak bir şey varken tüketilir). Pencere dışına çıkan focus ay değiştirir ve focus kaybolmaz.
 - `aria-label`: tam tarih + bugün/başlangıç/bitiş/aralıkta + engel sebebi. Engelli günler `aria-disabled` ile odaklanabilir kalır (sebep okunabilir).
 - Canlı bölge: seçim, ret ve yükleme duyuruları.
 - Ay ekleme/pencereleme sırasında focus korunur; "daha fazla" butonu sınırda kaybolursa focus yeni eklenen ilk güne taşınır.
