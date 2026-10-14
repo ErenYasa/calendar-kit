@@ -85,9 +85,16 @@ export function TooltipExample() {
   const [boundary, setBoundary] = useState<TooltipBoundary>('calendar');
   const [placement, setPlacement] = useState<TooltipPlacement>('top');
   const [value, setValue] = useState<CalendarDate | null>(null);
+  // tooltip.container: a portal target inside a transformed box (as in many
+  // animated modals) must not shift the tooltip.
+  const [inTransformed, setInTransformed] = useState(false);
+  const [host, setHost] = useState<HTMLElement | null>(null);
   return (
     <div>
       <div className="row controls">
+        <label>
+          <input type="checkbox" checked={inTransformed} onChange={(e) => setInTransformed(e.target.checked)} /> container: transform içeren kutu
+        </label>
         <label>
           boundary{' '}
           <select value={boundary} onChange={(e) => setBoundary(e.target.value as TooltipBoundary)}>
@@ -114,12 +121,13 @@ export function TooltipExample() {
           value={value}
           onChange={setValue}
           maxBlockSize={300}
-          tooltip={{ boundary, placement }}
+          tooltip={{ boundary, placement, container: inTransformed ? host : undefined }}
           getDayTooltip={({ day }) =>
             day.selected ? { content: 'Bu uzun bir açıklama metni: sınıra göre satır kırar ve hiçbir zaman kesilmez.', persistent: true } : null
           }
         />
       </div>
+      <div ref={setHost} className="transformed-host" />
     </div>
   );
 }

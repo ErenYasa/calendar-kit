@@ -45,7 +45,8 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F32 | düşük | Kontrolsüz modda mod değişimi eski seçimi geri getiriyor; `today` prop'u yokken görünen ay gece yarısı kayıyor | kanıtlandı | sözleşme (belgelendi) |
 | F33 | 6 | İskelet (yükleme) günlerinde klavye odak halkası gizleniyor (iskelet kuralı 0,5,1 > odak 0,4,1); F17 düzeltmesi sırasında bulundu | kanıtlandı (özgüllük) | düzeltildi |
 | F34 | 9 | Dar (<~300 px) continuous görünümde ortak hafta günü satırı takvim kökünden taşıyor (kırpmayan bir üst öğede sayfayı genişletir) ve aylar yatay kaydırılınca kolonlarla hizasını kaybediyor (S02'den) | kanıtlandı (Chrome: kökten 122 px taşma, hizalama 57 vs −3 px) | düzeltildi |
-| S01 | şüphe | `transform` içeren portal container'da tooltip kayması | şüphe | açık |
+| F35 | 7 | `transform` içeren portal kabında tooltip kabın konumu kadar kayıyor; dar kapta genişliği kaba göre daralıyor (S01'den) | kanıtlandı (Chrome: +300 px kayma; demo: −332 px boşluk) | düzeltildi |
+| S01 | şüphe | `transform` içeren portal container'da tooltip kayması | yeniden üretildi → F35 | F35'e taşındı |
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | bu makinede yeniden üretilemedi (macOS overlay scrollbar, genişlik 0) | doğrulanamadı |
 | S04 | şüphe | `aria-selected` + `aria-pressed` ile durumun iki kez okunması; boş hücrelerin kolon indeksini kaydırması | ekran okuyucu gerektirir (VoiceOver/NVDA) | doğrulanamadı |
@@ -54,7 +55,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
 `npm run test:browser` (playwright-core + sistem Chrome, demo üzerinde) jsdom'un
 doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F17,
-F21, F30, F34 (F34 düzeltme öncesi/sonrası ayrıca çalıştırıldı: başarısız → geçti). Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
+F21, F30, F34, F35 (F34 ve F35 düzeltme öncesi/sonrası ayrıca çalıştırıldı: başarısız → geçti). Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
 altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da geçiyor.
 
 ## F16 notu: `loading` prop'unda görünür yazı neden hata sayılmamalı

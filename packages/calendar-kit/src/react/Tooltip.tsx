@@ -116,8 +116,13 @@ export function Tooltip(props: TooltipProps) {
   const { anchor, placement, offset, clipElement, boundary } = props;
   const elRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [pos, setPos] = useState<(TooltipPosition & { maxWidth: number }) | null>(null);
+  const [pos, setPos] = useState<(TooltipPosition & { tx: number; ty: number; maxWidth: number }) | null>(null);
   const [theme, setTheme] = useState<Record<string, string>>({});
+  // Translation currently applied to the element. Comparing it with the
+  // element's on-screen rect gives the origin of its containing block: not
+  // the viewport when the portal container (or an ancestor) has a transform,
+  // filter or contain, where position: fixed becomes relative to that box.
+  const appliedRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => setMounted(true), []);
 
@@ -159,10 +164,14 @@ export function Tooltip(props: TooltipProps) {
         offset,
         clip ? intersect(viewport, clip) : viewport,
       );
+      const own = el.getBoundingClientRect();
+      const origin = { x: own.left - appliedRef.current.x, y: own.top - appliedRef.current.y };
+      const tx = Math.round(next.x - origin.x);
+      const ty = Math.round(next.y - origin.y);
       setPos((p) =>
-        p && p.x === next.x && p.y === next.y && p.placement === next.placement && p.hidden === next.hidden && p.arrow === next.arrow && p.maxWidth === maxWidth
+        p && p.tx === tx && p.ty === ty && p.placement === next.placement && p.hidden === next.hidden && p.arrow === next.arrow && p.maxWidth === maxWidth
           ? p
-          : { ...next, maxWidth },
+          : { ...next, tx, ty, maxWidth },
       );
     };
     const schedule = () => {
@@ -184,7 +193,8 @@ export function Tooltip(props: TooltipProps) {
 
   if (!mounted || !anchor) return null;
   const container = props.container ?? document.body;
-  const p = pos ?? { x: 0, y: 0, placement, arrow: 0, hidden: true, maxWidth: undefined };
+  const p = pos ?? { tx: 0, ty: 0, placement, arrow: 0, hidden: true, maxWidth: undefined };
+  appliedRef.current = { x: p.tx, y: p.ty };
   return createPortal(
     <div
       ref={mergeRefs(elRef, props.tooltipRef)}
@@ -197,8 +207,11 @@ export function Tooltip(props: TooltipProps) {
         position: 'fixed',
         top: 0,
         left: 0,
+        // Width must not depend on the portal container's width (fixed elements
+        // inside a transformed box size against that box).
+        width: 'max-content',
         maxWidth: p.maxWidth ? `min(var(--cal-tooltip-max-width, 280px), ${p.maxWidth}px)` : undefined,
-        transform: `translate3d(${Math.round(p.x)}px, ${Math.round(p.y)}px, 0)`,
+        transform: `translate3d(${p.tx}px, ${p.ty}px, 0)`,
         visibility: p.hidden || !pos ? 'hidden' : 'visible',
         pointerEvents: 'none',
         ['--cal-tooltip-arrow' as string]: `${Math.round(p.arrow)}px`,

@@ -457,6 +457,5 @@ Belgelenmiş sözleşmeler (doğrulama sırasında netleştirildi, `docs/verific
 Bilinen sınırlar:
 - Continuous modda DOM sınırı ay bazlı kırpma ile sağlanır; ölçüme dayalı sanal kaydırma (virtualization) yok — ölçümler buna gerek göstermedi.
 - `requireReachableEnd` aramaları `maxLength` yoksa başlangıçtan en fazla ~62 gün ileri bakar.
-- Tooltip `container`'ı CSS `transform` içeren bir elementse `position: fixed` o elemente göre konumlanır; varsayılan `document.body` önerilir.
 - Ay sayısı JS'te `minDaySize` ve sabit 8px ay padding'i ile hesaplanır; `unstyled` kullanımda kendi CSS'inizin bu ölçülerle uyumlu olması gerekir.
 - Hover önizlemesi aylar arası her render'da tüm gün durumlarını yeniden hesaplar (12 ayda 5.9 ms); ay düzeyinde memo gerekirse ileride eklenebilir.
