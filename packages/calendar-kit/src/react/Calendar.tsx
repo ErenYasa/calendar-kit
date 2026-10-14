@@ -1243,7 +1243,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
 
   // Scroll events, coalesced per frame.
   const scrollFrame = useRef(0);
+  const sharedWeekdaysRef = useRef<HTMLDivElement | null>(null);
   const onViewportScroll = () => {
+    // The shared weekday row sits outside the scroll area (so it can stick to
+    // the page); keep its columns aligned with horizontally scrolled months.
+    const vp = viewportRef.current;
+    if (vp && sharedWeekdaysRef.current) sharedWeekdaysRef.current.scrollLeft = vp.scrollLeft;
     if (!latestProps.current.onScroll && !latestProps.current.onEvent) return;
     if (scrollFrame.current) return;
     scrollFrame.current = requestAnimationFrame(() => {
@@ -1272,10 +1277,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   };
   const renderWeekdayRow = (asGridRow: boolean, month?: CalendarMonth) => (
     <div
-      ref={month ? chromeRef(month) : undefined}
+      ref={month ? chromeRef(month) : asGridRow ? undefined : sharedWeekdaysRef}
       role={asGridRow ? 'row' : 'presentation'}
       className={cx(p('weekdays'), cn?.weekdays)}
       aria-hidden={asGridRow ? undefined : true}
+      // The shared row never widens the page; it follows the months' scroll.
+      style={asGridRow ? undefined : { overflow: 'hidden' }}
     >
       {weekdays.map((w) => (
         <span key={w.weekday} role={asGridRow ? 'columnheader' : undefined} aria-label={w.long} className={cx(p('weekday'), cn?.weekday)} title={w.long}>

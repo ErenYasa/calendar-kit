@@ -127,6 +127,35 @@ await check('F30', 'day label stays inside the circle at the minimum cell size',
   return `${r.length} labels inside ${r[0].cell}px cells`;
 });
 
+await check('F34', 'shared weekday row: no overflow beyond the calendar, aligned with scrolled months', async (page) => {
+  await open(page, 'playground');
+  await page.selectOption('#playground select >> nth=0', 'vertical');
+  await page.selectOption('#playground select >> nth=1', 'continuous');
+  await page.evaluate(() => {
+    const r = document.querySelector('#playground .resizable');
+    r.style.overflow = 'visible';
+    r.style.width = '220px';
+  });
+  await page.setViewportSize({ width: 260, height: 900 });
+  await page.waitForTimeout(400);
+  // The calendar must not widen its container (the rest of the demo page may).
+  const overflow = await page.evaluate(() => {
+    const root = document.querySelector('#playground .cal-root');
+    return root.scrollWidth - root.clientWidth;
+  });
+  assert(overflow <= 0, `calendar content overflows its root by ${overflow}px`);
+  await page.evaluate(() => (document.querySelector('#playground .cal-viewport').scrollLeft = 60));
+  await page.waitForTimeout(150);
+  const a = await page.evaluate(() => {
+    const root = document.querySelector('#playground .cal-root');
+    const wk = root.querySelector(':scope > .cal-weekdays').children[0].getBoundingClientRect();
+    const day = root.querySelector('.cal-week > *').getBoundingClientRect();
+    return { weekday: wk.left, day: day.left, width: day.width };
+  });
+  assert(Math.abs(a.weekday - a.day) <= 1, `column 0 misaligned: weekday ${a.weekday} vs day ${a.day}`);
+  return 'aligned, no overflow';
+});
+
 await browser.close();
 await server.close();
 console.table(results.map((r) => ({ id: r.id, ok: r.ok ? 'PASS' : 'FAIL', title: r.title, detail: r.detail })));

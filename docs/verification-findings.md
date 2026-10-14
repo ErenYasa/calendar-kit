@@ -44,14 +44,15 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F31 | düşük | `addDays` yıl 1–9999 dışına çıkabiliyor; `eachMonth` 9999'da tekrar ay üretiyor; geçersiz `timeZone` hata fırlatıyor | kanıtlandı | sözleşme (belgelendi) |
 | F32 | düşük | Kontrolsüz modda mod değişimi eski seçimi geri getiriyor; `today` prop'u yokken görünen ay gece yarısı kayıyor | kanıtlandı | sözleşme (belgelendi) |
 | F33 | 6 | İskelet (yükleme) günlerinde klavye odak halkası gizleniyor (iskelet kuralı 0,5,1 > odak 0,4,1); F17 düzeltmesi sırasında bulundu | kanıtlandı (özgüllük) | düzeltildi |
+| F34 | 9 | Dar (<~300 px) continuous görünümde ortak hafta günü satırı takvim kökünden taşıyor (kırpmayan bir üst öğede sayfayı genişletir) ve aylar yatay kaydırılınca kolonlarla hizasını kaybediyor (S02'den) | kanıtlandı (Chrome: kökten 122 px taşma, hizalama 57 vs −3 px) | düzeltildi |
 | S01 | şüphe | `transform` içeren portal container'da tooltip kayması | şüphe | açık |
-| S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | şüphe | açık |
-| S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | şüphe | açık |
+| S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
+| S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | bu makinede yeniden üretilemedi (macOS overlay scrollbar, genişlik 0) | doğrulanamadı |
 | S04 | şüphe | `aria-selected` + `aria-pressed` ile durumun iki kez okunması; boş hücrelerin kolon indeksini kaydırması | şüphe | açık |
 
 ## Tarayıcı regresyon kontrolleri
 
 `npm run test:browser` (playwright-core + sistem Chrome, demo üzerinde) jsdom'un
 doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F17,
-F21, F30. Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
+F21, F30, F34 (F34 düzeltme öncesi/sonrası ayrıca çalıştırıldı: başarısız → geçti). Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
 altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da geçiyor.
