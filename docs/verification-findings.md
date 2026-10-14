@@ -26,7 +26,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F13 | 7 | Dokunmatik tooltip, `onOutsideClick` verilmemişse dışarı dokununca kapanmıyor | kanıtlandı | düzeltildi |
 | F14 | 7 | Dışarıdan Tab ile gelindiğinde odak tooltip'i ve önizleme gösterilmiyor | kanıtlandı | düzeltildi |
 | F15 | 8 | RTL CSS seçicileri takvimin kendi yönüne değil, atadaki `dir`'e bakıyor | kanıtlandı (`matches`) | düzeltildi |
-| F16 | 9 | `loading` prop'u görünür "Yükleniyor…" yazısı gösteriyor; günler iskelete dönmüyor | kanıtlandı | açık (bkz. not) |
+| F16 | 9 | `loading` prop'u görünür "Yükleniyor…" yazısı gösteriyor; günler iskelete dönmüyor | kanıtlandı (davranış) — hata değil, karar gerekli | karar gerekli |
 | F17 | 9 | "Hareketi azalt" iskelet parıltısını durdurmuyor (CSS özgüllüğü) | kanıtlandı (özgüllük) | düzeltildi |
 | F18 | 9 | Continuous liste yeni `minDate`/`maxDate` dışındaki ayları tutuyor | kanıtlandı | düzeltildi |
 | F19 | 9 | Ebeveyn controlled değeri reddettiğinde `onActiveEndpointChange` yine gönderiliyor (gerçek geçiş değil) | kanıtlandı | düzeltildi |
@@ -48,7 +48,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | S01 | şüphe | `transform` içeren portal container'da tooltip kayması | şüphe | açık |
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | bu makinede yeniden üretilemedi (macOS overlay scrollbar, genişlik 0) | doğrulanamadı |
-| S04 | şüphe | `aria-selected` + `aria-pressed` ile durumun iki kez okunması; boş hücrelerin kolon indeksini kaydırması | şüphe | açık |
+| S04 | şüphe | `aria-selected` + `aria-pressed` ile durumun iki kez okunması; boş hücrelerin kolon indeksini kaydırması | ekran okuyucu gerektirir (VoiceOver/NVDA) | doğrulanamadı |
 
 ## Tarayıcı regresyon kontrolleri
 
@@ -56,3 +56,23 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F17,
 F21, F30, F34 (F34 düzeltme öncesi/sonrası ayrıca çalıştırıldı: başarısız → geçti). Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
 altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da geçiyor.
+
+## F16 notu: `loading` prop'unda görünür yazı neden hata sayılmamalı
+
+- Asıl gereksinim (#10): "Mutlaka renderLoading API'si sun: takvimin ilk yüklenmesi,
+  ay verisinin yüklenmesi, daha fazla ay yüklenmesi… Varsayılan skeleton/loading
+  görünümü de sağla. Layout kaymasını azalt; aria-busy ve yükleme duyurularını
+  destekle." Görünür yazıyı yasaklamıyor; varsayılan bir "loading görünümü" istiyor.
+- Sonraki geri bildirim (I): "tarihlerin load sırasında yukarda 'yükleniyor' yazısı
+  çıkıyor… bu loader'a gerek bile yok, çünkü günlerin üzerinde loader (skeleton
+  olarak) gözüküyor." Bu, **ay verisi** yüklenirken günlerin zaten iskelet olduğu
+  durumla ilgiliydi ve o durum düzeltildi.
+- `loading` prop'unda (takvim geneli ilk yükleme) günler iskelete dönmüyor; görünür
+  gösterge yalnızca bu katman. Yazıyı kaldırmak görünür hiçbir yükleme işareti
+  bırakmaz; erişilebilir açıklamayı (`role="status"`, `aria-busy`) kaldırmak da
+  #10'a aykırı olur.
+- Sonuç: mevcut davranış asıl gereksinime aykırı değil; I ile tutarlılık için iki
+  seçenek var: (a) olduğu gibi bırakıp belgelemek (özelleştirme: `renderLoading`),
+  (b) `loading` iken günleri de iskelet yapıp görünür yazıyı ekran okuyucuya özel
+  metne çevirmek. (b) varsayılan görünümü değiştirdiği için kullanıcı kararı
+  bekliyor; kod değiştirilmedi.
