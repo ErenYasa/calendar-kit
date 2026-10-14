@@ -81,3 +81,26 @@ describe('F17 / F33 skeleton day styles', () => {
     for (const s of skeleton.filter((r) => /box-shadow/.test(r.body))) expect(wins(focus, s), `${focus.selector} vs ${s.selector}`).toBe(true);
   });
 });
+
+describe('F21 tooltip theming', () => {
+  it('.cal-tooltip does not reset the theme variables it consumes', () => {
+    for (const r of find((x) => /^\.cal-tooltip$/.test(x.selector), 'tooltip rule')) expect(r.body).not.toMatch(/--cal-tooltip-bg\s*:/);
+  });
+
+  it('tooltip variables set on the calendar root reach the portalled tooltip', async () => {
+    const { render, screen } = await import('@testing-library/react');
+    const { createElement } = await import('react');
+    const { Calendar, toCalendarDate } = await import('../src');
+    render(
+      createElement(Calendar, {
+        mode: 'single',
+        today: toCalendarDate('2026-10-12'),
+        style: { ['--cal-tooltip-bg' as string]: 'rgb(1, 2, 3)', ['--cal-tooltip-color' as string]: 'rgb(4, 5, 6)' },
+        getDayTooltip: ({ day }) => (day.date === '2026-10-20' ? { content: 'tip', persistent: true } : null),
+      }),
+    );
+    const tip = screen.getByRole('tooltip');
+    expect(tip.style.getPropertyValue('--cal-tooltip-bg').trim()).toBe('rgb(1, 2, 3)');
+    expect(tip.style.getPropertyValue('--cal-tooltip-color').trim()).toBe('rgb(4, 5, 6)');
+  });
+});

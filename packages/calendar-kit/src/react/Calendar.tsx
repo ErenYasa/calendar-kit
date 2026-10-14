@@ -1581,6 +1581,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           id={tooltipId}
           anchor={tooltipAnchor}
           clipElement={viewportRef.current}
+          themeSource={rootRef.current}
           getArea={() => {
             // The anchor's month below its header/weekday row.
             const m = getMonth(openTip!.date);

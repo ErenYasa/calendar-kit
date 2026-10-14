@@ -503,15 +503,16 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
 // Tooltip ---------------------------------------------------------------------
 
 .#{$p}-tooltip {
-  --cal-tooltip-bg: #fff;
-  // Portalled outside .cal-root, so it does not inherit the root's box-sizing.
+  // Portalled outside .cal-root: theme variables are copied from the calendar
+  // root by the component; the fallbacks below apply when none are set.
+  // It also does not inherit the root's box-sizing.
   box-sizing: border-box;
   z-index: 1000;
   max-width: min(var(--cal-tooltip-max-width, 280px), calc(100vw - 16px));
   padding: 8px 12px;
   overflow-wrap: anywhere;
   border-radius: 8px;
-  background: var(--cal-tooltip-bg);
+  background: var(--cal-tooltip-bg, #fff);
   color: var(--cal-tooltip-color, #1f2328);
   box-shadow: var(--cal-tooltip-shadow, 0 4px 16px rgb(0 0 0 / 0.14));
   font-size: 0.875rem;

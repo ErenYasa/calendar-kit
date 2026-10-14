@@ -4,6 +4,7 @@ import type { TooltipBoundary, TooltipPlacement } from './types.js';
 import { mergeRefs, useIsomorphicLayoutEffect } from './utils.js';
 
 const PAD = 8;
+const THEME_VARS = ['--cal-tooltip-bg', '--cal-tooltip-color', '--cal-tooltip-shadow', '--cal-tooltip-max-width'];
 
 export interface Rect {
   left: number;
@@ -85,6 +86,8 @@ export interface TooltipProps {
   anchor: HTMLElement | null;
   /** Element that clips the anchor (the months viewport); also the `calendar` boundary. */
   clipElement?: HTMLElement | null;
+  /** Element whose theme (tooltip CSS variables, font) the portalled tooltip copies. */
+  themeSource?: HTMLElement | null;
   /** Vertical limits (viewport px) of the area the tooltip may use in `calendar` mode. */
   getArea?: () => { top?: number; bottom?: number };
   boundary: TooltipBoundary;
@@ -114,8 +117,24 @@ export function Tooltip(props: TooltipProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const [pos, setPos] = useState<(TooltipPosition & { maxWidth: number }) | null>(null);
+  const [theme, setTheme] = useState<Record<string, string>>({});
 
   useEffect(() => setMounted(true), []);
+
+  // The portal leaves the calendar's subtree, so CSS variables set on the
+  // calendar root would not reach the tooltip: copy the few it uses.
+  const themeSource = props.themeSource;
+  useIsomorphicLayoutEffect(() => {
+    if (!mounted || !themeSource) return;
+    const cs = getComputedStyle(themeSource);
+    const next: Record<string, string> = {};
+    for (const name of THEME_VARS) {
+      const v = cs.getPropertyValue(name).trim();
+      if (v) next[name] = v;
+    }
+    if (cs.fontFamily) next.fontFamily = cs.fontFamily;
+    setTheme((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+  }, [mounted, themeSource, anchor]);
 
   useIsomorphicLayoutEffect(() => {
     if (!mounted || !anchor) return;
@@ -174,6 +193,7 @@ export function Tooltip(props: TooltipProps) {
       className={props.className}
       data-placement={p.placement}
       style={{
+        ...theme,
         position: 'fixed',
         top: 0,
         left: 0,
