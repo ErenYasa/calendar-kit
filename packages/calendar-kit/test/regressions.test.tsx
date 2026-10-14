@@ -293,3 +293,19 @@ describe('F14 tabbing in from outside counts as keyboard focus', () => {
     expect(screen.getByRole('tooltip').textContent).toBe('Today');
   });
 });
+
+describe('F18 continuous list respects changed min/max dates', () => {
+  it('drops rendered months that fall outside new bounds', () => {
+    const ref = createRef<CalendarController>();
+    const props = { mode: 'single' as const, today: TODAY, navigation: 'continuous' as const, orientation: 'vertical' as const, numberOfMonths: 1, defaultVisibleMonth: '2026-11' as CalendarMonth };
+    const { rerender } = render(<Calendar ref={ref} {...props} />);
+    act(() => ref.current!.loadMore('next'));
+    act(() => ref.current!.loadMore('next'));
+    const months = () => [...document.querySelectorAll<HTMLElement>('section[data-month]')].map((s) => s.dataset.month);
+    expect(months()).toEqual(['2026-11', '2026-12', '2027-01']);
+    rerender(<Calendar ref={ref} {...props} minDate={d('2026-12-01')} />);
+    expect(months()).toEqual(['2026-12', '2027-01']);
+    rerender(<Calendar ref={ref} {...props} minDate={d('2026-12-01')} maxDate={d('2026-12-31')} />);
+    expect(months()).toEqual(['2026-12']);
+  });
+});

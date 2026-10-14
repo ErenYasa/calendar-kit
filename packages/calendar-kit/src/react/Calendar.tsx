@@ -267,8 +267,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const listKey = `${referenceMonth}|${requestedMonths}|${layout.effectiveMonthPosition}|${minMonth}|${maxMonth}`;
   const [list, setList] = useState<{ key: string; first: CalendarMonth; last: CalendarMonth } | null>(null);
   if (navigation === 'continuous' && list && list.key !== listKey) {
-    // Derived-state reset: keep the loaded list when the new reference is already rendered.
-    if (referenceMonth && referenceMonth >= list.first && referenceMonth <= list.last) setList({ ...list, key: listKey });
+    // Derived-state reset: keep the loaded list when the new reference is already
+    // rendered, trimmed to the current min/max months.
+    const first = minMonth && list.first < minMonth ? minMonth : list.first;
+    const last = maxMonth && list.last > maxMonth ? maxMonth : list.last;
+    if (referenceMonth && referenceMonth >= list.first && referenceMonth <= list.last && first <= last) setList({ key: listKey, first, last });
     else setList(null);
   }
   let renderedMonths: CalendarMonth[] = [];

@@ -28,7 +28,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F15 | 8 | RTL CSS seçicileri takvimin kendi yönüne değil, atadaki `dir`'e bakıyor | kanıtlandı (`matches`) | düzeltildi |
 | F16 | 9 | `loading` prop'u görünür "Yükleniyor…" yazısı gösteriyor; günler iskelete dönmüyor | kanıtlandı | açık (bkz. not) |
 | F17 | 9 | "Hareketi azalt" iskelet parıltısını durdurmuyor (CSS özgüllüğü) | kanıtlandı (özgüllük) | düzeltildi |
-| F18 | 9 | Continuous liste yeni `minDate`/`maxDate` dışındaki ayları tutuyor | kanıtlandı | açık |
+| F18 | 9 | Continuous liste yeni `minDate`/`maxDate` dışındaki ayları tutuyor | kanıtlandı | düzeltildi |
 | F19 | 9 | Ebeveyn controlled değeri reddettiğinde `onActiveEndpointChange` yine gönderiliyor (gerçek geçiş değil) | kanıtlandı | açık |
 | F20 | 9 | Özel `renderLoadMore` kontrolü sınırda kaybolunca odak kayboluyor | kanıtlandı | açık |
 | F21 | 9 | Tooltip tema değişkenleri portala ulaşmıyor; `.cal-tooltip` `--cal-tooltip-bg`'yi kendisi sıfırlıyor | kanıtlandı (kod) | açık |
