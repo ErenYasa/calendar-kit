@@ -17,9 +17,9 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F04 | 4 | `maxRenderedMonths`: bir güne bir kez odaklanıldıktan/tıklandıktan sonra sınır uygulanmıyor | kanıtlandı | düzeltildi |
 | F05 | 5 | Gün hücresi memo anahtarı eksik: `firstDayOfWeek`, `canStart/canEnd/canPassThrough` vb. değişince hücre eski kalıyor | kanıtlandı (belirli koşulda) | düzeltildi |
 | F06 | 6 | Bugünün tarihinde klavye odak halkası görünmüyor (CSS özgüllüğü) | kanıtlandı (özgüllük) | düzeltildi |
-| F07 | 6 | Controlled `visibleMonth` ebeveyn tarafından güncellenmezse bekleyen focus sonra odağı çalıyor; roving tabindex senkron dışı | kanıtlandı | açık |
-| F08 | 6 | `focusDate(d)` / `goToMonth(m,{focus})` hedef zaten odak tarihi ise hiçbir şey yapmıyor; bekleyen focus sonra tetiklenebiliyor | kanıtlandı | açık |
-| F09 | 6 | Continuous modda `goToMonth` aynı aya kaydırmıyor; kaydırma sonra alakasız bir render'da oluyor | kanıtlandı | açık |
+| F07 | 6 | Controlled `visibleMonth` ebeveyn tarafından güncellenmezse bekleyen focus sonra odağı çalıyor; roving tabindex senkron dışı | kanıtlandı | düzeltildi |
+| F08 | 6 | `focusDate(d)` / `goToMonth(m,{focus})` hedef zaten odak tarihi ise hiçbir şey yapmıyor; bekleyen focus sonra tetiklenebiliyor | kanıtlandı | düzeltildi |
+| F09 | 6 | Continuous modda `goToMonth` aynı aya kaydırmıyor; kaydırma sonra alakasız bir render'da oluyor | kanıtlandı | düzeltildi |
 | F10 | 7 | `boundary="calendar"` tooltip sayfalı modda ay başlığını/hafta günü satırını örtüyor | kanıtlandı (demo ölçümü) | açık |
 | F11 | 7 | Hiçbir tarafa sığmayan tooltip ana eksende sınır dışına çıkıyor (metin kesilebilir) | kanıtlandı | açık |
 | F12 | 7 | Escape, odak/persistent tooltip'i kapatmıyor | kanıtlandı | açık |

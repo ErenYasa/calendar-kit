@@ -3,12 +3,13 @@
  * finding id; every test failed before its fix.
  */
 import { act, fireEvent, render } from '@testing-library/react';
-import { createRef } from 'react';
-import { describe, expect, it } from 'vitest';
+import { createRef, useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import {
   Calendar,
   type CalendarController,
   type CalendarDate,
+  type CalendarMonth,
   type DayRenderContext,
   type Selection,
   type SelectionRules,
@@ -126,5 +127,68 @@ describe('F05 day cells re-render when any rendered day state changes', () => {
     const rules: SelectionRules = { getDayAvailability: (x) => (x === '2026-10-20' ? { canStart: false } : undefined) };
     rerender(<Calendar mode="range" today={TODAY} value={value} renderDayContent={content} rules={rules} />);
     expect(document.querySelector('button[data-date="2026-10-20"]')!.textContent).toBe('20:-');
+  });
+});
+
+describe('F07 pending keyboard focus never steals focus later', () => {
+  function Controlled({ month }: { month: CalendarMonth }) {
+    return (
+      <>
+        <input aria-label="outside" />
+        <Calendar mode="single" today={TODAY} visibleMonth={month} onVisibleMonthChange={() => {}} />
+      </>
+    );
+  }
+  const btn = (date: string) => document.querySelector<HTMLElement>(`button[data-date="${date}"]`);
+
+  it('keeps focus and the roving tabindex on the current day when the parent ignores navigation', () => {
+    const { rerender } = render(<Controlled month={'2026-10' as CalendarMonth} />);
+    act(() => btn('2026-10-31')!.focus());
+    fireEvent.keyDown(btn('2026-10-31')!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(btn('2026-10-31'));
+    expect(document.querySelector('button[data-date][tabindex="0"]')).toBe(btn('2026-10-31'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    rerender(<Controlled month={'2026-11' as CalendarMonth} />);
+    expect(document.activeElement).toBe(document.querySelector('input'));
+  });
+});
+
+describe('F08 focusDate / goToMonth focus work when the target is already the focused date', () => {
+  it('moves DOM focus back to the same date', () => {
+    const ref = createRef<CalendarController>();
+    render(
+      <>
+        <input aria-label="outside" />
+        <Calendar ref={ref} mode="single" today={TODAY} />
+      </>,
+    );
+    act(() => ref.current!.focusDate(d('2026-10-15')));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-15"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => ref.current!.focusDate(d('2026-10-15')));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-15"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => void ref.current!.goToMonth('2026-10', { focus: true }));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-01"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => void ref.current!.goToMonth('2026-10', { focus: true }));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-01"]'));
+  });
+});
+
+describe('F09 continuous goToMonth scrolls every time, never later', () => {
+  it('scrolls again when jumping to the same month and not on later renders', () => {
+    const ref = createRef<CalendarController>();
+    const spy = vi.spyOn(HTMLElement.prototype, 'scrollIntoView');
+    render(<Calendar ref={ref} mode="single" today={TODAY} navigation="continuous" orientation="vertical" numberOfMonths={1} />);
+    act(() => ref.current!.loadMore('next'));
+    spy.mockClear();
+    act(() => void ref.current!.goToMonth('2026-11'));
+    expect(spy).toHaveBeenCalledTimes(1);
+    act(() => void ref.current!.goToMonth('2026-11'));
+    expect(spy).toHaveBeenCalledTimes(2);
+    fireEvent.pointerEnter(document.querySelector<HTMLElement>('button[data-date="2026-11-05"]')!, { pointerType: 'mouse' });
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
   });
 });

@@ -304,7 +304,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const rootRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const tooltipElRef = useRef<HTMLDivElement | null>(null);
-  const pendingFocusRef = useRef<CalendarDate | null>(null);
+  // A focus request for a day that is not rendered yet. `active` is the element
+  // focused when it was made: if focus has moved elsewhere by the time the day
+  // renders, the request is dropped instead of stealing focus.
+  const pendingFocusRef = useRef<{ date: CalendarDate; active: Element | null; source: EventSource } | null>(null);
+  const focusSourceRef = useRef<EventSource | null>(null);
   const pendingScrollRef = useRef<{ month: CalendarMonth; behavior: ScrollBehavior } | null>(null);
   const preserveRef = useRef<{ month: CalendarMonth; top: number } | null>(null);
   const lastLoadRef = useRef<{ direction: LoadDirection; months: CalendarMonth[] } | null>(null);
@@ -581,6 +585,46 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     }
   }
 
+  function focusDayElement(el: HTMLElement, source: EventSource) {
+    focusSourceRef.current = source;
+    el.focus({ preventScroll: true });
+    focusSourceRef.current = null;
+    const vp = viewportRef.current;
+    if (vp) {
+      const er = el.getBoundingClientRect();
+      const vr = vp.getBoundingClientRect();
+      const pad = 4;
+      if (vp.scrollWidth > vp.clientWidth) {
+        if (er.left < vr.left + pad) vp.scrollLeft += er.left - vr.left - pad;
+        else if (er.right > vr.left + vp.clientWidth - pad) vp.scrollLeft += er.right - (vr.left + vp.clientWidth) + pad;
+      }
+      if (vp.scrollHeight > vp.clientHeight) {
+        if (er.top < vr.top + pad) vp.scrollTop += er.top - vr.top - pad;
+        else if (er.bottom > vr.top + vp.clientHeight - pad) vp.scrollTop += er.bottom - (vr.top + vp.clientHeight) + pad;
+      }
+    }
+    const r = el.getBoundingClientRect();
+    if (typeof window !== 'undefined' && (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth))
+      el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
+
+  /** Focuses a rendered day now, or remembers the request until it renders. */
+  function requestFocus(date: CalendarDate, source: EventSource) {
+    const el = dayRefs.current.get(date);
+    if (el) {
+      pendingFocusRef.current = null;
+      focusDayElement(el, source);
+    } else pendingFocusRef.current = { date, active: typeof document !== 'undefined' ? document.activeElement : null, source };
+  }
+
+  function scrollToMonthElement(el: HTMLElement, behavior: ScrollBehavior) {
+    const vp = viewportRef.current;
+    if (vp && vp.scrollHeight > vp.clientHeight) {
+      const delta = el.getBoundingClientRect().top - vp.getBoundingClientRect().top;
+      vp.scrollTo?.({ top: vp.scrollTop + delta, behavior });
+    } else el.scrollIntoView?.({ block: 'start', behavior });
+  }
+
   function navigateTo(month: CalendarMonth, source: EventSource, reason: 'previous' | 'next' | 'jump' | 'keyboard', options?: GoToMonthOptions): GoToMonthResult {
     let target = month;
     if (minMonth && target < minMonth) target = minMonth;
@@ -588,7 +632,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const clamped = target !== month;
     if (navigation === 'continuous') {
       const behavior: ScrollBehavior = options?.behavior === 'smooth' && !prefersReducedMotion() ? 'smooth' : 'auto';
-      pendingScrollRef.current = { month: target, behavior };
+      // Already rendered: scroll now (a same-month jump causes no render at all).
+      const el = renderedMonths.includes(target) ? monthRefs.current.get(target) : undefined;
+      if (el) {
+        pendingScrollRef.current = null;
+        scrollToMonthElement(el, behavior);
+      } else pendingScrollRef.current = { month: target, behavior };
     }
     if (!anchorProp) setAnchorState(target);
     if (target !== referenceMonth || clamped)
@@ -651,19 +700,16 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     // The default control disappears at the min/max boundary; keep focus in the grid.
     const exhausted = dir === 'next' ? !!maxMonth && last >= maxMonth : !!minMonth && first <= minMonth;
     if (exhausted && control && control === document.activeElement && added[0]) {
-      const target = clampDate(firstDayOfMonth(added[0]), rules.minDate, rules.maxDate);
-      setFocusedDate(target);
-      pendingFocusRef.current = target;
+      requestFocus(clampDate(firstDayOfMonth(added[0]), rules.minDate, rules.maxDate), 'load-more');
     }
     emit({ type: 'loadMore', instanceId, direction: dir, months: added, source: 'load-more', trigger });
   }
 
   function moveFocus(date: CalendarDate, source: EventSource) {
     const target = clampDate(date, rules.minDate, rules.maxDate);
-    const prev = focusedDate;
-    setFocusedDate(target);
-    pendingFocusRef.current = target;
-    if (prev !== target) emit({ type: 'dayFocusChange', instanceId, previous: prev, date: target, source });
+    // Focus state (and dayFocusChange) follows real DOM focus via the day's
+    // onFocus; an unrendered target only becomes focused once it renders.
+    requestFocus(target, source);
     const tm = getMonth(target);
     if (renderedMonths.includes(tm) || !firstRendered || !lastRendered) return;
     if (navigation === 'paged') {
@@ -761,12 +807,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const month = parseMonth(input);
     if (!month) return null;
     const result = navigateTo(month, 'programmatic', 'jump', options);
-    if (options?.focus) {
-      const d = clampDate(firstDayOfMonth(result.month), rules.minDate, rules.maxDate);
-      if (focusedDate !== d) emit({ type: 'dayFocusChange', instanceId, previous: focusedDate, date: d, source: 'programmatic' });
-      setFocusedDate(d);
-      pendingFocusRef.current = d;
-    }
+    if (options?.focus) requestFocus(clampDate(firstDayOfMonth(result.month), rules.minDate, rules.maxDate), 'programmatic');
     return result;
   }
 
@@ -819,7 +860,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         setFocusVisible(modalityRef.current === 'keyboard');
         const cur = live.current;
         if (cur.focusedDate !== d) {
-          cur.emit({ type: 'dayFocusChange', instanceId, previous: cur.focusedDate, date: d, source: modalityRef.current === 'keyboard' ? 'keyboard' : 'pointer' });
+          cur.emit({
+            type: 'dayFocusChange',
+            instanceId,
+            previous: cur.focusedDate,
+            date: d,
+            source: focusSourceRef.current ?? (modalityRef.current === 'keyboard' ? 'keyboard' : 'pointer'),
+          });
           setFocusedDate(d);
         }
       },
@@ -928,31 +975,16 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   }, [measure, emit, instanceId, latestProps]);
 
   // ------------------------------------------------------ DOM effects
-  // Move focus after keyboard navigation / month changes.
+  // Complete a focus request once its day has rendered (unless focus moved on).
   useIsomorphicLayoutEffect(() => {
-    const d = pendingFocusRef.current;
-    if (!d) return;
-    const el = dayRefs.current.get(d);
+    const req = pendingFocusRef.current;
+    if (!req) return;
+    const el = dayRefs.current.get(req.date);
     if (!el) return;
     pendingFocusRef.current = null;
-    el.focus({ preventScroll: true });
-    const vp = viewportRef.current;
-    if (vp) {
-      const er = el.getBoundingClientRect();
-      const vr = vp.getBoundingClientRect();
-      const pad = 4;
-      if (vp.scrollWidth > vp.clientWidth) {
-        if (er.left < vr.left + pad) vp.scrollLeft += er.left - vr.left - pad;
-        else if (er.right > vr.left + vp.clientWidth - pad) vp.scrollLeft += er.right - (vr.left + vp.clientWidth) + pad;
-      }
-      if (vp.scrollHeight > vp.clientHeight) {
-        if (er.top < vr.top + pad) vp.scrollTop += er.top - vr.top - pad;
-        else if (er.bottom > vr.top + vp.clientHeight - pad) vp.scrollTop += er.bottom - (vr.top + vp.clientHeight) + pad;
-      }
-    }
-    const r = el.getBoundingClientRect();
-    if (typeof window !== 'undefined' && (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth))
-      el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    const active = document.activeElement;
+    if (active && active !== req.active && active !== document.body) return;
+    focusDayElement(el, req.source);
   });
 
   // Preserve scroll position when months are added before / removed above.
@@ -969,18 +1001,14 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     else window.scrollBy(0, delta);
   }, [renderedKey]);
 
-  // Continuous mode: scroll to a programmatic target.
+  // Continuous mode: scroll to a programmatic target once it has rendered.
   useIsomorphicLayoutEffect(() => {
     const target = pendingScrollRef.current;
     if (!target) return;
     const el = monthRefs.current.get(target.month);
     if (!el) return;
     pendingScrollRef.current = null;
-    const vp = viewportRef.current;
-    if (vp && vp.scrollHeight > vp.clientHeight) {
-      const delta = el.getBoundingClientRect().top - vp.getBoundingClientRect().top;
-      vp.scrollTo?.({ top: vp.scrollTop + delta, behavior: target.behavior });
-    } else el.scrollIntoView?.({ block: 'start', behavior: target.behavior });
+    scrollToMonthElement(el, target.behavior);
   });
 
   // Auto load-more and visible-month tracking (continuous mode).
