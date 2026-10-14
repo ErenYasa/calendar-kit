@@ -58,7 +58,7 @@ calendar-kit/
 
 Katmanlar tek yönlü bağımlıdır: `date` ← `core` ← `adapters` ← `react`. Çekirdek (`createSelectionEngine`) React olmadan da kullanılabilir (ör. sunucuda aynı kurallarla doğrulama; 2.9 kB gzip).
 
-**Demo ve public API ayrımı:** paketin `exports` haritasında bir `source` koşulu vardır. Demo'nun Vite config'i bu koşulu açar; böylece `import { Calendar } from 'calendar-kit'` ve `import 'calendar-kit/styles.css'` geliştirmede kaynak dosyalara, dağıtımda `dist`'e çözülür. Demo hiçbir iç dosyaya doğrudan erişmez.
+**Demo ve public API ayrımı:** demo kodu yalnızca public adları import eder (`import { Calendar } from 'calendar-kit'`, `import 'calendar-kit/styles.css'`). Geliştirmede (HMR, paket build'i gerekmeden) bu iki public giriş noktası demonun `vite.config.ts` ve `tsconfig.json` dosyalarında workspace kaynaklarına eşlenir. Yayımlanan paketin `exports` haritası yalnızca `dist`'i gösterir; her hedefin tarball'da bulunduğu `test/package.test.ts` ile doğrulanır.
 
 **Temel kararlar (kısa gerekçe):**
 
