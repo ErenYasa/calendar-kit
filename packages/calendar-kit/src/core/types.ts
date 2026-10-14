@@ -125,7 +125,11 @@ export interface SelectionRules<TContext = unknown> {
   disableFuture?: boolean;
   /** Default `'inclusive'` (validates every day between the endpoints). */
   rangeSemantics?: RangeSemantics;
-  /** `start === end`. Default: `true` for inclusive, `false` for exclusive. */
+  /**
+   * `start === end`. Default: `true` for inclusive, `false` for exclusive.
+   * An exclusive same-day range has length 0, so it also needs
+   * `minLength` unset or 0 (e.g. `minNights: 1` forbids day-use).
+   */
   allowSameDay?: boolean;
   /**
    * Lengths are measured in the unit implied by `rangeSemantics`:
@@ -157,11 +161,14 @@ export interface SelectionRules<TContext = unknown> {
   /** What to do with days whose data is not `loaded`. Default `'block'`. */
   unknownDataPolicy?: 'block' | 'allow';
   validateSelection?: (selection: Selection, ctx: RuleContext<TContext>) => ValidationIssue | null | undefined | void;
-  /** Multiple mode: maximum number of dates. */
+  /** Multiple mode: maximum number of distinct dates (the value is treated as a set). */
   maxSelections?: number;
   /**
    * Range mode: reject a start when no valid end can follow it
    * (e.g. the next night is booked under a 2-night minimum).
+   * The search checks at most 63 end candidates, starting at the minimum
+   * length (up to `maxLength` when that is smaller); a start whose only
+   * valid ends lie further away is rejected.
    */
   requireReachableEnd?: boolean;
 }
