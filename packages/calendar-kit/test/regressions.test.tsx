@@ -350,3 +350,28 @@ describe('F19 onActiveEndpointChange reports real transitions only (uncontrolled
     ]);
   });
 });
+
+describe('F20 focus survives a custom load-more control disappearing at the boundary', () => {
+  it('moves focus to the first newly added day', () => {
+    render(
+      <Calendar
+        mode="single"
+        today={TODAY}
+        navigation="continuous"
+        orientation="vertical"
+        numberOfMonths={1}
+        maxDate={d('2026-11-20')}
+        renderLoadMore={({ loadMore }) => (
+          <button type="button" onClick={loadMore}>
+            custom more
+          </button>
+        )}
+      />,
+    );
+    const btn = screen.getByText('custom more');
+    act(() => btn.focus());
+    fireEvent.click(btn);
+    expect(screen.queryByText('custom more')).toBeNull();
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-01"]'));
+  });
+});

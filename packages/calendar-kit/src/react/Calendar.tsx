@@ -316,6 +316,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const pendingFocusRef = useRef<{ date: CalendarDate; active: Element | null; source: EventSource } | null>(null);
   const focusSourceRef = useRef<EventSource | null>(null);
   const endpointSourceRef = useRef<EventSource | null>(null);
+  const loadMoreAreaRefs = useRef<Partial<Record<LoadDirection, HTMLElement | null>>>({});
   const pendingScrollRef = useRef<{ month: CalendarMonth; behavior: ScrollBehavior } | null>(null);
   const preserveRef = useRef<{ month: CalendarMonth; top: number } | null>(null);
   const lastLoadRef = useRef<{ direction: LoadDirection; months: CalendarMonth[] } | null>(null);
@@ -711,7 +712,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setList({ key: listKey, first, last });
     // The default control disappears at the min/max boundary; keep focus in the grid.
     const exhausted = dir === 'next' ? !!maxMonth && last >= maxMonth : !!minMonth && first <= minMonth;
-    if (exhausted && control && control === document.activeElement && added[0]) {
+    // The control (default or custom renderLoadMore) is removed at the boundary;
+    // if focus was inside it, keep focus in the grid.
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    const focusInControl = !!active && (active === control || !!loadMoreAreaRefs.current[dir]?.contains(active));
+    if (exhausted && focusInControl && added[0]) {
       requestFocus(clampDate(firstDayOfMonth(added[0]), rules.minDate, rules.maxDate), 'load-more');
     }
     emit({ type: 'loadMore', instanceId, direction: dir, months: added, source: 'load-more', trigger });
@@ -1445,7 +1450,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
             )
         : null;
     return (
-      <div className={p('load-more-area')} data-direction={dir}>
+      <div
+        ref={(el) => {
+          loadMoreAreaRefs.current[dir] = el;
+        }}
+        className={p('load-more-area')}
+        data-direction={dir}
+      >
         {dir === 'previous' && sentinel}
         {dir === 'next' && loadingNode}
         {ctl}
