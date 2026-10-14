@@ -2,10 +2,12 @@
  * Regression tests for docs/verification-findings.md. Each block names the
  * finding id; every test failed before its fix.
  */
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
+import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 import {
   Calendar,
+  type CalendarController,
   type CalendarDate,
   type Selection,
   type SelectionRules,
@@ -62,5 +64,43 @@ describe('F03 relaxing combined rules keeps real partial restrictions only', () 
     expect(day.getAttribute('aria-disabled')).toBeNull();
     fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-16"]')!, { detail: 1 });
     expect(document.querySelector<HTMLElement>(`button[data-date="${X}"]`)!.getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('F04 maxRenderedMonths keeps bounding the DOM after interaction', () => {
+  const months = () => [...document.querySelectorAll<HTMLElement>('section[data-month]')].map((s) => s.dataset.month);
+  const setup = () => {
+    const ref = createRef<CalendarController>();
+    render(
+      <>
+        <input aria-label="outside" />
+        <Calendar ref={ref} mode="single" today={TODAY} navigation="continuous" orientation="vertical" numberOfMonths={1} monthsPerLoad={1} maxRenderedMonths={3} />
+      </>,
+    );
+    return ref;
+  };
+
+  it('applies the bound once focus has left the calendar', () => {
+    const ref = setup();
+    const day = document.querySelector<HTMLElement>('button[data-date="2026-10-15"]')!;
+    act(() => day.focus());
+    fireEvent.click(day, { detail: 1 });
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    for (let i = 0; i < 6; i++) act(() => ref.current!.loadMore('next'));
+    expect(months()).toEqual(['2027-02', '2027-03', '2027-04']);
+  });
+
+  it('never drops the month holding DOM focus, but still trims up to it', () => {
+    const ref = setup();
+    act(() => ref.current!.loadMore('next'));
+    act(() => ref.current!.loadMore('next')); // Oct..Dec
+    const day = document.querySelector<HTMLElement>('button[data-date="2026-11-10"]')!;
+    act(() => day.focus());
+    for (let i = 0; i < 3; i++) act(() => ref.current!.loadMore('next'));
+    expect(months()[0]).toBe('2026-11'); // October trimmed, November kept
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-10"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => ref.current!.loadMore('next'));
+    expect(months()).toHaveLength(3);
   });
 });

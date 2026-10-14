@@ -624,17 +624,18 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       if (minMonth && first < minMonth) first = minMonth;
     }
     const added = dir === 'next' ? eachMonth(addMonthsToMonth(lastRendered, 1), diffMonths(lastRendered, last)) : eachMonth(first, diffMonths(first, firstRendered));
-    // Bound the DOM: drop months from the opposite end, never the focused one.
+    // Bound the DOM: drop months from the opposite end. A month holding DOM
+    // focus is never dropped (trimming stops at it until focus leaves).
     const total = diffMonths(first, last) + 1;
     if (total > maxRenderedMonths) {
       const excess = total - maxRenderedMonths;
-      const focusMonth = focusedDate ? getMonth(focusedDate) : null;
+      const focusMonth = hasFocus && focusedDate ? getMonth(focusedDate) : null;
       if (dir === 'next') {
         const nf = addMonthsToMonth(first, excess);
-        if (!focusMonth || focusMonth >= nf) first = nf;
+        first = focusMonth && focusMonth < nf ? (focusMonth > first ? focusMonth : first) : nf;
       } else {
         const nl = addMonthsToMonth(last, -excess);
-        if (!focusMonth || focusMonth <= nl) last = nl;
+        last = focusMonth && focusMonth > nl ? (focusMonth < last ? focusMonth : last) : nl;
       }
     }
     // Remember a month that stays rendered so its position can be preserved.
