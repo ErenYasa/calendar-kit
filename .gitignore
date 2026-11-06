@@ -28,3 +28,4 @@ npm-debug.log*
 
 # Test scratch output
 .tmp-node16/
+.tmp-package-types/
