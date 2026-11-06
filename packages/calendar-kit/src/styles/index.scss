@@ -370,7 +370,11 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
 
 // Skeleton: identical pills for every day (independent of digit widths).
 // :where() keeps it low-specificity so reduced motion and the focus ring win.
-.#{$p}-month:where([data-status='loading'], [data-status='unknown']) {
+.#{$p}-month:where([data-status='loading'], [data-status='unknown'], [data-skeleton]) {
+  // Calendar-wide initial load: days are placeholders, not pointer targets.
+  &:where([data-skeleton]) .#{$p}-day-button {
+    pointer-events: none;
+  }
   .#{$p}-day:where(:not([data-selected])) .#{$p}-day-content {
     visibility: hidden;
   }
@@ -403,12 +407,6 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
     top: 8px;
     inset-inline-end: calc(var(--cal-month-padding) + 44px);
   }
-  &[data-scope='initial'] {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    background: color-mix(in srgb, var(--cal-bg) 70%, transparent);
-  }
   &[data-scope='load-more'] {
     padding: 8px;
   }
@@ -437,7 +435,7 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
 
 @media (prefers-reduced-motion: reduce) {
   .#{$p}-root .#{$p}-spinner,
-  .#{$p}-root .#{$p}-month[data-status] .#{$p}-day-button::before {
+  .#{$p}-root .#{$p}-month:is([data-status], [data-skeleton]) .#{$p}-day-button::before {
     animation: none;
   }
 }

@@ -26,7 +26,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F13 | 7 | Dokunmatik tooltip, `onOutsideClick` verilmemişse dışarı dokununca kapanmıyor | kanıtlandı | düzeltildi |
 | F14 | 7 | Dışarıdan Tab ile gelindiğinde odak tooltip'i ve önizleme gösterilmiyor | kanıtlandı | düzeltildi |
 | F15 | 8 | RTL CSS seçicileri takvimin kendi yönüne değil, atadaki `dir`'e bakıyor | kanıtlandı (`matches`) | düzeltildi |
-| F16 | 9 | `loading` prop'u görünür "Yükleniyor…" yazısı gösteriyor; günler iskelete dönmüyor | kanıtlandı (davranış) — hata değil, karar gerekli | karar gerekli |
+| F16 | 9 | `loading` prop'u görünür "Yükleniyor…" yazısı gösteriyor; günler iskelete dönmüyor | kanıtlandı (davranış); kullanıcı (b)'yi seçti | düzeltildi |
 | F17 | 9 | "Hareketi azalt" iskelet parıltısını durdurmuyor (CSS özgüllüğü) | kanıtlandı (özgüllük) | düzeltildi |
 | F18 | 9 | Continuous liste yeni `minDate`/`maxDate` dışındaki ayları tutuyor | kanıtlandı | düzeltildi |
 | F19 | 9 | Ebeveyn controlled değeri reddettiğinde `onActiveEndpointChange` yine gönderiliyor (gerçek geçiş değil) | kanıtlandı | düzeltildi |
@@ -75,5 +75,10 @@ altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da 
 - Sonuç: mevcut davranış asıl gereksinime aykırı değil; I ile tutarlılık için iki
   seçenek var: (a) olduğu gibi bırakıp belgelemek (özelleştirme: `renderLoading`),
   (b) `loading` iken günleri de iskelet yapıp görünür yazıyı ekran okuyucuya özel
-  metne çevirmek. (b) varsayılan görünümü değiştirdiği için kullanıcı kararı
-  bekliyor; kod değiştirilmedi.
+  metne çevirmek.
+- Karar: (b). İlk yükleme (takvim henüz `loading` olmadan gösterilmedi) günleri
+  iskelet çizer, görünür yazı yoktur, `role="status"` metni ve `aria-busy`
+  korunur, `renderLoading({ scope: 'initial' })` çalışır, hareketi azalt tercihi
+  parıltıyı durdurur. Sonraki `loading` arka plan yenilemesidir: görünüm, seçim
+  ve odak korunur (`LoadingSnapshot.refreshing`). Testler: `regressions.test.tsx`
+  (F16), `styles.test.ts` (F16 reduced motion), tarayıcı kontrolü F16.

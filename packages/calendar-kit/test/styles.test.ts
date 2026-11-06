@@ -104,3 +104,21 @@ describe('F21 tooltip theming', () => {
     expect(tip.style.getPropertyValue('--cal-tooltip-color').trim()).toBe('rgb(4, 5, 6)');
   });
 });
+
+describe('F16 reduced motion on the initial-load skeleton', () => {
+  it('the reduced-motion rule matches initial-load skeleton days and beats the shimmer', async () => {
+    const { render } = await import('@testing-library/react');
+    const { createElement } = await import('react');
+    const { Calendar, toCalendarDate } = await import('../src');
+    const { container } = render(createElement(Calendar, { mode: 'single', today: toCalendarDate('2026-10-12'), loading: true }));
+    const btn = container.querySelector<HTMLElement>('.cal-month[data-skeleton] .cal-day-button')!;
+    expect(btn, 'initial-load skeleton day').not.toBeNull();
+    const plain = (sel: string) => sel.replace(/::[\w-]+/g, '');
+    const shimmer = find((r) => !r.media && /animation:/.test(r.body) && r.selector.endsWith('::before') && btn.matches(plain(r.selector)), 'shimmer on the button');
+    const reduced = find(
+      (r) => (r.media ?? '').includes('prefers-reduced-motion') && /animation:\s*none/.test(r.body) && r.selector.endsWith('::before') && btn.matches(plain(r.selector)),
+      'reduced-motion rule matching the button',
+    );
+    for (const s of shimmer) expect(reduced.some((rm) => wins(rm, s)), s.selector).toBe(true);
+  });
+});

@@ -87,6 +87,53 @@ await check('F17', 'reduced motion stops the skeleton shimmer', async (page) => 
   return anim;
 });
 
+await check('F16', 'calendar-wide loading: initial skeleton (no visible text, reduced motion), refresh keeps the view', async (page) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await open(page, 'f-loading');
+  const box = '#f-loading';
+  await page.uncheck(`${box} .cal-footer input[type=checkbox] >> nth=0`); // month data loaded
+  // Initial load: the demo remounts the calendar with `loading` on for 1.5 s.
+  await page.click(`${box} .cal-footer button`);
+  await page.waitForTimeout(250);
+  const r = await page.evaluate((box) => {
+    const root = document.querySelector(`${box} .cal-root`);
+    const btn = root.querySelector('.cal-month[data-skeleton] .cal-day-button');
+    const status = root.querySelector('.cal-loading[role=status]');
+    const visible = (el) => el.getBoundingClientRect().width > 1 && getComputedStyle(el).clip === 'auto';
+    const pill = getComputedStyle(btn, '::before');
+    const c = btn.getBoundingClientRect();
+    return {
+      busy: root.getAttribute('aria-busy'),
+      statusText: status.textContent,
+      statusVisible: visible(status),
+      anim: pill.animationName,
+      pill: pill.backgroundImage.slice(0, 15),
+      number: getComputedStyle(btn.querySelector('.cal-day-content')).visibility,
+      hit: document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2) === btn,
+      footerHit: root.querySelector('.cal-footer button') === document.elementFromPoint(...(() => { const f = root.querySelector('.cal-footer button').getBoundingClientRect(); return [f.left + 4, f.top + 4]; })()),
+    };
+  }, box);
+  assert(r.busy === 'true' && r.statusText && !r.statusVisible, JSON.stringify(r));
+  assert(r.pill.startsWith('linear-gradient') && r.number === 'hidden', `no skeleton: ${JSON.stringify(r)}`);
+  assert(r.anim === 'none', `reduced motion ignored: ${r.anim}`);
+  assert(!r.hit && r.footerHit, `pointer: day hit ${r.hit}, footer reachable ${r.footerHit}`);
+  // After data was shown, calendar-wide loading is a background refresh.
+  await page.waitForFunction((box) => !document.querySelector(`${box} .cal-month[data-skeleton]`), box, { timeout: 4000 });
+  await page.focus(`${box} .cal-day-button[data-date]:not([aria-disabled])`);
+  const focused = await page.evaluate(() => document.activeElement?.dataset.date);
+  const months = await page.$$eval(`${box} .cal-month`, (m) => m.map((x) => x.dataset.month).join());
+  await page.evaluate((box) => document.querySelectorAll(`${box} .cal-footer input[type=checkbox]`)[2].click(), box);
+  await page.waitForTimeout(200);
+  const after = await page.evaluate((box) => ({
+    focused: document.activeElement?.dataset.date,
+    months: [...document.querySelectorAll(`${box} .cal-month`)].map((x) => x.dataset.month).join(),
+    skeleton: document.querySelectorAll(`${box} .cal-month[data-skeleton]`).length,
+    busy: document.querySelector(`${box} .cal-root`).getAttribute('aria-busy'),
+  }), box);
+  assert(after.focused === focused && after.months === months && after.skeleton === 0 && after.busy === 'true', JSON.stringify({ focused, months, ...after }));
+  return `initial: skeleton, sr-only text, animation ${r.anim}; refresh kept ${focused}`;
+});
+
 await check('F21', 'root tooltip theme reaches the portalled tooltip', async (page) => {
   await open(page, 'f-today');
   const bg = await page.evaluate(async () => {

@@ -257,7 +257,7 @@ Kendi `getDayAvailability` kodunuzda program kaynaklı kısıtlamaları `schedul
 Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unknown/loading/error` günler varsayılan olarak seçilemez (`unknownDataPolicy: 'allow'` ile değiştirilebilir).
 
 - `onRenderedMonthsChange({ months, added, removed })` ile istek başlatın (ilk mount'ta da gelir).
-- `loading` prop'u: takvim geneli ilk yükleme. `renderLoading({ scope: 'initial' | 'month' | 'load-more', months, status })`, `renderError({ months, retry })`, `onRetry(months)`.
+- `loading` prop'u: takvim hiç `loading` olmadan gösterilmediyse **ilk yükleme**dir: günler iskelet olarak çizilir, görünür yazı yoktur (`role="status"` metni yalnızca ekran okuyucu için), kök `aria-busy` alır, günler fareyle seçilemez. Veri bir kez gösterildikten sonra yeniden açılırsa **arka plan yenilemesi**dir: görünüm, seçim ve odak korunur, yalnızca `aria-busy` ve `onLoadingChange` (`current.refreshing: true`) değişir; `renderLoading` çağrılmaz. Yenilemede de iskelet isteniyorsa takvimi `key` ile yeniden kurun. `prefers-reduced-motion: reduce` iken iskelet parıltısı ve spinner durur. `renderLoading({ scope: 'initial' | 'month' | 'load-more', months, status })`, `renderError({ months, retry })`, `onRetry(months)`.
 - Varsayılan ay/ay-ekleme yükleme görünümü **yalnızca gün iskeletidir**: her gün için eşit boyutlu bir hap (rakam genişliğinden bağımsız), görünür "Yükleniyor" yazısı yok. Ekran okuyucular için gizli durum metni, kök `aria-busy` ve canlı bölge duyurusu vardır. Görünür bir gösterge isterseniz `renderLoading` verin.
 - `onLoadingChange` yalnızca durum geçişlerinde gelir.
 
@@ -274,7 +274,7 @@ Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unk
 
 - Tetikleyiciler: hover, klavye focus'u, dokunmatikte dokunma (reddedilen güne dokununca açıklama açılır), `persistent` (ör. başlangıç seçildikten sonra "Çıkış tarihini seçin").
 - Anchor doğrudan ref'tir; DOM araması yoktur. Portal + `position: fixed`; scroll/resize'da rAF ile yeniden konumlanır, viewport içine sıkıştırılır, yer yoksa ters yöne döner; gün, scroll alanının dışına çıkınca gizlenir.
-- İskelet olarak çizilen günlerde (ay verisi `loading`/`unknown` veya `loading` prop'u açık) hiçbir tooltip gösterilmez — varsayılan, `getDayTooltip` ve persistent olanlar dahil.
+- İskelet olarak çizilen günlerde (ay verisi `loading`/`unknown` veya `loading` prop'u ile ilk yükleme) hiçbir tooltip gösterilmez — varsayılan, `getDayTooltip` ve persistent olanlar dahil.
 - Tooltip `pointer-events: none` — seçimle çakışmaz. Sebep metni her zaman gün butonunun `aria-label`'ında da vardır; tooltip tek bilgi kaynağı değildir.
 
 ## 13. Slotlar ve dış kontroller

@@ -381,7 +381,10 @@ export interface CalendarLayout {
 }
 
 export interface LoadingSnapshot {
+  /** `loading` is on and the calendar has not been shown without it yet (skeleton). */
   initial: boolean;
+  /** `loading` is on after data was shown: background refresh, the view is kept. */
+  refreshing: boolean;
   loadingMonths: readonly CalendarMonth[];
   errorMonths: readonly CalendarMonth[];
   busy: boolean;
@@ -571,7 +574,13 @@ export interface CalendarBaseProps<TDayData = unknown, TContext = unknown> exten
   getDayData?: (date: CalendarDate) => TDayData | undefined;
   /** Month data status (also feeds the rules, see `unknownDataPolicy`). */
   getDataStatus?: (month: CalendarMonth) => DataStatus;
-  /** Calendar-wide initial loading flag. */
+  /**
+   * Calendar-wide loading flag. While the calendar has not yet been shown
+   * without it, it is the initial load: days are drawn as a skeleton and
+   * `renderLoading({ scope: 'initial' })` is used. Turned on again later it is
+   * a background refresh: days, selection and focus are kept, only `aria-busy`
+   * is set and `LoadingSnapshot.refreshing` reported.
+   */
   loading?: boolean;
   onRetry?: (months: readonly CalendarMonth[]) => void;
   modifiers?: Record<string, (day: DayState) => boolean>;

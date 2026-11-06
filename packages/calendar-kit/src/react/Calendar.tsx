@@ -163,6 +163,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const firstDayOfWeek = props.firstDayOfWeek ?? getDefaultFirstDayOfWeek(locale);
   const messages: CalendarMessages = useMemo(() => mergeMessages(messagesEn, props.messages), [props.messages]);
   const today = useToday(props.today, props.timeZone);
+  // `loading` before the calendar has ever rendered without it is the initial
+  // load (days drawn as a skeleton); later it is a background refresh: the
+  // view, selection and focus stay as they are, only aria-busy is set.
+  const [hasLoaded, setHasLoaded] = useState(!props.loading);
+  if (!props.loading && !hasLoaded) setHasLoaded(true);
+  const initialLoading = !!props.loading && !hasLoaded;
   const unstyled = !!props.unstyled;
   const highlightToday = props.highlightToday !== false;
   const cn = props.classNames;
@@ -436,7 +442,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         canPassThrough: avail.canPassThrough,
         outOfSchedule: avail.schedule && (avail.closed || !avail.canStart || !avail.canEnd || !avail.canPassThrough),
         dataStatus: status,
-        loading: status === 'loading' || !!props.loading,
+        loading: status === 'loading' || initialLoading,
         reason,
         reasonText: reason ? formatIssue(reason, messages, helpers) : null,
         modifiers: {},
@@ -469,7 +475,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       const ctx: DayRenderContext<TDayData> = { day: base, data };
       // Days drawn as a skeleton (loading/unknown data or calendar-wide loading)
       // show no tooltip at all — neither default nor consumer ones.
-      const skeleton = status === 'loading' || status === 'unknown' || !!props.loading;
+      const skeleton = status === 'loading' || status === 'unknown' || initialLoading;
       const raw: TooltipContent | null | undefined = skeleton
         ? null
         : tooltipFn
@@ -534,12 +540,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const loadingMonths = renderedMonths.filter((m) => monthStatus.get(m) === 'loading');
   const errorMonths = renderedMonths.filter((m) => monthStatus.get(m) === 'error');
   const loadingSnapshot: LoadingSnapshot = {
-    initial: !!props.loading,
+    initial: initialLoading,
+    refreshing: !!props.loading && !initialLoading,
     loadingMonths,
     errorMonths,
     busy: !!props.loading || loadingMonths.length > 0,
   };
-  const loadingKey = `${loadingSnapshot.initial}|${loadingMonths.join(',')}|${errorMonths.join(',')}`;
+  const loadingKey = `${loadingSnapshot.initial}|${loadingSnapshot.refreshing}|${loadingMonths.join(',')}|${errorMonths.join(',')}`;
 
   // ------------------------------------------------------------ actions
   const getSnapshot = (): CalendarSnapshot => ({
@@ -1392,6 +1399,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         }}
         data-month={month}
         data-status={status === 'loaded' ? undefined : status}
+        data-skeleton={initialLoading ? '' : undefined}
         className={cx(p('month'), cn?.month)}
         aria-labelledby={props.renderMonthHeader ? undefined : titleId}
         aria-label={props.renderMonthHeader ? title : undefined}
@@ -1564,19 +1572,19 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
             : (
                 <div className={cx(p('loading'), cn?.loading)} data-scope="initial" role="status">
                   <span className={p('spinner')} aria-hidden="true" />
-                  <span>{messages.loading}</span>
+                  <span style={srOnlyStyle}>{messages.loading}</span>
                 </div>
               )}
         </div>
         {loadMoreControl('next')}
       </div>
-      {props.loading &&
+      {/* Initial load: the days are the skeleton; the text is for assistive tech only. */}
+      {initialLoading &&
         (props.renderLoading ? (
           props.renderLoading({ scope: 'initial', months: renderedMonths, status: 'loading', messages: { loading: messages.loading } }, slotCtx)
         ) : (
-          <div className={cx(p('loading'), cn?.loading)} data-scope="initial" role="status">
-            <span className={p('spinner')} aria-hidden="true" />
-            <span>{messages.loading}</span>
+          <div className={cx(p('loading'), cn?.loading)} data-scope="initial" role="status" style={srOnlyStyle}>
+            {messages.loading}
           </div>
         ))}
       {footer != null && footer !== false && <div className={cx(p('footer'), cn?.footer)}>{footer}</div>}

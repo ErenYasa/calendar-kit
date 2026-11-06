@@ -15,6 +15,7 @@ import {
   type SelectionRules,
   closedDates,
   combineRules,
+  messagesEn,
   createSelectionEngine,
   relaxRules,
   stayRules,
@@ -411,5 +412,51 @@ describe('F28 multiple mode counts unique dates consistently', () => {
     const e = createSelectionEngine({ rules: { maxSelections: 2 }, state: { selection: sel, activeEndpoint: 'start' }, today: TODAY });
     expect(e.validate({ mode: 'multiple', value: [d('2026-11-13'), d('2026-11-13'), d('2026-11-14')] }).valid).toBe(true);
     expect(e.plan(d('2026-11-14')).kind).toBe('toggle-on');
+  });
+});
+
+describe('F16 calendar-wide loading: initial skeleton vs background refresh', () => {
+  const root = () => document.querySelector<HTMLElement>('.cal-root')!;
+
+  it('initial load draws the days as a skeleton with screen-reader-only text', () => {
+    render(<Calendar mode="single" today={TODAY} loading />);
+    expect(document.querySelectorAll('.cal-month[data-skeleton]').length).toBeGreaterThan(0);
+    expect(root().getAttribute('aria-busy')).toBe('true');
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe(messagesEn.loading);
+    expect(status.getAttribute('style')).toContain('clip'); // visually hidden
+    expect(status.querySelector('.cal-spinner')).toBeNull();
+  });
+
+  it('renderLoading still replaces the default initial indicator', () => {
+    const renderLoading = vi.fn(() => <div>custom loading</div>);
+    render(<Calendar mode="single" today={TODAY} loading renderLoading={renderLoading} />);
+    expect(screen.getByText('custom loading')).toBeTruthy();
+    expect(renderLoading).toHaveBeenCalledWith(expect.objectContaining({ scope: 'initial' }), expect.anything());
+    expect(document.querySelectorAll('.cal-month[data-skeleton]').length).toBeGreaterThan(0);
+  });
+
+  it('a later refresh keeps view, selection and focus; only aria-busy changes', () => {
+    const onLoadingChange = vi.fn();
+    const renderLoading = vi.fn(() => <div>custom loading</div>);
+    const props = { mode: 'single', today: TODAY, defaultValue: d('2026-11-03'), onLoadingChange, renderLoading } as const;
+    const { rerender } = render(<Calendar {...props} />);
+    const months = () => [...document.querySelectorAll('.cal-month')].map((m) => m.getAttribute('data-month'));
+    const before = months();
+    const btn = document.querySelector<HTMLElement>('button[data-date="2026-11-10"]')!;
+    act(() => btn.focus());
+    rerender(<Calendar {...props} loading />);
+    expect(months()).toEqual(before);
+    expect(document.activeElement).toBe(btn);
+    expect(document.querySelector('.cal-month[data-skeleton]')).toBeNull();
+    expect(document.querySelector('[data-loading]')).toBeNull();
+    expect(document.querySelector('.cal-loading')).toBeNull();
+    expect(renderLoading).not.toHaveBeenCalled();
+    expect(document.querySelector('button[data-date="2026-11-03"]')!.closest('.cal-day')!.hasAttribute('data-selected')).toBe(true);
+    expect(root().getAttribute('aria-busy')).toBe('true');
+    expect(onLoadingChange.mock.lastCall![0].current).toMatchObject({ initial: false, refreshing: true, busy: true });
+    rerender(<Calendar {...props} />);
+    expect(root().hasAttribute('aria-busy')).toBe(false);
+    expect(document.activeElement).toBe(btn);
   });
 });

@@ -468,9 +468,11 @@ describe('default UI details', () => {
     const { rerender } = render(<Calendar mode="single" today={TODAY} getDataStatus={() => 'loading'} getDayTooltip={() => ({ content: 'x', persistent: true })} />);
     fireEvent.pointerEnter(day('2026-10-12'), { pointerType: 'mouse' });
     expect(screen.queryByRole('tooltip')).toBeNull();
-    rerender(<Calendar mode="single" today={TODAY} loading />);
-    fireEvent.pointerEnter(day('2026-10-12'), { pointerType: 'mouse' });
+    // Calendar-wide initial load (a fresh calendar; a later `loading` is a refresh, see F16).
+    const second = render(<Calendar mode="single" today={TODAY} loading getDayTooltip={() => ({ content: 'x', persistent: true })} />);
+    fireEvent.pointerEnter(second.container.querySelector<HTMLElement>('button[data-date="2026-10-12"]')!, { pointerType: 'mouse' });
     expect(screen.queryByRole('tooltip')).toBeNull();
+    second.unmount();
     rerender(<Calendar mode="single" today={TODAY} getDataStatus={() => 'loaded'} />);
     fireEvent.pointerEnter(day('2026-10-12'), { pointerType: 'mouse' });
     expect(screen.getByRole('tooltip').textContent).toBe('Today');

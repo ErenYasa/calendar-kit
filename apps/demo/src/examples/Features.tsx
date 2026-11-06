@@ -208,12 +208,17 @@ export function LoadMoreExample() {
 export function SkeletonExample() {
   const [loading, setLoading] = useState(true);
   const [custom, setCustom] = useState(false);
+  // Calendar-wide `loading`: skeleton on the first load, a later one is a background refresh.
+  const [wide, setWide] = useState(false);
+  const [mountKey, setMountKey] = useState(0);
   return (
     <Calendar
+      key={mountKey}
       mode="single"
       locale="tr-TR"
       messages={messagesTr}
       numberOfMonths={2}
+      loading={wide}
       getDataStatus={(): DataStatus => (loading ? 'loading' : 'loaded')}
       renderLoading={custom ? ({ scope, months }) => (scope === 'month' ? <span className="badge-loading">{months[0]} yükleniyor</span> : null) : undefined}
       renderFooter={() => (
@@ -224,6 +229,19 @@ export function SkeletonExample() {
           <label>
             <input type="checkbox" checked={custom} onChange={(e) => setCustom(e.target.checked)} /> Ek gösterge (<code>renderLoading</code>)
           </label>
+          <label>
+            <input type="checkbox" checked={wide} onChange={(e) => setWide(e.target.checked)} /> Takvim geneli <code>loading</code> (veri gösterildikten sonra: arka plan yenilemesi)
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              setWide(true);
+              setMountKey((k) => k + 1);
+              setTimeout(() => setWide(false), 1500);
+            }}
+          >
+            İlk yüklemeyi göster
+          </button>
           <span className="note">Varsayılan: yalnızca eşit boyutlu iskelet; ekran okuyucu “yükleniyor” duyurusu alır.</span>
         </div>
       )}
