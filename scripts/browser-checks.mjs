@@ -31,6 +31,8 @@ async function check(id, title, fn) {
 const assert = (cond, msg) => {
   if (!cond) throw new Error(msg);
 };
+// Dates are taken from the first rendered month: the demo follows the real today.
+const firstMonth = (page, hash) => page.$eval(`#${hash} .cal-month`, (m) => m.dataset.month);
 const open = async (page, hash) => {
   await page.goto(`${base}#${hash}`);
   await page.waitForSelector(`#${hash} .cal-root[data-measured]`);
@@ -52,8 +54,10 @@ await check('F06', 'focus ring visible on today', async (page) => {
 
 await check('F10', 'calendar-boundary tooltip below the weekday row', async (page) => {
   await open(page, 'f-tooltip');
+  // First and last day of the first week row: right below the weekday row.
+  const row = await page.$eval('#f-tooltip .cal-week', (w) => [...w.querySelectorAll('button[data-date]')].map((x) => x.dataset.date));
   const out = [];
-  for (const date of ['2026-10-01', '2026-10-04']) {
+  for (const date of new Set([row[0], row[row.length - 1]])) {
     await page.click(`#f-tooltip button[data-date="${date}"]`);
     await page.waitForTimeout(250);
     const r = await page.evaluate(() => {
@@ -206,19 +210,20 @@ await check('F34', 'shared weekday row: no overflow beyond the calendar, aligned
 await check('F35', 'tooltip in a transformed portal container stays on its anchor', async (page) => {
   await open(page, 'f-tooltip');
   await page.check('#f-tooltip .controls input[type=checkbox]');
-  await page.click('#f-tooltip button[data-date="2026-10-14"]');
+  const date = `${await firstMonth(page, 'f-tooltip')}-14`;
+  await page.click(`#f-tooltip button[data-date="${date}"]`);
   await page.waitForTimeout(300);
-  const r = await page.evaluate(() => {
+  const r = await page.evaluate((date) => {
     const root = document.querySelector('#f-tooltip .cal-root');
     const tip = document.getElementById(`${root.id}-tooltip`);
     const t = tip.getBoundingClientRect();
     const arrow = tip.querySelector('.cal-tooltip-arrow').getBoundingClientRect();
-    const a = root.querySelector('button[data-date="2026-10-14"]').getBoundingClientRect();
+    const a = root.querySelector(`button[data-date="${date}"]`).getBoundingClientRect();
     const place = tip.dataset.placement;
     const gap = place === 'top' ? a.top - t.bottom : place === 'bottom' ? t.top - a.bottom : place === 'left' ? a.left - t.right : t.left - a.right;
     const arrowOff = place === 'top' || place === 'bottom' ? arrow.left + arrow.width / 2 - (a.left + a.width / 2) : arrow.top + arrow.height / 2 - (a.top + a.height / 2);
     return { place, inHost: !!tip.closest('.transformed-host'), gap: Math.round(gap), arrowOff: Math.round(arrowOff) };
-  });
+  }, date);
   assert(r.inHost, 'tooltip is not portalled into the transformed container');
   assert(Math.abs(r.gap - 8) <= 2 && Math.abs(r.arrowOff) <= 2, JSON.stringify(r));
   return JSON.stringify(r);
