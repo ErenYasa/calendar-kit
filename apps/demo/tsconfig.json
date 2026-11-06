@@ -1,19 +1,15 @@
-// Browser app and its tests; vite.config.ts is checked by tsconfig.node.json.
+// Browser app: the docs site and its examples. No Node types here; tests and
+// the Vite config are checked by tsconfig.node.json.
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": [
-      "vite/client"
-    ],
+    "types": ["vite/client"],
     "paths": {
-      "calendar-kit": [
-        "../../packages/calendar-kit/src/index.ts"
-      ]
+      "calendar-kit": ["../../packages/calendar-kit/src/index.ts"],
+      "calendar-kit/core": ["../../packages/calendar-kit/src/core.ts"],
+      "calendar-kit/client": ["../../packages/calendar-kit/src/client.ts"]
     }
   },
-  "include": [
-    "src",
-    "test"
-  ]
+  "include": ["src"]
 }
