@@ -25,10 +25,11 @@ jobs:
       - run: npm ci
       - name: Typecheck (package source, package tests/config, demo, demo config)
         run: npm run typecheck
-      - name: Tests (package + demo)
-        run: npm test
+      # Before the tests: test/package.test.ts checks the built dist/ against npm pack.
       - name: Build (package + demo)
         run: npm run build
+      - name: Tests (package + demo)
+        run: npm test
       - name: SSR smoke test (built package via its exports)
         run: npm run smoke:ssr -w calendar-kit
 

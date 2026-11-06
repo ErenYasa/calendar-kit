@@ -3,7 +3,7 @@
  * the packed tarball (no conditions pointing at files that are not shipped).
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, it } from 'vitest';
 
@@ -16,6 +16,8 @@ function targets(node: unknown, out: string[] = []): string[] {
 }
 
 it('all export targets are included in the npm pack file list', () => {
+  // Checks the built package: dist/ must come from `npm run build` first (npm run check does that).
+  if (!existsSync(resolve(root, 'dist/index.js'))) throw new Error('dist/ is missing: run `npm run build -w calendar-kit` before this test');
   const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
   const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: root, encoding: 'utf8' }))[0];
   const files = new Set<string>(packed.files.map((f: { path: string }) => f.path));

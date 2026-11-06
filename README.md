@@ -36,7 +36,7 @@ Demo: **http://127.0.0.1:5173**
 | `npm run build:package` | `packages/calendar-kit/dist` → ESM + `.d.ts` + `styles.css`. |
 | `npm run build` | Paket + demo production build'i. |
 | `npm run size` | Minify + gzip/brotli boyut ölçümü. |
-| `npm run check` | typecheck + test + paket build + dist üzerinden SSR duman testi. |
+| `npm run check` | typecheck + paket build + testler (paket testleri build edilmiş `dist`i de denetler) + dist üzerinden SSR duman testi. CI (`.github/workflows/ci.yml`) aynı scriptleri çalıştırır. |
 | `npm run test:browser` | Gerçek Chrome'da (playwright-core, sistem Chrome'u) görsel/cascade regresyon kontrolleri. |
 | `npm run perf` | Gerçek Chrome'da etkileşim ölçümü (render / işleme / sonraki kare, CPU yavaşlatmalı). |
 
