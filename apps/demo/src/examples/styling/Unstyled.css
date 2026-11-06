@@ -1,0 +1,42 @@
+.u-root {
+  max-width: 340px;
+  font-size: 14px;
+}
+.u-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 8px;
+}
+.u-nav {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d0d4d9;
+  border-radius: 6px;
+  background: #fff;
+}
+.u-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.u-weekday {
+  text-align: center;
+  color: #6b7280;
+  font-size: 12px;
+}
+.u-day {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.u-selected {
+  background: #111827;
+  color: #fff;
+  border-radius: 6px;
+}
+.u-disabled {
+  color: #b0b4ba;
+}

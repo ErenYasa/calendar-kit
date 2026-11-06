@@ -1,0 +1,9 @@
+/* A small mark under holidays, also visible when the day is selected. */
+.marked-day[data-mod-holiday] .marked-content {
+  text-decoration: underline 2px #d6336c;
+  text-underline-offset: 3px;
+}
+/* Range endpoints get a bolder number. */
+.marked-day:is([data-range-start], [data-range-end]) .marked-content {
+  font-weight: 700;
+}

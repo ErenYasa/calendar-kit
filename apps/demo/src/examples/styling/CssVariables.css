@@ -1,0 +1,19 @@
+/* Imported after calendar-kit/styles.css, so these values win. */
+.night {
+  --cal-bg: #16161a;
+  --cal-color: #ececf1;
+  --cal-muted: #8d8d99;
+  --cal-accent: #8ab4ff;
+  --cal-accent-contrast: #0b0b0d;
+  --cal-range: #23304a;
+  --cal-preview: #1d2433;
+  --cal-hover: #3a3a44;
+  --cal-today: #8d8d99;
+  --cal-ring: #4e6a9c;
+  --cal-focus: #ffd166;
+  --cal-tooltip-bg: #26262c;
+  --cal-tooltip-color: #ececf1;
+  --cal-radius: 8px;
+  padding: 8px;
+  border-radius: 12px;
+}
