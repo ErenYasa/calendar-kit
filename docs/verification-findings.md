@@ -9,20 +9,23 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız, 36 bulgu + 4 şüphe)
+## Sayım (çakışmasız, 37 bulgu + 4 şüphe)
 
 Her madde tam olarak bir grupta sayılır.
 
 | Grup | Sayı | Maddeler |
 |---|---|---|
-| Düzeltildi | 31 | F01–F26, F28, F30, F33, F34, F35 |
+| Düzeltildi | 34 | F01–F26, F28, F30, F32–F37 |
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 3 | F27, F29, F31 |
-| Bekleyen (karar gerekli) | 2 | F32 — (a) kısmı düzeltildi, (b) mod değişiminde sıfırlama önerisi onay bekliyor; F36 — `styles.css` için tip bildirimi önerisi |
+| Bekleyen (karar gerekli) | 0 | — |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
-Bulgu listesi dışında, hiç yapılmamış ve bekleyen ortam kontrolleri: Safari,
-Firefox, gerçek mobil cihaz (dokunma), ekran okuyucu (VoiceOver/NVDA).
+Bulgu listesi dışında, hiç yapılmamış ve **doğrulanmamış** ortam kontrolleri:
+Safari, Firefox, gerçek mobil cihaz (dokunma), ekran okuyucu (VoiceOver/NVDA).
+
+Ek (bulgu değil, kullanıcı isteği): `calendar-kit/client` (`'use client'`) ve
+`calendar-kit/core` (React'siz) giriş noktaları; `calendar-kit` değişmedi.
 
 | ID | Öncelik | Bulgu | Kanıt | Durum |
 |---|---|---|---|---|
@@ -84,26 +87,37 @@ Ayrı bir olay da eklenmedi: sıfırlamayı tetikleyen `mode` prop'u tüketicini
 elindedir; seçimin boşaldığı gerekirse `getSnapshot()` veya `validationChange`
 ile okunabilir. Testler: `regressions.test.tsx` F32(b).
 
-## Uyumluluk: npm pack çıktısı temiz tüketicilerde (2026-11-07)
+## Uyumluluk: npm pack çıktısı temiz tüketicilerde (2026-11-07, F36 ve giriş noktalarından sonra)
 
-Tarball: `calendar-kit-0.1.0.tgz` (22 dosya, yalnızca `dist`, README, LICENSE,
-package.json). Her tüketici ayrı klasörde, yalnızca tarball'dan kuruldu.
+Tarball: `calendar-kit-0.1.0.tgz` (32 dosya; yalnızca `dist`, README, LICENSE,
+package.json; `dist/styles.css.d.ts`, `dist/client.js`, `dist/core.js` dahil).
+Her tüketici ayrı klasörde, yalnızca tarball'dan kuruldu.
 
-| Tüketici | Tipler | Build | SSR / hydration (Chrome 155) | CSS | Etkileşim |
+| Tüketici | Tipler | Build | SSR / hydration (Chrome) | CSS | Etkileşim |
 |---|---|---|---|---|---|
-| Vite 8 + React 19.2.0 | `bundler`, `node16` (skipLibCheck false), `nodenext`, JSX (`vite/client`): 0 hata; `@ts-expect-error` yoklamaları tutuyor | geçti; bundle'da kaynak yolu yok | `renderToString` + `hydrateRoot` (StrictMode): 122 gün butonu, konsol hatası / kurtarılabilir hata yok | `--cal-accent` uygulanmış | aralık seçimi: 4 gece |
-| Vite 8 + React 18.3.1 (`@types/react` 18.3) | aynı: 0 hata | geçti | aynı: hata yok | uygulanmış | 4 gece |
-| Next.js 16.4.5 App Router (React 19.3.1) | `next build` TypeScript (skipLibCheck false): 0 hata | geçti | `next start` ve `next dev`: hydration hatası yok | `app/layout.tsx` import'u uygulanmış | 4 gece |
+| Düz TypeScript 7.0.2 (Vite/Next tipi yok, `types: []`) | `bundler`, `node16`, `nodenext` (skipLibCheck false): 0 hata; `styles.css` → `dist/styles.css.d.ts` (`--traceResolution`); `/core`, `/client` tipli. `types` koşulu kaldırılınca TS2882 geri geliyor | — | — | — | — |
+| Vite 8 + React 19.2.0 | `bundler`, `node16`, `nodenext`, JSX (ortam tipi olmadan da): 0 hata | geçti; bundle'da kaynak yolu yok | `renderToString` + `hydrateRoot` (StrictMode): hata yok | uygulanmış | aralık: 4 gece |
+| Vite 8 + React 18.3.1 | aynı: 0 hata | geçti | hata yok | uygulanmış | 4 gece |
+| Next.js 16.4.5 App Router (React 19.3.1) | `next build` TypeScript: 0 hata | geçti | `next start` ve `next dev`: hydration hatası yok | `app/layout.tsx` import'u uygulanmış | aşağıda |
 
-- Client Component sınırı: `'use client'` dosyasında `Calendar` çalışıyor; Server
-  Component'te yalnızca saf yardımcılar (`addDays`, `countNights`, `getToday`,
-  `toCalendarDate`) sunucuda render edildi. `Calendar` doğrudan Server
-  Component'e konunca build prerender'da `useSyncExternalStore is not a
-  function` ile duruyor (beklenen; README §18'de belgelendi).
-- Özel yollar (`calendar-kit/src/...`) `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+Next.js sayfaları (her biri `start` ve `dev` ile):
+- **Server sayfası → `calendar-kit/client`**: `Calendar` doğrudan Server
+  Component'ten (serileştirilebilir prop'larla) render edildi; SSR HTML'de 122
+  gün butonu ve `defaultValue` seçili, tıklama seçimi değiştiriyor, konsol
+  temiz. Aynı sayfada `countNights`/`addDays` (`calendar-kit/core`) sunucuda
+  hesaplandı.
+- **Yalnızca `calendar-kit/core`** kullanan dinamik server sayfası:
+  `createSelectionEngine` + `stayRules` sunucuda çalıştı (`plan` → `rejected`,
+  2 gece minimumu doğru).
+- **Kendi `'use client'` sarmalayıcısı + `calendar-kit`** (mevcut kullanım):
+  değişmeden çalışıyor.
+- `calendar-kit` girişinden `Calendar`'ı doğrudan Server Component'te render
+  etmek önceki gibi build'i durdurur (belgelendi; çözüm `calendar-kit/client`).
+- `dist/client.js` ilk satırı `"use client";`; `core.js` React import etmiyor
+  (`test/build-output.test.ts`).
 - Next'te React 18 denenmedi: App Router kendi React 19 kopyasını kullanır.
-- Yapılmayanlar (bekleyen): Safari, Firefox, gerçek mobil cihaz, ekran
-  okuyucular (VoiceOver/NVDA). Hiçbiri bu ortamda çalıştırılmadı.
+- Yapılmayanlar (bekleyen, doğrulanmadı): Safari, Firefox, gerçek mobil cihaz,
+  ekran okuyucular (VoiceOver/NVDA).
 
 ## Tarayıcı regresyon kontrolleri
 
