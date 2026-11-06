@@ -6,7 +6,7 @@ React + TypeScript için hafif, erişilebilir, responsive ve genişletilebilir t
 
 - Bağımlılık yok (React/ReactDOM peer). Moment, react-dates veya başka tarih kütüphanesi kullanılmaz.
 - Tipik kullanım **20.2 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
-- 127 paket testi + 2 demo testi, gerçek Chrome'da 9 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
+- 142 paket testi + 2 demo testi, gerçek Chrome'da 9 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
 
 ---
 
@@ -431,12 +431,12 @@ Bilinçli farklar: react-dates `focusedInput=startDate` iken bitişten önceki t
 
 | | min | gzip | brotli |
 |---|---|---|---|
-| Tümü (`export *`) | 68.6 kB | 23.5 kB | 21.0 kB |
-| Tipik: `Calendar` + `stayRules` + `messagesTr` | 58.6 kB | 20.2 kB | 18.4 kB |
+| Tümü (`export *`) | 68.7 kB | 23.6 kB | 21.0 kB |
+| Tipik: `Calendar` + `stayRules` + `messagesTr` | 58.7 kB | 20.2 kB | 18.4 kB |
 | Yalnız çekirdek (motor + adaptör + tarih) | 8.5 kB | 3.1 kB | 2.9 kB |
-| `styles.css` | 9.6 kB | 2.6 kB | 2.2 kB |
+| `styles.css` | 9.4 kB | 2.6 kB | 2.2 kB |
 
-**Etkileşim** (`npm run perf`): demonun `bench.html` sayfası (yalnızca takvim + React Profiler) `react-dom/profiling` ile production modunda build edilir, sistem Chrome'u (155) gerçek fare/klavye girdisiyle sürülür; CPU yavaşlatma CDP `Emulation.setCPUThrottlingRate` ile yapılır. Ölçüm makinesi: Apple M5 Pro, macOS 26.6. Her eylem 10 kez (hover 30 kez); değerler medyan / p95, ms.
+**Etkileşim** (`npm run perf`): demonun `bench.html` sayfası (yalnızca takvim + React Profiler) `react-dom/profiling` ile production modunda build edilir, sistem Chrome'u (156) gerçek fare/klavye girdisiyle sürülür; CPU yavaşlatma CDP `Emulation.setCPUThrottlingRate` ile yapılır. Ölçüm makinesi: Apple M5 Pro, macOS 26.6. Her eylem 10 kez (hover 30 kez); değerler medyan / p95, ms.
 
 Sütunlar birbirinin yerine kullanılamaz:
 - **render**: etkileşimin yol açtığı commit'lerin React Profiler `actualDuration` toplamı — takvim alt ağacının render süresi (yalnızca render fazı; memo ile atlanan hücreler ve DOM yazımı dahil değil).
@@ -446,16 +446,16 @@ Sütunlar birbirinin yerine kullanılamaz:
 
 | Ay / gün | CPU | Başlangıç tıklaması: render · işleme · sonraki kare | Hover: render · işleme | Bitiş tıklaması: render · işleme | Ok tuşu: render · işleme | Sonraki ay: render · işleme |
 |---|---|---|---|---|---|---|
-| 2 / 61 | 1× | 1.9 · 1.3 · 6.0 | 0.9 · 1.9 | 2.0 · 1.3 | 0.8 · 2.1 | 1.4 · 1.4 |
-| 2 / 61 | 4× | 3.8 · 2.6 · 11.3 | 1.4 · 2.8 | 4.0 · 2.3 | 1.6 · 2.7 | 3.4 · 3.7 |
-| 2 / 61 | 6× | 6.0 · 3.5 · 17.8 | 2.2 · 4.2 | 8.2 · 3.8 | 2.0 · 4.2 | 5.4 · 5.2 |
-| 12 / 365 | 1× | 6.2 · 2.7 · 12.9 | 2.3 · 3.7 | 10.1 · 3.8 | 1.9 · 3.1 | 4.0 · 4.8 |
-| 12 / 365 | 4× | 16.0 · 6.6 · 33.5 | 4.7 · 7.6 | 21.9 · 7.6 | 4.3 · 7.2 | 9.3 · 11.0 |
-| 12 / 365 | 6× | 24.8 · 10.7 · 56.7 | 6.8 · 11.4 | 30.1 · 10.5 | 6.3 · 9.8 | 13.4 · 17.0 |
+| 2 / 61 | 1× | 1.7 · 1.1 · 5.3 | 0.8 · 1.8 | 2.5 · 1.3 | 0.7 · 1.7 | 1.4 · 1.6 |
+| 2 / 61 | 4× | 3.8 · 2.4 · 11.7 | 1.6 · 3.1 | 4.8 · 2.6 | 1.3 · 2.8 | 2.9 · 3.5 |
+| 2 / 61 | 6× | 5.3 · 3.5 · 18.9 | 2.2 · 4.6 | 7.5 · 3.6 | 2.2 · 4.3 | 5.2 · 5.8 |
+| 12 / 365 | 1× | 6.1 · 2.7 · 12.6 | 2.5 · 4.1 | 9.3 · 3.8 | 1.9 · 3.0 | 4.1 · 4.6 |
+| 12 / 365 | 4× | 16.0 · 7.0 · 35.6 | 4.9 · 8.0 | 21.8 · 7.7 | 4.6 · 7.1 | 9.4 · 11.3 |
+| 12 / 365 | 6× | 24.9 · 10.7 · 57.0 | 7.4 · 12.0 | 31.7 · 11.7 | 6.4 · 10.9 | 13.9 · 17.2 |
 
-(Medyanlar; p95 değerleri betik çıktısında.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
+(Medyanlar; p95 değerleri betik çıktısında. Son ölçüm 2026-11-07, Chrome 156, F16/F32/F37 değişikliklerinden sonra; önceki ölçümle (Chrome 155) farklar ölçüm gürültüsü içinde.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
 
-Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 30 ms, p95 51 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
+Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 32 ms, p95 43 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
 
 ## 21. Dağıtım, destek, lisans
 
