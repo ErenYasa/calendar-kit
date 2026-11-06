@@ -213,6 +213,10 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const defaultSelectionRef = useRef<Selection | null>(null);
   if (!defaultSelectionRef.current) defaultSelectionRef.current = toSelection(mode, (props as { defaultValue?: unknown }).defaultValue);
   const [internal, setInternal] = useState<Selection>(() => defaultSelectionRef.current!);
+  // Uncontrolled: a mode change starts from the new mode's empty value; the
+  // previous mode's selection is dropped, never restored. No change event:
+  // the mode prop comes from the consumer (prop changes do not emit onChange).
+  if (!controlled && internal.mode !== mode) setInternal(emptySelection(mode));
   const selection: Selection = controlled ? toSelection(mode, valueProp) : internal.mode === mode ? internal : emptySelection(mode);
   const selKey = selectionKey(selection);
 

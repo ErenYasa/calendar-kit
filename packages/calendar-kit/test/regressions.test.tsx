@@ -522,3 +522,50 @@ describe('F32 a refreshed "today" does not move the visible month', () => {
     }
   });
 });
+
+describe('F32(b) uncontrolled mode change resets the selection', () => {
+  const selected = () => [...document.querySelectorAll('.cal-day[data-selected] button')].map((b) => b.getAttribute('data-date'));
+
+  it('switching modes starts empty and going back never restores the old selection; no change event', () => {
+    const onChange = vi.fn();
+    const onEvent = vi.fn();
+    const props = { today: TODAY, onChange, onEvent } as const;
+    const { rerender } = render(<Calendar {...props} mode="range" defaultValue={{ start: d('2026-10-14'), end: d('2026-10-17') }} />);
+    expect(selected()).toEqual(['2026-10-14', '2026-10-17']);
+    rerender(<Calendar {...props} mode="single" />);
+    expect(selected()).toEqual([]);
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-20"]')!, { detail: 1 });
+    expect(selected()).toEqual(['2026-10-20']);
+    onChange.mockClear();
+    onEvent.mockClear();
+    rerender(<Calendar {...props} mode="range" />);
+    expect(selected()).toEqual([]);
+    rerender(<Calendar {...props} mode="multiple" />);
+    expect(selected()).toEqual([]);
+    rerender(<Calendar {...props} mode="single" />);
+    expect(selected()).toEqual([]);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onEvent.mock.calls.map((c) => c[0].type)).not.toContain('change');
+  });
+
+  it('a range in progress does not survive a round trip either', () => {
+    const { rerender } = render(<Calendar today={TODAY} mode="range" />);
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-14"]')!, { detail: 1 });
+    rerender(<Calendar today={TODAY} mode="readonly" />);
+    rerender(<Calendar today={TODAY} mode="range" />);
+    expect(selected()).toEqual([]);
+    expect(document.querySelector('.cal-root')!.getAttribute('data-phase')).toBe('empty');
+  });
+
+  it('controlled: the consumer value is untouched and no change is emitted', () => {
+    const onChange = vi.fn();
+    const value = { start: d('2026-10-14'), end: d('2026-10-17') };
+    const { rerender } = render(<Calendar today={TODAY} mode="range" value={value} onChange={onChange} />);
+    rerender(<Calendar today={TODAY} mode="single" value={d('2026-10-20')} onChange={onChange} />);
+    expect(selected()).toEqual(['2026-10-20']);
+    rerender(<Calendar today={TODAY} mode="range" value={value} onChange={onChange} />);
+    expect(selected()).toEqual(['2026-10-14', '2026-10-17']);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+

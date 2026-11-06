@@ -462,7 +462,7 @@ Belgelenmiş sözleşmeler (doğrulama sırasında netleştirildi, `docs/verific
 - Hariç bitişli (konaklama) aynı gün aralığının uzunluğu 0'dır; `allowSameDay` ile birlikte `minNights`/`minLength` 0 veya tanımsız olmalıdır (F27).
 - Ay ekleme (load-more) referans ayı değiştirmez, bu yüzden `onVisibleMonthChange` göndermez; eklenen aylar `onLoadMore` ve `onRenderedMonthsChange` ile bildirilir (F29).
 - Tarih yardımcıları 0001–9999 yılları için tanımlıdır; bu aralığın dışına çıkan aritmetiğin sonucu tanımsızdır. `timeZone` geçerli bir IANA adı olmalıdır, aksi halde `Intl` `RangeError` fırlatır (F31).
-- Uncontrolled kullanımda seçim mod başına tutulur; `mode` değişip geri dönünce önceki seçim geri gelir (sıfırlama önerisi: `docs/verification-findings.md`, F32). `today` verilmediğinde görünen ay ilk bilinen "bugün"e göre bir kez belirlenir; gece yarısı veya sekme yeniden görünür olunca yenilenen "bugün" yalnızca bugün işaretini taşır, görünür ayı değiştirmez (F32).
+- Uncontrolled kullanımda `mode` değişince seçim yeni modun boş değerine sıfırlanır; eski moda dönülünce önceki seçim geri gelmez. Bu bir prop değişimi olduğundan `onChange`/`change` gönderilmez (sıfırlamayı tüketici zaten `mode` prop'unu değiştirerek bilir). Controlled kullanımda `value` hiç değiştirilmez (F32). `today` verilmediğinde görünen ay ilk bilinen "bugün"e göre bir kez belirlenir; gece yarısı veya sekme yeniden görünür olunca yenilenen "bugün" yalnızca bugün işaretini taşır, görünür ayı değiştirmez (F32).
 
 Bilinen sınırlar:
 - Continuous modda DOM sınırı ay bazlı kırpma ile sağlanır; ölçüme dayalı sanal kaydırma (virtualization) yok — ölçümler buna gerek göstermedi.
