@@ -237,7 +237,7 @@ export function SkeletonExample() {
             onClick={() => {
               setWide(true);
               setMountKey((k) => k + 1);
-              setTimeout(() => setWide(false), 1500);
+              setTimeout(() => setWide(false), 3000);
             }}
           >
             İlk yüklemeyi göster

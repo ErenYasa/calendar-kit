@@ -96,7 +96,7 @@ await check('F16', 'calendar-wide loading: initial skeleton (no visible text, re
   await open(page, 'f-loading');
   const box = '#f-loading';
   await page.uncheck(`${box} .cal-footer input[type=checkbox] >> nth=0`); // month data loaded
-  // Initial load: the demo remounts the calendar with `loading` on for 1.5 s.
+  // Initial load: the demo remounts the calendar with `loading` on for 3 s.
   await page.click(`${box} .cal-footer button`);
   await page.waitForTimeout(250);
   const r = await page.evaluate((box) => {
@@ -105,7 +105,6 @@ await check('F16', 'calendar-wide loading: initial skeleton (no visible text, re
     const status = root.querySelector('.cal-loading[role=status]');
     const visible = (el) => el.getBoundingClientRect().width > 1 && getComputedStyle(el).clip === 'auto';
     const pill = getComputedStyle(btn, '::before');
-    const c = btn.getBoundingClientRect();
     return {
       busy: root.getAttribute('aria-busy'),
       statusText: status.textContent,
@@ -113,14 +112,29 @@ await check('F16', 'calendar-wide loading: initial skeleton (no visible text, re
       anim: pill.animationName,
       pill: pill.backgroundImage.slice(0, 15),
       number: getComputedStyle(btn.querySelector('.cal-day-content')).visibility,
-      hit: document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2) === btn,
       footerHit: root.querySelector('.cal-footer button') === document.elementFromPoint(...(() => { const f = root.querySelector('.cal-footer button').getBoundingClientRect(); return [f.left + 4, f.top + 4]; })()),
     };
   }, box);
   assert(r.busy === 'true' && r.statusText && !r.statusVisible, JSON.stringify(r));
   assert(r.pill.startsWith('linear-gradient') && r.number === 'hidden', `no skeleton: ${JSON.stringify(r)}`);
   assert(r.anim === 'none', `reduced motion ignored: ${r.anim}`);
-  assert(!r.hit && r.footerHit, `pointer: day hit ${r.hit}, footer reachable ${r.footerHit}`);
+  assert(r.footerHit, 'footer controls are not reachable during the initial load');
+  // No selection from pointer or keyboard while no data is known.
+  const day = `${box} .cal-month[data-skeleton] .cal-day-button[data-date]`;
+  const t0 = Date.now();
+  // force: the days are aria-disabled now, which Playwright would wait out; a user can still click them.
+  await page.click(day, { force: true });
+  const tClick = Date.now() - t0;
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  const sel = await page.evaluate((box) => ({
+    selected: document.querySelectorAll(`${box} .cal-day[data-selected]`).length,
+    focusMoved: document.activeElement?.closest('.cal-month') != null,
+    stillLoading: document.querySelectorAll(`${box} .cal-month[data-skeleton]`).length > 0,
+  }), box);
+  assert(sel.stillLoading, `initial load ended before the selection attempts (check is invalid; click took ${tClick} ms)`);
+  assert(sel.selected === 0 && sel.focusMoved, `initial load selection: ${JSON.stringify(sel)}`);
   // After data was shown, calendar-wide loading is a background refresh.
   await page.waitForFunction((box) => !document.querySelector(`${box} .cal-month[data-skeleton]`), box, { timeout: 4000 });
   await page.focus(`${box} .cal-day-button[data-date]:not([aria-disabled])`);

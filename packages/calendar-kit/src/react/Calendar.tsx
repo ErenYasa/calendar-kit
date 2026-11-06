@@ -203,6 +203,15 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     return relax ? relaxRules(combined, relax === true ? {} : relax) : combined;
   }, [props.rules, minDateProp, maxDateProp, disablePast, disableFuture, getDataStatus, props.relaxSchedule]);
 
+  // Selection validation during the initial load: no day has known data yet,
+  // so every activation path (pointer, keyboard, controller) sees `loading`
+  // data and follows `unknownDataPolicy`, exactly like a loading month.
+  // The months themselves keep their real status (no per-month indicators).
+  const engineRules = useMemo<SelectionRules<TContext>>(
+    () => (initialLoading ? { ...rules, getDataStatus: () => 'loading' } : rules),
+    [rules, initialLoading],
+  );
+
   const minMonth = rules.minDate ? getMonth(rules.minDate) : null;
   const maxMonth = rules.maxDate ? getMonth(rules.maxDate) : null;
 
@@ -231,8 +240,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableSelection = useMemo(() => selection, [selKey]);
   const engine = useMemo(
-    () => createSelectionEngine<TContext>({ rules, state: { selection: stableSelection, activeEndpoint }, today, context: props.ruleContext as TContext }),
-    [rules, stableSelection, activeEndpoint, today, props.ruleContext],
+    () => createSelectionEngine<TContext>({ rules: engineRules, state: { selection: stableSelection, activeEndpoint }, today, context: props.ruleContext as TContext }),
+    [engineRules, stableSelection, activeEndpoint, today, props.ruleContext],
   );
   const validation = useMemo(() => engine.validate(stableSelection), [engine, stableSelection]);
   const phase = getSelectionPhase(selection);
@@ -574,7 +583,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const prevEndpoint = activeEndpoint;
     if (!controlled) setInternal(next.selection);
     setInternalEndpoint({ value: next.activeEndpoint, key: selectionKey(next.selection) });
-    const nextValidation = createSelectionEngine<TContext>({ rules, state: next, today, context: props.ruleContext as TContext }).validate(next.selection);
+    const nextValidation = createSelectionEngine<TContext>({ rules: engineRules, state: next, today, context: props.ruleContext as TContext }).validate(next.selection);
     const nextPhase = getSelectionPhase(next.selection);
     emit({
       type: 'change',
@@ -849,7 +858,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     if (mode === 'readonly') return { valid: false, issue: { code: 'custom', message: 'read-only' } };
     const nextSel = toSelection(mode, value);
     const nextState: SelectionState = { selection: nextSel, activeEndpoint: deriveEndpoint(nextSel, !!rules.singleDayFirst) };
-    const result = createSelectionEngine<TContext>({ rules, state: nextState, today, context: props.ruleContext as TContext }).validate(nextSel);
+    const result = createSelectionEngine<TContext>({ rules: engineRules, state: nextState, today, context: props.ruleContext as TContext }).validate(nextSel);
     if (!result.valid && result.issue) {
       const message = formatIssue(result.issue, messages, helpers);
       emit({ type: 'invalidSelection', instanceId, date: result.issue.date ?? ('' as CalendarDate), issue: result.issue, message, source: 'programmatic' });

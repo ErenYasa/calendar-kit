@@ -569,3 +569,50 @@ describe('F32(b) uncontrolled mode change resets the selection', () => {
   });
 });
 
+describe('F16 follow-up: one selection policy while the initial load has no data', () => {
+  const day = (x: string) => document.querySelector<HTMLElement>(`button[data-date="${x}"]`)!;
+
+  it('pointer, keyboard and controller cannot select; focus and navigation still work', () => {
+    const onChange = vi.fn();
+    const invalid: string[] = [];
+    const ref = createRef<CalendarController>();
+    render(<Calendar ref={ref} mode="single" today={TODAY} loading onChange={onChange} onInvalidSelection={(e) => invalid.push(e.issue.code)} />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    act(() => day('2026-10-14').focus());
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(day('2026-10-15'));
+    // Keyboard activation of a native button = click with detail 0.
+    fireEvent.click(document.activeElement!, { detail: 0 });
+    let result: ReturnType<CalendarController['select']> | undefined;
+    act(() => {
+      result = ref.current!.select(d('2026-10-16'));
+    });
+    expect(result!.valid).toBe(false);
+    expect(result!.issue?.code).toBe('data-loading');
+    expect(onChange).not.toHaveBeenCalled();
+    expect(invalid.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(invalid)).toEqual(new Set(['data-loading']));
+    act(() => {
+      ref.current!.goToMonth('2026-12');
+    });
+    expect(document.querySelector('.cal-month')!.getAttribute('data-month')).toBe('2026-12');
+  });
+
+  it('a background refresh keeps selecting against the data already shown', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<Calendar mode="single" today={TODAY} onChange={onChange} />);
+    rerender(<Calendar mode="single" today={TODAY} loading onChange={onChange} />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    act(() => day('2026-10-14').focus());
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    fireEvent.click(document.activeElement!, { detail: 0 });
+    expect(onChange.mock.calls.map((c) => c[0])).toEqual(['2026-10-14', '2026-10-15']);
+  });
+
+  it('unknownDataPolicy="allow" applies to the initial load like to a loading month', () => {
+    const onChange = vi.fn();
+    render(<Calendar mode="single" today={TODAY} loading rules={{ unknownDataPolicy: 'allow' }} onChange={onChange} />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    expect(onChange).toHaveBeenCalledWith('2026-10-14', expect.anything());
+  });
+});
