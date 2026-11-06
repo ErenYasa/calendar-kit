@@ -29,13 +29,13 @@ import {
   getWeekday,
   parseDate,
   parseMonth,
-} from '../date/calendarDate';
-import { formatDate, formatMonth, getDefaultFirstDayOfWeek, getLocaleDirection, getWeekdayNames } from '../date/locale';
-import { EMPTY_RANGE, createSelectionEngine, emptySelection, getSelectionPhase } from '../core/engine';
-import { combineRules, relaxRules } from '../core/rules';
-import type { DateRange, RangeEndpoint, Selection, SelectionRules, SelectionState, ValidationIssue, ValidationResult } from '../core/types';
-import { type CalendarMessages, type MessageFormatHelpers, formatIssue, mergeMessages, messagesEn } from '../i18n/messages';
-import { DayCell, type DayActions } from './Day';
+} from '../date/calendarDate.js';
+import { formatDate, formatMonth, getDefaultFirstDayOfWeek, getLocaleDirection, getWeekdayNames } from '../date/locale.js';
+import { EMPTY_RANGE, createSelectionEngine, emptySelection, getSelectionPhase } from '../core/engine.js';
+import { combineRules, relaxRules } from '../core/rules.js';
+import type { DateRange, RangeEndpoint, Selection, SelectionRules, SelectionState, ValidationIssue, ValidationResult } from '../core/types.js';
+import { type CalendarMessages, type MessageFormatHelpers, formatIssue, mergeMessages, messagesEn } from '../i18n/messages.js';
+import { DayCell, type DayActions } from './Day.js';
 import {
   DEFAULT_MAX_DAY_SIZE,
   DEFAULT_MIN_DAY_SIZE,
@@ -45,8 +45,8 @@ import {
   computeMonthWindow,
   layoutKey,
   sanitizeCount,
-} from './layout';
-import { Tooltip } from './Tooltip';
+} from './layout.js';
+import { Tooltip } from './Tooltip.js';
 import type {
   CalendarController,
   CalendarEvent,
@@ -65,9 +65,9 @@ import type {
   SlotContext,
   TooltipContent,
   TooltipTrigger,
-} from './types';
-import { PREFIX, cx, prefersReducedMotion, shallowEqualArray, srOnlyStyle, useIsomorphicLayoutEffect, useLatest } from './utils';
-import { useToday } from './useToday';
+} from './types.js';
+import { PREFIX, cx, prefersReducedMotion, shallowEqualArray, srOnlyStyle, useIsomorphicLayoutEffect, useLatest } from './utils.js';
+import { useToday } from './useToday.js';
 
 // ----------------------------------------------------------------- helpers
 
@@ -163,6 +163,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const firstDayOfWeek = props.firstDayOfWeek ?? getDefaultFirstDayOfWeek(locale);
   const messages: CalendarMessages = useMemo(() => mergeMessages(messagesEn, props.messages), [props.messages]);
   const today = useToday(props.today, props.timeZone);
+  // `loading` before the calendar has ever rendered without it is the initial
+  // load (days drawn as a skeleton); later it is a background refresh: the
+  // view, selection and focus stay as they are, only aria-busy is set.
+  const [hasLoaded, setHasLoaded] = useState(!props.loading);
+  if (!props.loading && !hasLoaded) setHasLoaded(true);
+  const initialLoading = !!props.loading && !hasLoaded;
   const unstyled = !!props.unstyled;
   const highlightToday = props.highlightToday !== false;
   const cn = props.classNames;
@@ -197,6 +203,15 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     return relax ? relaxRules(combined, relax === true ? {} : relax) : combined;
   }, [props.rules, minDateProp, maxDateProp, disablePast, disableFuture, getDataStatus, props.relaxSchedule]);
 
+  // Selection validation during the initial load: no day has known data yet,
+  // so every activation path (pointer, keyboard, controller) sees `loading`
+  // data and follows `unknownDataPolicy`, exactly like a loading month.
+  // The months themselves keep their real status (no per-month indicators).
+  const engineRules = useMemo<SelectionRules<TContext>>(
+    () => (initialLoading ? { ...rules, getDataStatus: () => 'loading' } : rules),
+    [rules, initialLoading],
+  );
+
   const minMonth = rules.minDate ? getMonth(rules.minDate) : null;
   const maxMonth = rules.maxDate ? getMonth(rules.maxDate) : null;
 
@@ -207,6 +222,10 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const defaultSelectionRef = useRef<Selection | null>(null);
   if (!defaultSelectionRef.current) defaultSelectionRef.current = toSelection(mode, (props as { defaultValue?: unknown }).defaultValue);
   const [internal, setInternal] = useState<Selection>(() => defaultSelectionRef.current!);
+  // Uncontrolled: a mode change starts from the new mode's empty value; the
+  // previous mode's selection is dropped, never restored. No change event:
+  // the mode prop comes from the consumer (prop changes do not emit onChange).
+  if (!controlled && internal.mode !== mode) setInternal(emptySelection(mode));
   const selection: Selection = controlled ? toSelection(mode, valueProp) : internal.mode === mode ? internal : emptySelection(mode);
   const selKey = selectionKey(selection);
 
@@ -221,8 +240,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableSelection = useMemo(() => selection, [selKey]);
   const engine = useMemo(
-    () => createSelectionEngine<TContext>({ rules, state: { selection: stableSelection, activeEndpoint }, today, context: props.ruleContext as TContext }),
-    [rules, stableSelection, activeEndpoint, today, props.ruleContext],
+    () => createSelectionEngine<TContext>({ rules: engineRules, state: { selection: stableSelection, activeEndpoint }, today, context: props.ruleContext as TContext }),
+    [engineRules, stableSelection, activeEndpoint, today, props.ruleContext],
   );
   const validation = useMemo(() => engine.validate(stableSelection), [engine, stableSelection]);
   const phase = getSelectionPhase(selection);
@@ -256,6 +275,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     () => parseMonth(props.defaultVisibleMonth) ?? selectionAnchorMonth(selection),
   );
   const anchorProp = props.visibleMonth ? parseMonth(props.visibleMonth) : null;
+  // The first known "today" fixes the default month; a later refresh of today
+  // (midnight, tab becoming visible) only moves the today marker.
+  if (!anchorProp && !anchorState && today) setAnchorState(getMonth(today));
   const referenceMonth: CalendarMonth | null = anchorProp ?? anchorState ?? (today ? getMonth(today) : null);
 
   const pagedWindow = referenceMonth
@@ -267,8 +289,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const listKey = `${referenceMonth}|${requestedMonths}|${layout.effectiveMonthPosition}|${minMonth}|${maxMonth}`;
   const [list, setList] = useState<{ key: string; first: CalendarMonth; last: CalendarMonth } | null>(null);
   if (navigation === 'continuous' && list && list.key !== listKey) {
-    // Derived-state reset: keep the loaded list when the new reference is already rendered.
-    if (referenceMonth && referenceMonth >= list.first && referenceMonth <= list.last) setList({ ...list, key: listKey });
+    // Derived-state reset: keep the loaded list when the new reference is already
+    // rendered, trimmed to the current min/max months.
+    const first = minMonth && list.first < minMonth ? minMonth : list.first;
+    const last = maxMonth && list.last > maxMonth ? maxMonth : list.last;
+    if (referenceMonth && referenceMonth >= list.first && referenceMonth <= list.last && first <= last) setList({ key: listKey, first, last });
     else setList(null);
   }
   let renderedMonths: CalendarMonth[] = [];
@@ -295,16 +320,25 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const [focusVisible, setFocusVisible] = useState(false);
   const [hovered, setHovered] = useState<CalendarDate | null>(null);
   const [touchTip, setTouchTip] = useState<CalendarDate | null>(null);
+  const [dismissedTip, setDismissedTip] = useState<CalendarDate | null>(null);
+  const monthChromeRefs = useRef(new Map<CalendarMonth, HTMLElement>());
   const [announcement, setAnnouncement] = useState('');
   const modalityRef = useRef<'keyboard' | 'pointer'>('pointer');
   const pointerTypeRef = useRef('mouse');
-  const insideEventRef = useRef(false);
+  // The last pointerdown seen inside the React tree (incl. portals); compared by identity.
+  const insideEventRef = useRef<Event | null>(null);
   const dayRefs = useRef(new Map<CalendarDate, HTMLElement>());
   const monthRefs = useRef(new Map<CalendarMonth, HTMLElement>());
   const rootRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const tooltipElRef = useRef<HTMLDivElement | null>(null);
-  const pendingFocusRef = useRef<CalendarDate | null>(null);
+  // A focus request for a day that is not rendered yet. `active` is the element
+  // focused when it was made: if focus has moved elsewhere by the time the day
+  // renders, the request is dropped instead of stealing focus.
+  const pendingFocusRef = useRef<{ date: CalendarDate; active: Element | null; source: EventSource } | null>(null);
+  const focusSourceRef = useRef<EventSource | null>(null);
+  const endpointSourceRef = useRef<EventSource | null>(null);
+  const loadMoreAreaRefs = useRef<Partial<Record<LoadDirection, HTMLElement | null>>>({});
   const pendingScrollRef = useRef<{ month: CalendarMonth; behavior: ScrollBehavior } | null>(null);
   const preserveRef = useRef<{ month: CalendarMonth; top: number } | null>(null);
   const lastLoadRef = useRef<{ direction: LoadDirection; months: CalendarMonth[] } | null>(null);
@@ -424,7 +458,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         canPassThrough: avail.canPassThrough,
         outOfSchedule: avail.schedule && (avail.closed || !avail.canStart || !avail.canEnd || !avail.canPassThrough),
         dataStatus: status,
-        loading: status === 'loading' || !!props.loading,
+        loading: status === 'loading' || initialLoading,
         reason,
         reasonText: reason ? formatIssue(reason, messages, helpers) : null,
         modifiers: {},
@@ -443,17 +477,21 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         date,
         band && date >= band.start! && date <= band.end! ? (date === band.start ? 'start' : date === band.end ? 'end' : 'mid') : null,
       );
+      // Memo key over every DayState field, so no rendered state can go stale.
       let key = '';
-      for (const f of ['today', 'past', 'disabled', 'unavailable', 'selected', 'selectedStart', 'selectedEnd', 'inRange', 'included', 'inPreviewRange', 'previewStart', 'previewEnd', 'focused', 'hovered', 'loading', 'readOnly', 'outOfSchedule'] as const)
-        key += base[f] ? '1' : '0';
-      key += `|${plan.kind}|${base.reasonText ?? ''}|${status}|${Object.keys(base.modifiers).join(',')}|${base.label}`;
+      for (const f in base) {
+        const v = base[f as keyof DayState];
+        if (f === 'reason') key += `|${reason ? `${reason.code}/${reason.dayReason ?? ''}/${reason.message ?? ''}/${JSON.stringify(reason.params ?? null)}` : ''}`;
+        else if (f === 'modifiers') key += `|${Object.keys(v as object).join(',')}`;
+        else key += `|${v as string | number | boolean | null}`;
+      }
       dayKeys.set(date, key);
       const data = props.getDayData?.(date);
       dayData.set(date, data);
       const ctx: DayRenderContext<TDayData> = { day: base, data };
       // Days drawn as a skeleton (loading/unknown data or calendar-wide loading)
       // show no tooltip at all — neither default nor consumer ones.
-      const skeleton = status === 'loading' || status === 'unknown' || !!props.loading;
+      const skeleton = status === 'loading' || status === 'unknown' || initialLoading;
       const raw: TooltipContent | null | undefined = skeleton
         ? null
         : tooltipFn
@@ -503,6 +541,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         break;
       }
   }
+  // Escape dismisses the open (uncontrolled) tooltip until the user moves on.
+  if (openTip && openTip.trigger !== 'controlled' && openTip.date === dismissedTip) openTip = null;
   const tooltipId = `${instanceId}-tooltip`;
   const [tooltipAnchor, setTooltipAnchor] = useState<HTMLElement | null>(null);
   useIsomorphicLayoutEffect(() => {
@@ -516,12 +556,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const loadingMonths = renderedMonths.filter((m) => monthStatus.get(m) === 'loading');
   const errorMonths = renderedMonths.filter((m) => monthStatus.get(m) === 'error');
   const loadingSnapshot: LoadingSnapshot = {
-    initial: !!props.loading,
+    initial: initialLoading,
+    refreshing: !!props.loading && !initialLoading,
     loadingMonths,
     errorMonths,
     busy: !!props.loading || loadingMonths.length > 0,
   };
-  const loadingKey = `${loadingSnapshot.initial}|${loadingMonths.join(',')}|${errorMonths.join(',')}`;
+  const loadingKey = `${loadingSnapshot.initial}|${loadingSnapshot.refreshing}|${loadingMonths.join(',')}|${errorMonths.join(',')}`;
 
   // ------------------------------------------------------------ actions
   const getSnapshot = (): CalendarSnapshot => ({
@@ -542,7 +583,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const prevEndpoint = activeEndpoint;
     if (!controlled) setInternal(next.selection);
     setInternalEndpoint({ value: next.activeEndpoint, key: selectionKey(next.selection) });
-    const nextValidation = createSelectionEngine<TContext>({ rules, state: next, today, context: props.ruleContext as TContext }).validate(next.selection);
+    const nextValidation = createSelectionEngine<TContext>({ rules: engineRules, state: next, today, context: props.ruleContext as TContext }).validate(next.selection);
     const nextPhase = getSelectionPhase(next.selection);
     emit({
       type: 'change',
@@ -556,7 +597,10 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       phase: nextPhase,
       validation: nextValidation,
     });
-    if (mode === 'range' && next.activeEndpoint !== prevEndpoint)
+    // Controlled endpoint: the event is a request (like onChange). Uncontrolled:
+    // the real transition is reported after commit (see effect below).
+    endpointSourceRef.current = source;
+    if (mode === 'range' && endpointProp !== undefined && next.activeEndpoint !== prevEndpoint)
       emit({ type: 'activeEndpointChange', instanceId, previous: prevEndpoint, current: next.activeEndpoint, source });
     const completes =
       (reason === 'select' || reason === 'complete' || reason === 'set') && nextPhase === 'complete'
@@ -577,6 +621,46 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     }
   }
 
+  function focusDayElement(el: HTMLElement, source: EventSource) {
+    focusSourceRef.current = source;
+    el.focus({ preventScroll: true });
+    focusSourceRef.current = null;
+    const vp = viewportRef.current;
+    if (vp) {
+      const er = el.getBoundingClientRect();
+      const vr = vp.getBoundingClientRect();
+      const pad = 4;
+      if (vp.scrollWidth > vp.clientWidth) {
+        if (er.left < vr.left + pad) vp.scrollLeft += er.left - vr.left - pad;
+        else if (er.right > vr.left + vp.clientWidth - pad) vp.scrollLeft += er.right - (vr.left + vp.clientWidth) + pad;
+      }
+      if (vp.scrollHeight > vp.clientHeight) {
+        if (er.top < vr.top + pad) vp.scrollTop += er.top - vr.top - pad;
+        else if (er.bottom > vr.top + vp.clientHeight - pad) vp.scrollTop += er.bottom - (vr.top + vp.clientHeight) + pad;
+      }
+    }
+    const r = el.getBoundingClientRect();
+    if (typeof window !== 'undefined' && (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth))
+      el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }
+
+  /** Focuses a rendered day now, or remembers the request until it renders. */
+  function requestFocus(date: CalendarDate, source: EventSource) {
+    const el = dayRefs.current.get(date);
+    if (el) {
+      pendingFocusRef.current = null;
+      focusDayElement(el, source);
+    } else pendingFocusRef.current = { date, active: typeof document !== 'undefined' ? document.activeElement : null, source };
+  }
+
+  function scrollToMonthElement(el: HTMLElement, behavior: ScrollBehavior) {
+    const vp = viewportRef.current;
+    if (vp && vp.scrollHeight > vp.clientHeight) {
+      const delta = el.getBoundingClientRect().top - vp.getBoundingClientRect().top;
+      vp.scrollTo?.({ top: vp.scrollTop + delta, behavior });
+    } else el.scrollIntoView?.({ block: 'start', behavior });
+  }
+
   function navigateTo(month: CalendarMonth, source: EventSource, reason: 'previous' | 'next' | 'jump' | 'keyboard', options?: GoToMonthOptions): GoToMonthResult {
     let target = month;
     if (minMonth && target < minMonth) target = minMonth;
@@ -584,7 +668,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const clamped = target !== month;
     if (navigation === 'continuous') {
       const behavior: ScrollBehavior = options?.behavior === 'smooth' && !prefersReducedMotion() ? 'smooth' : 'auto';
-      pendingScrollRef.current = { month: target, behavior };
+      // Already rendered: scroll now (a same-month jump causes no render at all).
+      const el = renderedMonths.includes(target) ? monthRefs.current.get(target) : undefined;
+      if (el) {
+        pendingScrollRef.current = null;
+        scrollToMonthElement(el, behavior);
+      } else pendingScrollRef.current = { month: target, behavior };
     }
     if (!anchorProp) setAnchorState(target);
     if (target !== referenceMonth || clamped)
@@ -624,17 +713,18 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       if (minMonth && first < minMonth) first = minMonth;
     }
     const added = dir === 'next' ? eachMonth(addMonthsToMonth(lastRendered, 1), diffMonths(lastRendered, last)) : eachMonth(first, diffMonths(first, firstRendered));
-    // Bound the DOM: drop months from the opposite end, never the focused one.
+    // Bound the DOM: drop months from the opposite end. A month holding DOM
+    // focus is never dropped (trimming stops at it until focus leaves).
     const total = diffMonths(first, last) + 1;
     if (total > maxRenderedMonths) {
       const excess = total - maxRenderedMonths;
-      const focusMonth = focusedDate ? getMonth(focusedDate) : null;
+      const focusMonth = hasFocus && focusedDate ? getMonth(focusedDate) : null;
       if (dir === 'next') {
         const nf = addMonthsToMonth(first, excess);
-        if (!focusMonth || focusMonth >= nf) first = nf;
+        first = focusMonth && focusMonth < nf ? (focusMonth > first ? focusMonth : first) : nf;
       } else {
         const nl = addMonthsToMonth(last, -excess);
-        if (!focusMonth || focusMonth <= nl) last = nl;
+        last = focusMonth && focusMonth > nl ? (focusMonth < last ? focusMonth : last) : nl;
       }
     }
     // Remember a month that stays rendered so its position can be preserved.
@@ -645,20 +735,21 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setList({ key: listKey, first, last });
     // The default control disappears at the min/max boundary; keep focus in the grid.
     const exhausted = dir === 'next' ? !!maxMonth && last >= maxMonth : !!minMonth && first <= minMonth;
-    if (exhausted && control && control === document.activeElement && added[0]) {
-      const target = clampDate(firstDayOfMonth(added[0]), rules.minDate, rules.maxDate);
-      setFocusedDate(target);
-      pendingFocusRef.current = target;
+    // The control (default or custom renderLoadMore) is removed at the boundary;
+    // if focus was inside it, keep focus in the grid.
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    const focusInControl = !!active && (active === control || !!loadMoreAreaRefs.current[dir]?.contains(active));
+    if (exhausted && focusInControl && added[0]) {
+      requestFocus(clampDate(firstDayOfMonth(added[0]), rules.minDate, rules.maxDate), 'load-more');
     }
     emit({ type: 'loadMore', instanceId, direction: dir, months: added, source: 'load-more', trigger });
   }
 
   function moveFocus(date: CalendarDate, source: EventSource) {
     const target = clampDate(date, rules.minDate, rules.maxDate);
-    const prev = focusedDate;
-    setFocusedDate(target);
-    pendingFocusRef.current = target;
-    if (prev !== target) emit({ type: 'dayFocusChange', instanceId, previous: prev, date: target, source });
+    // Focus state (and dayFocusChange) follows real DOM focus via the day's
+    // onFocus; an unrendered target only becomes focused once it renders.
+    requestFocus(target, source);
     const tm = getMonth(target);
     if (renderedMonths.includes(tm) || !firstRendered || !lastRendered) return;
     if (navigation === 'paged') {
@@ -730,9 +821,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         next = addMonths(date, e.shiftKey ? 12 : 1);
         break;
       case 'Escape':
-        if (touchTip || hovered) {
-          setTouchTip(null);
-          setHovered(null);
+        // Dismiss the open tooltip without moving focus (WCAG 1.4.13). The key
+        // is consumed only when there is something to dismiss.
+        if (openTip && openTip.trigger !== 'controlled') {
+          e.preventDefault();
+          e.stopPropagation();
+          setDismissedTip(openTip.date);
         }
         return;
       case 'Enter':
@@ -756,12 +850,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const month = parseMonth(input);
     if (!month) return null;
     const result = navigateTo(month, 'programmatic', 'jump', options);
-    if (options?.focus) {
-      const d = clampDate(firstDayOfMonth(result.month), rules.minDate, rules.maxDate);
-      if (focusedDate !== d) emit({ type: 'dayFocusChange', instanceId, previous: focusedDate, date: d, source: 'programmatic' });
-      setFocusedDate(d);
-      pendingFocusRef.current = d;
-    }
+    if (options?.focus) requestFocus(clampDate(firstDayOfMonth(result.month), rules.minDate, rules.maxDate), 'programmatic');
     return result;
   }
 
@@ -769,7 +858,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     if (mode === 'readonly') return { valid: false, issue: { code: 'custom', message: 'read-only' } };
     const nextSel = toSelection(mode, value);
     const nextState: SelectionState = { selection: nextSel, activeEndpoint: deriveEndpoint(nextSel, !!rules.singleDayFirst) };
-    const result = createSelectionEngine<TContext>({ rules, state: nextState, today, context: props.ruleContext as TContext }).validate(nextSel);
+    const result = createSelectionEngine<TContext>({ rules: engineRules, state: nextState, today, context: props.ruleContext as TContext }).validate(nextSel);
     if (!result.valid && result.issue) {
       const message = formatIssue(result.issue, messages, helpers);
       emit({ type: 'invalidSelection', instanceId, date: result.issue.date ?? ('' as CalendarDate), issue: result.issue, message, source: 'programmatic' });
@@ -792,6 +881,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     mode,
     step,
     singleDayFirst: !!rules.singleDayFirst,
+    openTipDate: openTip?.date ?? null,
     focusedDate,
     hasFocus,
     tooltips,
@@ -800,7 +890,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setActiveEndpoint(endpoint: RangeEndpoint) {
       if (mode !== 'range' || endpoint === activeEndpoint) return;
       setInternalEndpoint({ value: endpoint, key: selKey });
-      emit({ type: 'activeEndpointChange', instanceId, previous: activeEndpoint, current: endpoint, source: 'programmatic' });
+      endpointSourceRef.current = 'programmatic';
+      if (endpointProp !== undefined)
+        emit({ type: 'activeEndpointChange', instanceId, previous: activeEndpoint, current: endpoint, source: 'programmatic' });
     },
   });
 
@@ -814,7 +906,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         setFocusVisible(modalityRef.current === 'keyboard');
         const cur = live.current;
         if (cur.focusedDate !== d) {
-          cur.emit({ type: 'dayFocusChange', instanceId, previous: cur.focusedDate, date: d, source: modalityRef.current === 'keyboard' ? 'keyboard' : 'pointer' });
+          cur.emit({
+            type: 'dayFocusChange',
+            instanceId,
+            previous: cur.focusedDate,
+            date: d,
+            source: focusSourceRef.current ?? (modalityRef.current === 'keyboard' ? 'keyboard' : 'pointer'),
+          });
           setFocusedDate(d);
         }
       },
@@ -923,31 +1021,16 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   }, [measure, emit, instanceId, latestProps]);
 
   // ------------------------------------------------------ DOM effects
-  // Move focus after keyboard navigation / month changes.
+  // Complete a focus request once its day has rendered (unless focus moved on).
   useIsomorphicLayoutEffect(() => {
-    const d = pendingFocusRef.current;
-    if (!d) return;
-    const el = dayRefs.current.get(d);
+    const req = pendingFocusRef.current;
+    if (!req) return;
+    const el = dayRefs.current.get(req.date);
     if (!el) return;
     pendingFocusRef.current = null;
-    el.focus({ preventScroll: true });
-    const vp = viewportRef.current;
-    if (vp) {
-      const er = el.getBoundingClientRect();
-      const vr = vp.getBoundingClientRect();
-      const pad = 4;
-      if (vp.scrollWidth > vp.clientWidth) {
-        if (er.left < vr.left + pad) vp.scrollLeft += er.left - vr.left - pad;
-        else if (er.right > vr.left + vp.clientWidth - pad) vp.scrollLeft += er.right - (vr.left + vp.clientWidth) + pad;
-      }
-      if (vp.scrollHeight > vp.clientHeight) {
-        if (er.top < vr.top + pad) vp.scrollTop += er.top - vr.top - pad;
-        else if (er.bottom > vr.top + vp.clientHeight - pad) vp.scrollTop += er.bottom - (vr.top + vp.clientHeight) + pad;
-      }
-    }
-    const r = el.getBoundingClientRect();
-    if (typeof window !== 'undefined' && (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth))
-      el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    const active = document.activeElement;
+    if (active && active !== req.active && active !== document.body) return;
+    focusDayElement(el, req.source);
   });
 
   // Preserve scroll position when months are added before / removed above.
@@ -964,18 +1047,14 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     else window.scrollBy(0, delta);
   }, [renderedKey]);
 
-  // Continuous mode: scroll to a programmatic target.
+  // Continuous mode: scroll to a programmatic target once it has rendered.
   useIsomorphicLayoutEffect(() => {
     const target = pendingScrollRef.current;
     if (!target) return;
     const el = monthRefs.current.get(target.month);
     if (!el) return;
     pendingScrollRef.current = null;
-    const vp = viewportRef.current;
-    if (vp && vp.scrollHeight > vp.clientHeight) {
-      const delta = el.getBoundingClientRect().top - vp.getBoundingClientRect().top;
-      vp.scrollTo?.({ top: vp.scrollTop + delta, behavior: target.behavior });
-    } else el.scrollIntoView?.({ block: 'start', behavior: target.behavior });
+    scrollToMonthElement(el, target.behavior);
   });
 
   // Auto load-more and visible-month tracking (continuous mode).
@@ -1030,13 +1109,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   // Outside click: React's synthetic capture marks events from inside the tree
   // (including portals such as the tooltip or slot popovers) before the
   // document listener sees them.
-  const wantsOutside = !!props.onOutsideClick || !!props.onEvent;
+  const wantsOutside = !!props.onOutsideClick || !!props.onEvent || !!touchTip;
   useEffect(() => {
     if (!wantsOutside) return;
     const onDown = (e: PointerEvent) => {
-      const inside = insideEventRef.current;
-      insideEventRef.current = false;
-      if (inside) return;
+      if (insideEventRef.current === e) return;
       const t = e.target as Node | null;
       if (t && (rootRef.current?.contains(t) || tooltipElRef.current?.contains(t))) return;
       emit({ type: 'outsideClick', instanceId, nativeEvent: e });
@@ -1045,6 +1122,48 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     document.addEventListener('pointerdown', onDown);
     return () => document.removeEventListener('pointerdown', onDown);
   }, [wantsOutside, emit, instanceId]);
+
+  // Input modality for the whole document, so focus arriving via Tab from
+  // outside the calendar counts as keyboard focus.
+  useEffect(() => {
+    const onKey = () => (modalityRef.current = 'keyboard');
+    const onPointer = () => (modalityRef.current = 'pointer');
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('pointerdown', onPointer, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('pointerdown', onPointer, true);
+    };
+  }, []);
+
+  // A dismissed tooltip may reappear once the user hovers/focuses/touches again.
+  useEffect(() => setDismissedTip(null), [hovered, focusedDate, touchTip]);
+
+  // Escape while the pointer (not focus) is on the calendar.
+  const tipOpen = !!openTip && openTip.trigger !== 'controlled';
+  useEffect(() => {
+    if (!tipOpen) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') setDismissedTip(live.current.openTipDate);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [tipOpen, live]);
+
+  // Real activeEndpoint transitions (uncontrolled endpoint only).
+  const prevEndpointRef = useRef<RangeEndpoint | null>(null);
+  useEffect(() => {
+    const prev = prevEndpointRef.current;
+    prevEndpointRef.current = activeEndpoint;
+    const source = endpointSourceRef.current ?? 'prop';
+    endpointSourceRef.current = null;
+    if (prev === null || prev === activeEndpoint || mode !== 'range' || endpointProp !== undefined) return;
+    emit({ type: 'activeEndpointChange', instanceId, previous: prev, current: activeEndpoint, source });
+  }, [activeEndpoint]); // eslint-disable-line react-hooks/exhaustive-deps
+  // An action whose value the parent rejected must not label a later change.
+  useEffect(() => {
+    endpointSourceRef.current = null;
+  });
 
   // ------------------------------------------------ state-change events
   // Each effect compares against the previously reported value; React
@@ -1147,7 +1266,12 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
 
   // Scroll events, coalesced per frame.
   const scrollFrame = useRef(0);
+  const sharedWeekdaysRef = useRef<HTMLDivElement | null>(null);
   const onViewportScroll = () => {
+    // The shared weekday row sits outside the scroll area (so it can stick to
+    // the page); keep its columns aligned with horizontally scrolled months.
+    const vp = viewportRef.current;
+    if (vp && sharedWeekdaysRef.current) sharedWeekdaysRef.current.scrollLeft = vp.scrollLeft;
     if (!latestProps.current.onScroll && !latestProps.current.onEvent) return;
     if (scrollFrame.current) return;
     scrollFrame.current = requestAnimationFrame(() => {
@@ -1170,8 +1294,19 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
 
   const weekdays = useMemo(() => getWeekdayNames(locale, firstDayOfWeek, props.weekdayFormat ?? 'short'), [locale, firstDayOfWeek, props.weekdayFormat]);
   const sharedWeekdays = navigation === 'continuous' && layout.columns === 1;
-  const renderWeekdayRow = (asGridRow: boolean) => (
-    <div role={asGridRow ? 'row' : 'presentation'} className={cx(p('weekdays'), cn?.weekdays)} aria-hidden={asGridRow ? undefined : true}>
+  const chromeRef = (month: CalendarMonth) => (el: HTMLElement | null) => {
+    if (el) monthChromeRefs.current.set(month, el);
+    else monthChromeRefs.current.delete(month);
+  };
+  const renderWeekdayRow = (asGridRow: boolean, month?: CalendarMonth) => (
+    <div
+      ref={month ? chromeRef(month) : asGridRow ? undefined : sharedWeekdaysRef}
+      role={asGridRow ? 'row' : 'presentation'}
+      className={cx(p('weekdays'), cn?.weekdays)}
+      aria-hidden={asGridRow ? undefined : true}
+      // The shared row never widens the page; it follows the months' scroll.
+      style={asGridRow ? undefined : { overflow: 'hidden' }}
+    >
       {weekdays.map((w) => (
         <span key={w.weekday} role={asGridRow ? 'columnheader' : undefined} aria-label={w.long} className={cx(p('weekday'), cn?.weekday)} title={w.long}>
           {props.formatWeekday ? props.formatWeekday(w.weekday, locale) : w.short}
@@ -1218,7 +1353,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const header = props.renderMonthHeader ? (
       props.renderMonthHeader({ month, title, index, navigation: navNode, status }, slotCtx)
     ) : (
-      <div className={cx(p('month-header'), cn?.monthHeader)}>
+      <div ref={sharedWeekdays ? chromeRef(month) : undefined} className={cx(p('month-header'), cn?.monthHeader)}>
         {defaultNav && index === 0 && navButton('previous')}
         <h2 id={titleId} className={cx(p('month-title'), cn?.monthTitle)} aria-live={navigation === 'paged' && index === 0 ? 'polite' : undefined}>
           {title}
@@ -1280,6 +1415,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         }}
         data-month={month}
         data-status={status === 'loaded' ? undefined : status}
+        data-skeleton={initialLoading ? '' : undefined}
         className={cx(p('month'), cn?.month)}
         aria-labelledby={props.renderMonthHeader ? undefined : titleId}
         aria-label={props.renderMonthHeader ? title : undefined}
@@ -1294,7 +1430,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           aria-multiselectable={mode === 'multiple' || mode === 'range' || undefined}
           className={cx(p('grid'), cn?.grid)}
         >
-          {!sharedWeekdays && renderWeekdayRow(true)}
+          {!sharedWeekdays && renderWeekdayRow(true, month)}
           {weeks}
         </div>
         {/* Default month loading UI is the day skeleton; text only for assistive tech. */}
@@ -1345,7 +1481,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
             )
         : null;
     return (
-      <div className={p('load-more-area')} data-direction={dir}>
+      <div
+        ref={(el) => {
+          loadMoreAreaRefs.current[dir] = el;
+        }}
+        className={p('load-more-area')}
+        data-direction={dir}
+      >
         {dir === 'previous' && sentinel}
         {dir === 'next' && loadingNode}
         {ctl}
@@ -1388,8 +1530,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       data-overflow={layout.activeOverflow}
       data-at-min-size={layout.atMinDaySize ? '' : undefined}
       data-measured={measured ? '' : undefined}
-      onPointerDownCapture={() => {
-        insideEventRef.current = true;
+      onPointerDownCapture={(e) => {
+        insideEventRef.current = e.nativeEvent;
         modalityRef.current = 'pointer';
       }}
       onKeyDownCapture={() => {
@@ -1446,19 +1588,19 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
             : (
                 <div className={cx(p('loading'), cn?.loading)} data-scope="initial" role="status">
                   <span className={p('spinner')} aria-hidden="true" />
-                  <span>{messages.loading}</span>
+                  <span style={srOnlyStyle}>{messages.loading}</span>
                 </div>
               )}
         </div>
         {loadMoreControl('next')}
       </div>
-      {props.loading &&
+      {/* Initial load: the days are the skeleton; the text is for assistive tech only. */}
+      {initialLoading &&
         (props.renderLoading ? (
           props.renderLoading({ scope: 'initial', months: renderedMonths, status: 'loading', messages: { loading: messages.loading } }, slotCtx)
         ) : (
-          <div className={cx(p('loading'), cn?.loading)} data-scope="initial" role="status">
-            <span className={p('spinner')} aria-hidden="true" />
-            <span>{messages.loading}</span>
+          <div className={cx(p('loading'), cn?.loading)} data-scope="initial" role="status" style={srOnlyStyle}>
+            {messages.loading}
           </div>
         ))}
       {footer != null && footer !== false && <div className={cx(p('footer'), cn?.footer)}>{footer}</div>}
@@ -1470,6 +1612,14 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           id={tooltipId}
           anchor={tooltipAnchor}
           clipElement={viewportRef.current}
+          themeSource={rootRef.current}
+          getArea={() => {
+            // The anchor's month below its header/weekday row.
+            const m = getMonth(openTip!.date);
+            const top = monthChromeRefs.current.get(m)?.getBoundingClientRect().bottom;
+            const bottom = monthRefs.current.get(m)?.getBoundingClientRect().bottom;
+            return { top, bottom };
+          }}
           boundary={tooltipOpts.boundary ?? 'calendar'}
           placement={tooltipOpts.placement ?? 'top'}
           offset={tooltipOpts.offset ?? 8}

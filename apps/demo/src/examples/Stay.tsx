@@ -43,6 +43,8 @@ function useStayCalendar() {
         checkInTime: "14:00",
         checkOutTime: "09:00",
     });
+    // "Özel tarih": schedule rules (min nights, …) are relaxed; bookings still apply.
+    const [customDates, setCustomDates] = useState(false);
     const availability = useAvailability();
     const { dayInfo } = availability;
     // Business rules. Late check-out depends on consumer state, passed as ruleContext.
@@ -72,7 +74,15 @@ function useStayCalendar() {
             ),
         [booking.dates, dayInfo]
     );
-    return { booking, setBooking, rules, total, ...availability };
+    return {
+        booking,
+        setBooking,
+        rules,
+        total,
+        customDates,
+        setCustomDates,
+        ...availability,
+    };
 }
 
 // Example of a consumer modifier: turnover days of other bookings (the
@@ -124,6 +134,7 @@ export function StayReference() {
             value={s.booking.dates}
             onChange={(dates) => s.setBooking((b) => ({ ...b, dates }))}
             rules={s.rules}
+            relaxSchedule={s.customDates}
             ruleContext={s.booking}
             getDataStatus={s.getDataStatus}
             onRenderedMonthsChange={(e) => s.ensure(e.months)}
@@ -151,7 +162,15 @@ export function StayReference() {
                             </button>
                         ))}
                         <label className="toggle">
-                            Özel tarih: <input type="checkbox" role="switch" />
+                            Özel tarih:{" "}
+                            <input
+                                type="checkbox"
+                                role="switch"
+                                checked={s.customDates}
+                                onChange={(e) =>
+                                    s.setCustomDates(e.target.checked)
+                                }
+                            />
                         </label>
                     </div>
                     <div className="ref-row ref-summary">
@@ -222,6 +241,11 @@ export function StayMobile() {
                 value={s.booking.dates}
                 onChange={(dates) => s.setBooking((b) => ({ ...b, dates }))}
                 rules={s.rules}
+                relaxSchedule={s.customDates}
+                loadMoreLabels={{
+                    previous: "Daha fazla tarih göster",
+                    next: "Daha fazla tarih göster",
+                }}
                 ruleContext={s.booking}
                 getDataStatus={s.getDataStatus}
                 onRenderedMonthsChange={(e) => s.ensure(e.months)}
@@ -229,7 +253,13 @@ export function StayMobile() {
                 getDayTooltip={getDayTooltip}
                 renderFooter={() => (
                     <label className="toggle">
-                        Özel tarih: <input type="checkbox" role="switch" />
+                        Özel tarih:{" "}
+                        <input
+                            type="checkbox"
+                            role="switch"
+                            checked={s.customDates}
+                            onChange={(e) => s.setCustomDates(e.target.checked)}
+                        />
                     </label>
                 )}
             />

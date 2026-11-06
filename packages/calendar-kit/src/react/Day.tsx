@@ -1,7 +1,7 @@
 import { type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode, memo } from 'react';
-import type { CalendarDate } from '../date/calendarDate';
-import type { CalendarClassNames, DayProps, DayPropsInput, DayRenderContext, DayRenderProps, DayState, DefaultDayData } from './types';
-import { PREFIX, composeHandlers, cx, mergeRefs, srOnlyStyle } from './utils';
+import type { CalendarDate } from '../date/calendarDate.js';
+import type { CalendarClassNames, DayProps, DayPropsInput, DayRenderContext, DayRenderProps, DayState, DefaultDayData } from './types.js';
+import { PREFIX, composeHandlers, cx, mergeRefs, srOnlyStyle } from './utils.js';
 
 /** Stable action bag created once per calendar instance. */
 export interface DayActions {

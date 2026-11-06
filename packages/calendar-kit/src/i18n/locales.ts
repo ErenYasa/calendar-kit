@@ -1,4 +1,4 @@
-import { type CalendarMessages, type ReasonMessage, messagesEn } from './messages';
+import { type CalendarMessages, type ReasonMessage, messagesEn } from './messages.js';
 
 /**
  * Additional UI message bundles. Month and weekday names always come from

@@ -1,5 +1,5 @@
-import { type CalendarDate } from '../date/calendarDate';
-import type { DayAvailability, SelectionRules } from './types';
+import { type CalendarDate } from '../date/calendarDate.js';
+import type { DayAvailability, SelectionRules } from './types.js';
 
 const maxOf = (a?: CalendarDate | null, b?: CalendarDate | null) => (a && b ? (a > b ? a : b) : (a ?? b ?? null));
 const minOf = (a?: CalendarDate | null, b?: CalendarDate | null) => (a && b ? (a < b ? a : b) : (a ?? b ?? null));
@@ -14,11 +14,20 @@ const intersect = <T,>(a?: readonly T[], b?: readonly T[]) => (a && b ? a.filter
  * `unknownDataPolicy`) are taken from the last rule set that defines them.
  * Inputs are never mutated.
  */
+// Source sets of each combined result, so relaxRules can relax them one by one
+// (merged availability loses which part of a restriction was schedule-only).
+const SOURCES = new WeakMap<object, SelectionRules<never>[]>();
+
 export function combineRules<TContext = unknown>(
   ...sets: (SelectionRules<TContext> | null | undefined | false)[]
 ): SelectionRules<TContext> {
-  return sets.reduce<SelectionRules<TContext>>((acc, next) => {
-    if (!next) return acc;
+  const flat = sets.flatMap((s) => (!s ? [] : ((SOURCES.get(s) as SelectionRules<TContext>[] | undefined) ?? [s])));
+  const result = flat.reduce<SelectionRules<TContext>>((acc, set) => {
+    if (!set) return acc;
+    // An explicit `undefined` (e.g. `validateSelection: props.validate`) means
+    // "not defined here" and must not erase what an earlier set defined.
+    const next: SelectionRules<TContext> = {};
+    for (const k in set) if (set[k as keyof typeof set] !== undefined) (next as Record<string, unknown>)[k] = set[k as keyof typeof set];
     const a = acc.getDayAvailability;
     const b = next.getDayAvailability;
     const va = acc.validateSelection;
@@ -50,6 +59,8 @@ export function combineRules<TContext = unknown>(
     if (va && vb) out.validateSelection = (sel, ctx) => va(sel, ctx) || vb(sel, ctx) || null;
     return out;
   }, {});
+  if (flat.length > 1) SOURCES.set(result, flat as SelectionRules<never>[]);
+  return result;
 }
 
 /** AND-combines two availability results. The first restricting result supplies reason/message. */
@@ -84,6 +95,8 @@ export interface RelaxScheduleOptions {
  * validators. Availability results marked `schedule: true` are ignored.
  */
 export function relaxRules<TContext>(rules: SelectionRules<TContext>, options: RelaxScheduleOptions = {}): SelectionRules<TContext> {
+  const sources = SOURCES.get(rules) as SelectionRules<TContext>[] | undefined;
+  if (sources) return combineRules(...sources.map((r) => relaxRules(r, options)));
   const out: SelectionRules<TContext> = { ...rules };
   if (options.weekdays !== false) {
     delete out.startWeekdays;

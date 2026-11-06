@@ -1,0 +1,618 @@
+/**
+ * Regression tests for docs/verification-findings.md. Each block names the
+ * finding id; every test failed before its fix.
+ */
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { createRef, useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  Calendar,
+  type CalendarController,
+  type CalendarDate,
+  type CalendarMonth,
+  type DayRenderContext,
+  type Selection,
+  type SelectionRules,
+  closedDates,
+  combineRules,
+  messagesEn,
+  createSelectionEngine,
+  relaxRules,
+  stayRules,
+  toCalendarDate as d,
+} from '../src';
+import { computeTooltipPosition } from '../src/react/Tooltip';
+
+const TODAY = d('2026-10-12');
+const range = (start: string | null, end: string | null): Selection => ({
+  mode: 'range',
+  value: { start: start as CalendarDate | null, end: end as CalendarDate | null },
+});
+const engine = (rules: SelectionRules, selection: Selection = range(null, null), activeEndpoint: 'start' | 'end' = 'start') =>
+  createSelectionEngine({ rules, state: { selection, activeEndpoint }, today: TODAY });
+
+describe('F02 combineRules ignores explicit undefined values', () => {
+  it('keeps an earlier validator when a later set has validateSelection: undefined', () => {
+    const check: SelectionRules['validateSelection'] = () => ({ code: 'custom', message: 'blocked' });
+    const rules = combineRules({ validateSelection: check }, stayRules({ minNights: 2, validateSelection: undefined }));
+    expect(rules.validateSelection).toBe(check);
+    expect(engine(rules).validate(range('2026-11-13', '2026-11-16')).issue?.message).toBe('blocked');
+  });
+
+  it('keeps an earlier closed day when a later set has getDayAvailability: undefined', () => {
+    const rules = combineRules(closedDates([d('2026-11-14')]), { getDayAvailability: undefined });
+    expect(engine(rules).plan(d('2026-11-14')).issue?.code).toBe('closed');
+  });
+
+  it('keeps earlier scalar semantics when a later set leaves them undefined', () => {
+    const rules = combineRules({ rangeSemantics: 'exclusive', unknownDataPolicy: 'allow' }, { rangeSemantics: undefined, unknownDataPolicy: undefined });
+    expect(rules.rangeSemantics).toBe('exclusive');
+    expect(rules.unknownDataPolicy).toBe('allow');
+  });
+});
+
+describe('F03 relaxing combined rules keeps real partial restrictions only', () => {
+  const X = d('2026-10-20');
+  const schedule: SelectionRules = { getDayAvailability: (x) => (x === X ? { closed: true, schedule: true, reason: 'out-of-season' } : undefined) };
+  const real: SelectionRules = { getDayAvailability: (x) => (x === X ? { canEnd: false, reason: 'check-in-only' } : undefined) };
+
+  it('relaxRules(combineRules(A, B)) equals combining the relaxed sets', () => {
+    const e = engine(relaxRules(combineRules(schedule, real)));
+    const a = e.availability(X);
+    expect(a).toMatchObject({ closed: false, canStart: true, canEnd: false, reason: 'check-in-only' });
+  });
+
+  it('Calendar relaxSchedule lets the day start a range but not end one', () => {
+    render(<Calendar mode="range" today={TODAY} rules={[schedule, real]} relaxSchedule />);
+    const day = document.querySelector<HTMLElement>(`button[data-date="${X}"]`)!;
+    expect(day.getAttribute('aria-disabled')).toBeNull();
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-16"]')!, { detail: 1 });
+    expect(document.querySelector<HTMLElement>(`button[data-date="${X}"]`)!.getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('F04 maxRenderedMonths keeps bounding the DOM after interaction', () => {
+  const months = () => [...document.querySelectorAll<HTMLElement>('section[data-month]')].map((s) => s.dataset.month);
+  const setup = () => {
+    const ref = createRef<CalendarController>();
+    render(
+      <>
+        <input aria-label="outside" />
+        <Calendar ref={ref} mode="single" today={TODAY} navigation="continuous" orientation="vertical" numberOfMonths={1} monthsPerLoad={1} maxRenderedMonths={3} />
+      </>,
+    );
+    return ref;
+  };
+
+  it('applies the bound once focus has left the calendar', () => {
+    const ref = setup();
+    const day = document.querySelector<HTMLElement>('button[data-date="2026-10-15"]')!;
+    act(() => day.focus());
+    fireEvent.click(day, { detail: 1 });
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    for (let i = 0; i < 6; i++) act(() => ref.current!.loadMore('next'));
+    expect(months()).toEqual(['2027-02', '2027-03', '2027-04']);
+  });
+
+  it('never drops the month holding DOM focus, but still trims up to it', () => {
+    const ref = setup();
+    act(() => ref.current!.loadMore('next'));
+    act(() => ref.current!.loadMore('next')); // Oct..Dec
+    const day = document.querySelector<HTMLElement>('button[data-date="2026-11-10"]')!;
+    act(() => day.focus());
+    for (let i = 0; i < 3; i++) act(() => ref.current!.loadMore('next'));
+    expect(months()[0]).toBe('2026-11'); // October trimmed, November kept
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-10"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => ref.current!.loadMore('next'));
+    expect(months()).toHaveLength(3);
+  });
+});
+
+describe('F05 day cells re-render when any rendered day state changes', () => {
+  const cell = (date: string) => document.querySelector<HTMLElement>(`button[data-date="${date}"]`)!.closest('.cal-day')!;
+
+  it('firstDayOfWeek change updates week start/end markers on every cell', () => {
+    const { rerender } = render(<Calendar mode="single" today={TODAY} firstDayOfWeek={1} />);
+    expect(cell('2026-10-12').hasAttribute('data-week-start')).toBe(true); // Monday
+    rerender(<Calendar mode="single" today={TODAY} firstDayOfWeek={0} />);
+    expect(cell('2026-10-12').hasAttribute('data-week-start')).toBe(false);
+    expect(cell('2026-10-11').hasAttribute('data-week-start')).toBe(true); // Sunday
+    expect(cell('2026-10-17').hasAttribute('data-week-end')).toBe(true); // Saturday
+  });
+
+  it('canStart change reaches stable renderDayContent while the click outcome is unchanged', () => {
+    const content = ({ day }: DayRenderContext) => `${day.dayOfMonth}:${day.canStart ? 'S' : '-'}`;
+    const value = { start: d('2026-10-14'), end: null };
+    const { rerender } = render(<Calendar mode="range" today={TODAY} value={value} renderDayContent={content} rules={{}} />);
+    expect(document.querySelector('button[data-date="2026-10-20"]')!.textContent).toBe('20:S');
+    const rules: SelectionRules = { getDayAvailability: (x) => (x === '2026-10-20' ? { canStart: false } : undefined) };
+    rerender(<Calendar mode="range" today={TODAY} value={value} renderDayContent={content} rules={rules} />);
+    expect(document.querySelector('button[data-date="2026-10-20"]')!.textContent).toBe('20:-');
+  });
+});
+
+describe('F07 pending keyboard focus never steals focus later', () => {
+  function Controlled({ month }: { month: CalendarMonth }) {
+    return (
+      <>
+        <input aria-label="outside" />
+        <Calendar mode="single" today={TODAY} visibleMonth={month} onVisibleMonthChange={() => {}} />
+      </>
+    );
+  }
+  const btn = (date: string) => document.querySelector<HTMLElement>(`button[data-date="${date}"]`);
+
+  it('keeps focus and the roving tabindex on the current day when the parent ignores navigation', () => {
+    const { rerender } = render(<Controlled month={'2026-10' as CalendarMonth} />);
+    act(() => btn('2026-10-31')!.focus());
+    fireEvent.keyDown(btn('2026-10-31')!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(btn('2026-10-31'));
+    expect(document.querySelector('button[data-date][tabindex="0"]')).toBe(btn('2026-10-31'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    rerender(<Controlled month={'2026-11' as CalendarMonth} />);
+    expect(document.activeElement).toBe(document.querySelector('input'));
+  });
+});
+
+describe('F08 focusDate / goToMonth focus work when the target is already the focused date', () => {
+  it('moves DOM focus back to the same date', () => {
+    const ref = createRef<CalendarController>();
+    render(
+      <>
+        <input aria-label="outside" />
+        <Calendar ref={ref} mode="single" today={TODAY} />
+      </>,
+    );
+    act(() => ref.current!.focusDate(d('2026-10-15')));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-15"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => ref.current!.focusDate(d('2026-10-15')));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-15"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => void ref.current!.goToMonth('2026-10', { focus: true }));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-01"]'));
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    act(() => void ref.current!.goToMonth('2026-10', { focus: true }));
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-10-01"]'));
+  });
+});
+
+describe('F09 continuous goToMonth scrolls every time, never later', () => {
+  it('scrolls again when jumping to the same month and not on later renders', () => {
+    const ref = createRef<CalendarController>();
+    const spy = vi.spyOn(HTMLElement.prototype, 'scrollIntoView');
+    render(<Calendar ref={ref} mode="single" today={TODAY} navigation="continuous" orientation="vertical" numberOfMonths={1} />);
+    act(() => ref.current!.loadMore('next'));
+    spy.mockClear();
+    act(() => void ref.current!.goToMonth('2026-11'));
+    expect(spy).toHaveBeenCalledTimes(1);
+    act(() => void ref.current!.goToMonth('2026-11'));
+    expect(spy).toHaveBeenCalledTimes(2);
+    fireEvent.pointerEnter(document.querySelector<HTMLElement>('button[data-date="2026-11-05"]')!, { pointerType: 'mouse' });
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
+  });
+});
+
+describe('F10 calendar-boundary tooltip never covers the month header/weekday row', () => {
+  it('flips below a first-row day instead of covering the weekday row', () => {
+    // jsdom has no layout: give the relevant elements a geometry.
+    const rects = new Map<Element, DOMRect>();
+    const rect = (top: number, left: number, width: number, height: number) => ({ top, left, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON() {} }) as DOMRect;
+    const orig = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function () {
+      return rects.get(this) ?? rect(0, 0, 0, 0);
+    };
+    const ow = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+    const oh = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => 120 });
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 30 });
+    try {
+      render(<Calendar mode="single" today={TODAY} getDayTooltip={({ day }) => (day.date === '2026-10-01' ? { content: 'tip', persistent: true } : null)} />);
+      const vp = document.querySelector('.cal-viewport')!;
+      const weekdays = document.querySelector('.cal-weekdays')!;
+      const section = document.querySelector('section[data-month]')!;
+      rects.set(vp, rect(0, 0, 400, 600));
+      rects.set(section, rect(0, 0, 400, 400));
+      rects.set(document.querySelector('.cal-month-header')!, rect(0, 0, 400, 44));
+      rects.set(weekdays, rect(52, 0, 400, 30));
+      rects.set(document.querySelector('button[data-date="2026-10-01"]')!, rect(90, 160, 50, 50));
+      // Re-run positioning with the stubbed geometry.
+      act(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      const tip = screen.getByRole('tooltip');
+      const y = Number(/translate3d\([-\d.]+px, ([-\d.]+)px/.exec(tip.style.transform)![1]);
+      expect(tip.getAttribute('data-placement')).toBe('bottom');
+      expect(y).toBeGreaterThanOrEqual(82); // never above the weekday row's bottom
+    } finally {
+      Element.prototype.getBoundingClientRect = orig;
+      if (ow) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', ow);
+      if (oh) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', oh);
+    }
+  });
+});
+
+describe('F11 tooltip stays inside bounds when no side fits', () => {
+  it('clamps the main axis instead of leaving the bounds', () => {
+    const bounds = { left: 0, top: 0, right: 300, bottom: 200 };
+    const p = computeTooltipPosition({ left: 100, top: 80, width: 40, height: 40 }, { width: 280, height: 150 }, bounds, 'top', 8);
+    expect(p.y).toBeGreaterThanOrEqual(8);
+    expect(p.y + 150).toBeLessThanOrEqual(200 - 8 + 0.5);
+    expect(p.x).toBeGreaterThanOrEqual(8);
+  });
+});
+
+describe('F12 Escape dismisses the open tooltip without moving focus', () => {
+  it('closes a focus tooltip and a persistent one', () => {
+    render(<Calendar mode="single" today={TODAY} />);
+    const day = (x: string) => document.querySelector<HTMLElement>(`button[data-date="${x}"]`)!;
+    act(() => day('2026-10-11').focus());
+    fireEvent.keyDown(day('2026-10-11'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(day('2026-10-12'));
+    expect(screen.getByRole('tooltip').textContent).toBe('Today');
+    fireEvent.keyDown(day('2026-10-12'), { key: 'Escape' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(document.activeElement).toBe(day('2026-10-12'));
+  });
+
+  it('closes a persistent tooltip on Escape', () => {
+    render(<Calendar mode="single" today={TODAY} getDayTooltip={({ day }) => (day.date === '2026-10-20' ? { content: 'guide', persistent: true } : null)} />);
+    expect(screen.getByRole('tooltip').textContent).toBe('guide');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+});
+
+describe('F13 a touch tooltip closes on an outside tap without onOutsideClick', () => {
+  it('closes when tapping outside', () => {
+    render(
+      <>
+        <button>outside</button>
+        <Calendar mode="single" today={TODAY} />
+      </>,
+    );
+    fireEvent.pointerDown(document.querySelector('button[data-date="2026-10-12"]')!, { pointerType: 'touch' });
+    expect(screen.getByRole('tooltip').textContent).toBe('Today');
+    fireEvent.pointerDown(screen.getByText('outside'), { pointerType: 'touch' });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+});
+
+describe('F14 tabbing in from outside counts as keyboard focus', () => {
+  it('shows the focus tooltip after Tab from another element', () => {
+    render(
+      <>
+        <input aria-label="before" />
+        <Calendar mode="single" today={TODAY} />
+      </>,
+    );
+    act(() => document.querySelector<HTMLElement>('input')!.focus());
+    fireEvent.keyDown(document.querySelector('input')!, { key: 'Tab' });
+    act(() => document.querySelector<HTMLElement>('button[data-date="2026-10-12"]')!.focus());
+    expect(screen.getByRole('tooltip').textContent).toBe('Today');
+  });
+});
+
+describe('F18 continuous list respects changed min/max dates', () => {
+  it('drops rendered months that fall outside new bounds', () => {
+    const ref = createRef<CalendarController>();
+    const props = { mode: 'single' as const, today: TODAY, navigation: 'continuous' as const, orientation: 'vertical' as const, numberOfMonths: 1, defaultVisibleMonth: '2026-11' as CalendarMonth };
+    const { rerender } = render(<Calendar ref={ref} {...props} />);
+    act(() => ref.current!.loadMore('next'));
+    act(() => ref.current!.loadMore('next'));
+    const months = () => [...document.querySelectorAll<HTMLElement>('section[data-month]')].map((s) => s.dataset.month);
+    expect(months()).toEqual(['2026-11', '2026-12', '2027-01']);
+    rerender(<Calendar ref={ref} {...props} minDate={d('2026-12-01')} />);
+    expect(months()).toEqual(['2026-12', '2027-01']);
+    rerender(<Calendar ref={ref} {...props} minDate={d('2026-12-01')} maxDate={d('2026-12-31')} />);
+    expect(months()).toEqual(['2026-12']);
+  });
+});
+
+describe('F19 onActiveEndpointChange reports real transitions only (uncontrolled endpoint)', () => {
+  const day = (x: string) => document.querySelector<HTMLElement>(`button[data-date="${x}"]`)!;
+
+  it('emits nothing when the parent rejects the proposed value', () => {
+    const events: string[] = [];
+    render(
+      <Calendar
+        mode="range"
+        today={TODAY}
+        value={{ start: d('2026-10-14'), end: null }}
+        onChange={() => {}}
+        onActiveEndpointChange={(ep) => events.push(ep)}
+      />,
+    );
+    fireEvent.click(day('2026-10-16'), { detail: 1 });
+    fireEvent.click(day('2026-10-18'), { detail: 1 });
+    expect(events).toEqual([]);
+  });
+
+  it('reports accepted transitions with the action source, and parent-driven ones as prop', () => {
+    const events: { current: string; source: string }[] = [];
+    function Host() {
+      const [value, setValue] = useState<{ start: CalendarDate | null; end: CalendarDate | null }>({ start: null, end: null });
+      return (
+        <>
+          <button onClick={() => setValue({ start: null, end: null })}>reset</button>
+          <Calendar mode="range" today={TODAY} value={value} onChange={setValue} onActiveEndpointChange={(_, e) => events.push({ current: e.current, source: e.source })} />
+        </>
+      );
+    }
+    render(<Host />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    expect(events).toEqual([{ current: 'end', source: 'pointer' }]);
+    fireEvent.click(screen.getByText('reset'));
+    expect(events).toEqual([
+      { current: 'end', source: 'pointer' },
+      { current: 'start', source: 'prop' },
+    ]);
+  });
+});
+
+describe('F20 focus survives a custom load-more control disappearing at the boundary', () => {
+  it('moves focus to the first newly added day', () => {
+    render(
+      <Calendar
+        mode="single"
+        today={TODAY}
+        navigation="continuous"
+        orientation="vertical"
+        numberOfMonths={1}
+        maxDate={d('2026-11-20')}
+        renderLoadMore={({ loadMore }) => (
+          <button type="button" onClick={loadMore}>
+            custom more
+          </button>
+        )}
+      />,
+    );
+    const btn = screen.getByText('custom more');
+    act(() => btn.focus());
+    fireEvent.click(btn);
+    expect(screen.queryByText('custom more')).toBeNull();
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-01"]'));
+  });
+});
+
+describe('F24 documented event order for a rejected click', () => {
+  it('dateClick → dayFocusChange → invalidSelection, no change', () => {
+    const events: string[] = [];
+    render(<Calendar mode="range" today={TODAY} rules={stayRules({ minNights: 2 })} defaultValue={{ start: d('2026-10-14'), end: null }} onEvent={(e) => events.push(e.type)} />);
+    events.length = 0;
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-15"]')!, { detail: 1 });
+    expect(events.filter((t) => !['validationChange', 'tooltipOpenChange'].includes(t))).toEqual(['dateClick', 'dayFocusChange', 'invalidSelection']);
+  });
+});
+
+describe('F25 an unreachable start reports the real blocker', () => {
+  it('reports the bound, not "Minimum 2 nights", when maxDate is the blocker', () => {
+    const e = engine(stayRules({ minNights: 2, maxDate: d('2026-11-14') }));
+    expect(e.checkStart(d('2026-11-13'))?.code).toBe('after-max');
+  });
+
+  it('never reports a minimum below the natural one ("Minimum 0 nights")', () => {
+    const e = engine(stayRules({ minNights: 0, getDayStatus: (x) => (x === '2026-11-14' ? 'closed' : undefined) }));
+    const issue = e.checkStart(d('2026-11-13'));
+    expect(issue).not.toBeNull();
+    expect(issue!.code).not.toBe('min-length');
+  });
+
+  it('still reports min-length when the configured minimum is the reason', () => {
+    const e = engine(stayRules({ minNights: 2, getDayStatus: (x) => (x === '2026-11-14' ? 'booked' : undefined) }));
+    expect(e.checkStart(d('2026-11-13'))).toMatchObject({ code: 'min-length', params: { min: 2 } });
+  });
+});
+
+describe('F28 multiple mode counts unique dates consistently', () => {
+  it('plan() and validate() agree when the value contains duplicates', () => {
+    const sel: Selection = { mode: 'multiple', value: [d('2026-11-13'), d('2026-11-13')] };
+    const e = createSelectionEngine({ rules: { maxSelections: 2 }, state: { selection: sel, activeEndpoint: 'start' }, today: TODAY });
+    expect(e.validate({ mode: 'multiple', value: [d('2026-11-13'), d('2026-11-13'), d('2026-11-14')] }).valid).toBe(true);
+    expect(e.plan(d('2026-11-14')).kind).toBe('toggle-on');
+  });
+});
+
+describe('F16 calendar-wide loading: initial skeleton vs background refresh', () => {
+  const root = () => document.querySelector<HTMLElement>('.cal-root')!;
+
+  it('initial load draws the days as a skeleton with screen-reader-only text', () => {
+    render(<Calendar mode="single" today={TODAY} loading />);
+    expect(document.querySelectorAll('.cal-month[data-skeleton]').length).toBeGreaterThan(0);
+    expect(root().getAttribute('aria-busy')).toBe('true');
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe(messagesEn.loading);
+    expect(status.getAttribute('style')).toContain('clip'); // visually hidden
+    expect(status.querySelector('.cal-spinner')).toBeNull();
+  });
+
+  it('renderLoading still replaces the default initial indicator', () => {
+    const renderLoading = vi.fn(() => <div>custom loading</div>);
+    render(<Calendar mode="single" today={TODAY} loading renderLoading={renderLoading} />);
+    expect(screen.getByText('custom loading')).toBeTruthy();
+    expect(renderLoading).toHaveBeenCalledWith(expect.objectContaining({ scope: 'initial' }), expect.anything());
+    expect(document.querySelectorAll('.cal-month[data-skeleton]').length).toBeGreaterThan(0);
+  });
+
+  it('a later refresh keeps view, selection and focus; only aria-busy changes', () => {
+    const onLoadingChange = vi.fn();
+    const renderLoading = vi.fn(() => <div>custom loading</div>);
+    const props = { mode: 'single', today: TODAY, defaultValue: d('2026-11-03'), onLoadingChange, renderLoading } as const;
+    const { rerender } = render(<Calendar {...props} />);
+    const months = () => [...document.querySelectorAll('.cal-month')].map((m) => m.getAttribute('data-month'));
+    const before = months();
+    const btn = document.querySelector<HTMLElement>('button[data-date="2026-11-10"]')!;
+    act(() => btn.focus());
+    rerender(<Calendar {...props} loading />);
+    expect(months()).toEqual(before);
+    expect(document.activeElement).toBe(btn);
+    expect(document.querySelector('.cal-month[data-skeleton]')).toBeNull();
+    expect(document.querySelector('[data-loading]')).toBeNull();
+    expect(document.querySelector('.cal-loading')).toBeNull();
+    expect(renderLoading).not.toHaveBeenCalled();
+    expect(document.querySelector('button[data-date="2026-11-03"]')!.closest('.cal-day')!.hasAttribute('data-selected')).toBe(true);
+    expect(root().getAttribute('aria-busy')).toBe('true');
+    expect(onLoadingChange.mock.lastCall![0].current).toMatchObject({ initial: false, refreshing: true, busy: true });
+    rerender(<Calendar {...props} />);
+    expect(root().hasAttribute('aria-busy')).toBe(false);
+    expect(document.activeElement).toBe(btn);
+  });
+});
+
+describe('F26 reachable-end search budget vs "no valid end"', () => {
+  const S = d('2026-11-02');
+  const END = d('2027-01-21'); // 80 nights after S
+  // Check-out is closed until END (nights can pass through): the only valid ends are far away.
+  const farEnd: SelectionRules = { getDayAvailability: (x) => (x > S && x < END ? { canEnd: false, reason: 'no-checkout' } : undefined) };
+
+  it('a start whose only valid end is beyond the search budget is not rejected', () => {
+    const e = engine(stayRules({ ...farEnd }));
+    expect(e.validate(range(S, END)).valid).toBe(true);
+    expect(e.checkStart(S)).toBeNull();
+    expect(e.plan(S).kind).toBe('start');
+  });
+
+  it('a start with provably no valid end is still rejected', () => {
+    // Same rule, but maxNights makes the search exhaustive.
+    expect(engine(stayRules({ ...farEnd, maxNights: 30 })).checkStart(S)?.code).toBe('end-not-allowed');
+    // maxDate ends the search before the budget.
+    expect(engine(stayRules({ ...farEnd, maxDate: d('2026-12-31') })).checkStart(S)).not.toBeNull();
+    // A booked night blocks every later end.
+    expect(engine(stayRules({ minNights: 2, getDayStatus: (x) => (x === '2026-11-03' ? 'booked' : undefined) })).checkStart(S)?.code).toBe('min-length');
+  });
+});
+
+describe('F32 a refreshed "today" does not move the visible month', () => {
+  const months = () => [...document.querySelectorAll('.cal-month')].map((m) => m.getAttribute('data-month'));
+  const crossMidnight = async () => {
+    await act(async () => {
+      vi.setSystemTime(new Date(2026, 10, 1, 0, 0, 5)); // local 1 Nov 2026
+      await vi.advanceTimersByTimeAsync(20_000);
+    });
+  };
+
+  it('without user navigation the month stays; the today marker moves', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    vi.setSystemTime(new Date(2026, 9, 31, 23, 59, 50));
+    try {
+      render(<Calendar mode="single" />);
+      expect(months()).toEqual(['2026-10']);
+      expect(document.querySelector('.cal-day[data-today] button')!.getAttribute('data-date')).toBe('2026-10-31');
+      await crossMidnight();
+      expect(months()).toEqual(['2026-10']);
+      expect(document.querySelector('.cal-day[data-today]')).toBeNull(); // 1 Nov is not rendered
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('after the user navigated, the position is kept', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    vi.setSystemTime(new Date(2026, 9, 31, 23, 59, 50));
+    try {
+      render(<Calendar mode="single" numberOfMonths={1} />);
+      fireEvent.click(document.querySelector<HTMLElement>('.cal-nav-button[data-direction="previous"]')!);
+      expect(months()).toEqual(['2026-09']);
+      await crossMidnight();
+      expect(months()).toEqual(['2026-09']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('F32(b) uncontrolled mode change resets the selection', () => {
+  const selected = () => [...document.querySelectorAll('.cal-day[data-selected] button')].map((b) => b.getAttribute('data-date'));
+
+  it('switching modes starts empty and going back never restores the old selection; no change event', () => {
+    const onChange = vi.fn();
+    const onEvent = vi.fn();
+    const props = { today: TODAY, onChange, onEvent } as const;
+    const { rerender } = render(<Calendar {...props} mode="range" defaultValue={{ start: d('2026-10-14'), end: d('2026-10-17') }} />);
+    expect(selected()).toEqual(['2026-10-14', '2026-10-17']);
+    rerender(<Calendar {...props} mode="single" />);
+    expect(selected()).toEqual([]);
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-20"]')!, { detail: 1 });
+    expect(selected()).toEqual(['2026-10-20']);
+    onChange.mockClear();
+    onEvent.mockClear();
+    rerender(<Calendar {...props} mode="range" />);
+    expect(selected()).toEqual([]);
+    rerender(<Calendar {...props} mode="multiple" />);
+    expect(selected()).toEqual([]);
+    rerender(<Calendar {...props} mode="single" />);
+    expect(selected()).toEqual([]);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(onEvent.mock.calls.map((c) => c[0].type)).not.toContain('change');
+  });
+
+  it('a range in progress does not survive a round trip either', () => {
+    const { rerender } = render(<Calendar today={TODAY} mode="range" />);
+    fireEvent.click(document.querySelector<HTMLElement>('button[data-date="2026-10-14"]')!, { detail: 1 });
+    rerender(<Calendar today={TODAY} mode="readonly" />);
+    rerender(<Calendar today={TODAY} mode="range" />);
+    expect(selected()).toEqual([]);
+    expect(document.querySelector('.cal-root')!.getAttribute('data-phase')).toBe('empty');
+  });
+
+  it('controlled: the consumer value is untouched and no change is emitted', () => {
+    const onChange = vi.fn();
+    const value = { start: d('2026-10-14'), end: d('2026-10-17') };
+    const { rerender } = render(<Calendar today={TODAY} mode="range" value={value} onChange={onChange} />);
+    rerender(<Calendar today={TODAY} mode="single" value={d('2026-10-20')} onChange={onChange} />);
+    expect(selected()).toEqual(['2026-10-20']);
+    rerender(<Calendar today={TODAY} mode="range" value={value} onChange={onChange} />);
+    expect(selected()).toEqual(['2026-10-14', '2026-10-17']);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('F16 follow-up: one selection policy while the initial load has no data', () => {
+  const day = (x: string) => document.querySelector<HTMLElement>(`button[data-date="${x}"]`)!;
+
+  it('pointer, keyboard and controller cannot select; focus and navigation still work', () => {
+    const onChange = vi.fn();
+    const invalid: string[] = [];
+    const ref = createRef<CalendarController>();
+    render(<Calendar ref={ref} mode="single" today={TODAY} loading onChange={onChange} onInvalidSelection={(e) => invalid.push(e.issue.code)} />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    act(() => day('2026-10-14').focus());
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(day('2026-10-15'));
+    // Keyboard activation of a native button = click with detail 0.
+    fireEvent.click(document.activeElement!, { detail: 0 });
+    let result: ReturnType<CalendarController['select']> | undefined;
+    act(() => {
+      result = ref.current!.select(d('2026-10-16'));
+    });
+    expect(result!.valid).toBe(false);
+    expect(result!.issue?.code).toBe('data-loading');
+    expect(onChange).not.toHaveBeenCalled();
+    expect(invalid.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(invalid)).toEqual(new Set(['data-loading']));
+    act(() => {
+      ref.current!.goToMonth('2026-12');
+    });
+    expect(document.querySelector('.cal-month')!.getAttribute('data-month')).toBe('2026-12');
+  });
+
+  it('a background refresh keeps selecting against the data already shown', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<Calendar mode="single" today={TODAY} onChange={onChange} />);
+    rerender(<Calendar mode="single" today={TODAY} loading onChange={onChange} />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    act(() => day('2026-10-14').focus());
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    fireEvent.click(document.activeElement!, { detail: 0 });
+    expect(onChange.mock.calls.map((c) => c[0])).toEqual(['2026-10-14', '2026-10-15']);
+  });
+
+  it('unknownDataPolicy="allow" applies to the initial load like to a loading month', () => {
+    const onChange = vi.fn();
+    render(<Calendar mode="single" today={TODAY} loading rules={{ unknownDataPolicy: 'allow' }} onChange={onChange} />);
+    fireEvent.click(day('2026-10-14'), { detail: 1 });
+    expect(onChange).toHaveBeenCalledWith('2026-10-14', expect.anything());
+  });
+});

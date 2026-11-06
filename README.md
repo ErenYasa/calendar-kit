@@ -5,8 +5,8 @@ React + TypeScript için hafif, erişilebilir, responsive ve genişletilebilir t
 > `calendar-kit` geçici addır. Bileşen adları (`Calendar`) ve CSS önekleri (`cal-`) paket adından bağımsızdır: önek tek yerden değişir (`src/react/utils.ts` → `PREFIX`, `src/styles/index.scss` → `$p`). Paket `private: true`; npm'e yayımlanmadı.
 
 - Bağımlılık yok (React/ReactDOM peer). Moment, react-dates veya başka tarih kütüphanesi kullanılmaz.
-- Tipik kullanım **19.1 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
-- 81 test (tarih, motor, bileşen, SSR, etkileşim maliyeti) + dist üzerinden SSR duman testi.
+- Tipik kullanım **20.2 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
+- 142 paket testi + 2 demo testi, gerçek Chrome'da 9 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
 
 ---
 
@@ -36,7 +36,9 @@ Demo: **http://127.0.0.1:5173**
 | `npm run build:package` | `packages/calendar-kit/dist` → ESM + `.d.ts` + `styles.css`. |
 | `npm run build` | Paket + demo production build'i. |
 | `npm run size` | Minify + gzip/brotli boyut ölçümü. |
-| `npm run check` | typecheck + test + paket build + dist üzerinden SSR duman testi. |
+| `npm run check` | typecheck + paket build + testler (paket testleri build edilmiş `dist`i de denetler) + dist üzerinden SSR duman testi. CI (`.github/workflows/ci.yml`) aynı scriptleri çalıştırır. |
+| `npm run test:browser` | Gerçek Chrome'da (playwright-core, sistem Chrome'u) görsel/cascade regresyon kontrolleri. |
+| `npm run perf` | Gerçek Chrome'da etkileşim ölçümü (render / işleme / sonraki kare, CPU yavaşlatmalı). |
 
 Demo production önizleme: `npm run build -w demo` ardından `npx vite preview` (`apps/demo` içinde). React Profiler süreleriyle production ölçümü için `PROFILE=1 npm run build -w demo`.
 
@@ -45,6 +47,7 @@ Demo production önizleme: `npm run build -w demo` ardından `npx vite preview` 
 ```
 calendar-kit/
 ├─ packages/calendar-kit/        ← yayımlanacak paket
+│  ├─ src/index.ts · core.ts · client.ts ← giriş noktaları: calendar-kit, /core (React'siz), /client ('use client')
 │  ├─ src/date/                  ← CalendarDate, saf takvim aritmetiği, Intl yardımcıları
 │  ├─ src/core/                  ← seçim/doğrulama motoru (React'ten bağımsız)
 │  ├─ src/adapters/              ← stayRules, dayRangeRules, closedDates (isteğe bağlı)
@@ -58,7 +61,7 @@ calendar-kit/
 
 Katmanlar tek yönlü bağımlıdır: `date` ← `core` ← `adapters` ← `react`. Çekirdek (`createSelectionEngine`) React olmadan da kullanılabilir (ör. sunucuda aynı kurallarla doğrulama; 2.9 kB gzip).
 
-**Demo ve public API ayrımı:** paketin `exports` haritasında bir `source` koşulu vardır. Demo'nun Vite config'i bu koşulu açar; böylece `import { Calendar } from 'calendar-kit'` ve `import 'calendar-kit/styles.css'` geliştirmede kaynak dosyalara, dağıtımda `dist`'e çözülür. Demo hiçbir iç dosyaya doğrudan erişmez.
+**Demo ve public API ayrımı:** demo kodu yalnızca public adları import eder (`import { Calendar } from 'calendar-kit'`, `import 'calendar-kit/styles.css'`). Geliştirmede (HMR, paket build'i gerekmeden) bu iki public giriş noktası demonun `vite.config.ts` ve `tsconfig.json` dosyalarında workspace kaynaklarına eşlenir. Yayımlanan paketin `exports` haritası yalnızca `dist`'i gösterir; her hedefin tarball'da bulunduğu `test/package.test.ts` ile doğrulanır.
 
 **Temel kararlar (kısa gerekçe):**
 
@@ -211,7 +214,7 @@ Kendi `getDayAvailability` kodunuzda program kaynaklı kısıtlamaları `schedul
 
 **İç içe etkileşim sınırı:** gün zaten bir `<button>`'dır. `renderDayContent` içine buton/link koymayın (geçersiz HTML, klavye sorunları). Gün içinde ayrı bir eylem gerekiyorsa `renderDay` ile kabuğu kendiniz kurup eylemi hücrenin dışına (ör. tooltip/slot) taşıyın.
 
-`DayState` alanları: `date, month, dayOfMonth, dayText, weekday, column, label, today, past, future, disabled, unavailable, readOnly, selected, selectedSingle, selectedStart, selectedEnd, inRange, included, inPreviewRange, previewStart, previewEnd, focused, hovered, action, canStart, canEnd, canPassThrough, dataStatus, loading, reason, reasonText, modifiers, weekStart, weekEnd, monthStart, monthEnd`.
+`DayState` alanları: `date, month, dayOfMonth, dayText, weekday, column, label, today, past, future, disabled, unavailable, readOnly, selected, selectedSingle, selectedStart, selectedEnd, inRange, included, inPreviewRange, previewStart, previewEnd, focused, hovered, action, canStart, canEnd, canPassThrough, outOfSchedule, dataStatus, loading, reason, reasonText, modifiers, weekStart, weekEnd, monthStart, monthEnd`.
 
 ## 9. Yerleşim (container'a göre)
 
@@ -248,14 +251,14 @@ Kendi `getDayAvailability` kodunuzda program kaynaklı kısıtlamaları `schedul
 
 **"Daha fazla tarih" kontrolleri:** varsayılan buton kalır; yalnızca içeriği değiştirmek için `loadMoreLabels={{ previous: <…/>, next: <…/> }}` (ReactNode), tamamen farklı bir kontrol için `renderLoadMore({ direction, canLoad, loading, loadMore, label })`, kontrolü takvimin dışına (ör. footer) taşımak için `loadMore="manual"` + `ref.loadMore('next')`.
 
-**Continuous mod:** başlangıçta yalnızca `numberOfMonths` ay render edilir; `monthsPerLoad` kadar önceki/sonraki ay eklenir, min/max'ta durur. Önceki aylar eklenirken scroll konumu korunur. DOM sınırı `maxRenderedMonths` (varsayılan 24) — aşılınca karşı uçtan ay düşülür (odaktaki ay asla). Render edilmemiş uzak bir aya `goToMonth`, ara ayları render etmeden listeyi o aya göre yeniden kurar. Liste var olan aylar arasında atlanırsa yeniden merkezlenmez; yalnızca kaydırılır.
+**Continuous mod:** başlangıçta yalnızca `numberOfMonths` ay render edilir; `monthsPerLoad` kadar önceki/sonraki ay eklenir, min/max'ta durur. Önceki aylar eklenirken scroll konumu korunur. DOM sınırı `maxRenderedMonths` (varsayılan 24) — aşılınca karşı uçtan ay düşülür. O anda DOM odağını taşıyan ay asla düşülmez; kırpma o aya kadar yapılır ve odak takvimden ayrılınca sınır tekrar tam uygulanır. Render edilmemiş uzak bir aya `goToMonth`, ara ayları render etmeden listeyi o aya göre yeniden kurar. Liste var olan aylar arasında atlanırsa yeniden merkezlenmez; yalnızca kaydırılır.
 
 ## 11. Veri yükleme (sahibi uygulama)
 
 Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unknown/loading/error` günler varsayılan olarak seçilemez (`unknownDataPolicy: 'allow'` ile değiştirilebilir).
 
 - `onRenderedMonthsChange({ months, added, removed })` ile istek başlatın (ilk mount'ta da gelir).
-- `loading` prop'u: takvim geneli ilk yükleme. `renderLoading({ scope: 'initial' | 'month' | 'load-more', months, status })`, `renderError({ months, retry })`, `onRetry(months)`.
+- `loading` prop'u: takvim hiç `loading` olmadan gösterilmediyse **ilk yükleme**dir: günler iskelet olarak çizilir, görünür yazı yoktur (`role="status"` metni yalnızca ekran okuyucu için), kök `aria-busy` alır. Veri henüz bilinmediği için seçim, yükleniyor durumundaki bir ay gibi doğrulanır: fare, klavye ve `ref.select()` aynı `data-loading` kuralına takılır (`unknownDataPolicy: 'allow'` ise izin verilir); odak ve ay gezintisi çalışmaya devam eder. Veri bir kez gösterildikten sonra yeniden açılırsa **arka plan yenilemesi**dir: görünüm, seçim ve odak korunur, yalnızca `aria-busy` ve `onLoadingChange` (`current.refreshing: true`) değişir; `renderLoading` çağrılmaz. Yenilemede de iskelet isteniyorsa takvimi `key` ile yeniden kurun. `prefers-reduced-motion: reduce` iken iskelet parıltısı ve spinner durur. `renderLoading({ scope: 'initial' | 'month' | 'load-more', months, status })`, `renderError({ months, retry })`, `onRetry(months)`.
 - Varsayılan ay/ay-ekleme yükleme görünümü **yalnızca gün iskeletidir**: her gün için eşit boyutlu bir hap (rakam genişliğinden bağımsız), görünür "Yükleniyor" yazısı yok. Ekran okuyucular için gizli durum metni, kök `aria-busy` ve canlı bölge duyurusu vardır. Görünür bir gösterge isterseniz `renderLoading` verin.
 - `onLoadingChange` yalnızca durum geçişlerinde gelir.
 
@@ -265,12 +268,14 @@ Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unk
 
 `getDayTooltip({ day, data })` → `ReactNode | { content, persistent }`; `renderDayTooltip({ day, content, trigger, placement })`; `tooltip={{ placement, boundary, offset, className, container, openDate }}` (controlled açık tarih). Varsayılan: devre dışı/müsait olmayan günlerde sebep metni (geçmiş/sınır dışı hariç), bugün için "Bugün".
 
-- `boundary: 'calendar'` (varsayılan): tooltip takvimin ay alanının içinde kalır — takvimin dışına taşmaz, ay alanının üstündeki başlık/hafta günü satırının üzerine çıkmaz. `'viewport'`: takvim dışına taşabilir, pencere içinde kalır.
+- `boundary: 'calendar'` (varsayılan): tooltip, ait olduğu ayın başlık/hafta günü satırının altındaki ve o ayın içindeki alanda kalır; takvimin dışına taşmaz. `'viewport'`: takvim dışına taşabilir, pencere içinde kalır (bu modda takvim başlıklarının üzerine gelebilir).
+- Tema: tooltip `document.body`'ye portallanır; takvim köküne verilen `--cal-tooltip-bg`, `--cal-tooltip-color`, `--cal-tooltip-shadow`, `--cal-tooltip-max-width` ve yazı tipi tooltip açılırken ona kopyalanır.
+- Dokunmatikte açılan tooltip dışarıya dokununca kapanır (`onOutsideClick` gerekmez). Dışarıdan Tab ile gelinen odak klavye odağı sayılır.
 - Yerleşim sırası: tercih edilen taraf (`placement`, varsayılan `top`) → karşı taraf → sağ → sol; tamamen sığan ilk taraf seçilir, diğer eksende sınır içine kaydırılır. Genişlik sınıra göre ayarlanır ve metin satır kırar; metin asla kesilmez. Hiçbir taraf tam sığmazsa en çok yer olan üst/alt taraf kullanılır.
 
 - Tetikleyiciler: hover, klavye focus'u, dokunmatikte dokunma (reddedilen güne dokununca açıklama açılır), `persistent` (ör. başlangıç seçildikten sonra "Çıkış tarihini seçin").
 - Anchor doğrudan ref'tir; DOM araması yoktur. Portal + `position: fixed`; scroll/resize'da rAF ile yeniden konumlanır, viewport içine sıkıştırılır, yer yoksa ters yöne döner; gün, scroll alanının dışına çıkınca gizlenir.
-- İskelet olarak çizilen günlerde (ay verisi `loading`/`unknown` veya `loading` prop'u açık) hiçbir tooltip gösterilmez — varsayılan, `getDayTooltip` ve persistent olanlar dahil.
+- İskelet olarak çizilen günlerde (ay verisi `loading`/`unknown` veya `loading` prop'u ile ilk yükleme) hiçbir tooltip gösterilmez — varsayılan, `getDayTooltip` ve persistent olanlar dahil.
 - Tooltip `pointer-events: none` — seçimle çakışmaz. Sebep metni her zaman gün butonunun `aria-label`'ında da vardır; tooltip tek bilgi kaynağı değildir.
 
 ## 13. Slotlar ve dış kontroller
@@ -314,7 +319,7 @@ Tümü typed; `onEvent(e)` aynı olayları discriminated union olarak (özel cal
 | `onOutsideClick` | Takvim ağacı dışındaki pointerdown. |
 | `onScroll` | Ay alanı kaydırıldı (frame başına bir). |
 
-**Sıra** (test edildi): başlangıç tıklaması `dateClick → dayFocusChange → change → activeEndpointChange`; bitiş tıklaması `… → change → activeEndpointChange → selectionComplete`; reddedilen `dateClick → (dayFocusChange) → invalidSelection`. Türetilmiş durum olayları (`validationChange`, `visibleMonthsChange`, `renderedMonthsChange`, `loadingChange`, `layoutChange`, `tooltipOpenChange`) commit'ten sonra effect'te gelir.
+**Sıra** (test edildi): başlangıç tıklaması `dateClick → dayFocusChange → change → activeEndpointChange`; bitiş tıklaması `dateClick → (dayFocusChange) → change → selectionComplete → activeEndpointChange`; reddedilen `dateClick → (dayFocusChange) → invalidSelection`. `activeEndpoint` **controlled** ise `onActiveEndpointChange` bir istektir ve `change`'den hemen sonra, eylem anında gelir; **uncontrolled** ise efektif uç noktadaki gerçek geçişi commit'ten sonra bildirir (ebeveyn controlled değeri reddederse olay gelmez; ebeveynin değeri dışarıdan değiştirmesi `source: 'prop'` ile bildirilir). Türetilmiş durum olayları (`validationChange`, `visibleMonthsChange`, `renderedMonthsChange`, `loadingChange`, `layoutChange`, `tooltipOpenChange`) commit'ten sonra effect'te gelir.
 
 Callback'ler render sırasında çağrılmaz; kimlik değişimi olayı yeniden üretmez. **StrictMode:** geliştirmede React effect'leri simüle unmount/remount ile iki kez çalıştırır; `onReady` her (simüle) mount için gelebilir. Paket "uygulama ömrü boyunca bir kez" garantisi vermez; gerçek remount'ta olaylar yeniden gelir. Kullanıcı eylemi olayları StrictMode'da çift gelmez (test edildi).
 
@@ -350,7 +355,7 @@ Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo
 ## 17. Erişilebilirlik
 
 - Her ay `role="grid"`, haftalar `row`, günler `gridcell` + `<button>`; tek `tabIndex=0` (roving).
-- Klavye: oklar (RTL'de yatay oklar ters), `Home`/`End` (hafta başı/sonu), `PageUp`/`PageDown` (ay), `Shift+PageUp/Down` (yıl), `Enter`/`Space` (seç), `Escape` (geçici tooltip/hover kapat). Pencere dışına çıkan focus ay değiştirir ve focus kaybolmaz.
+- Klavye: oklar (RTL'de yatay oklar ters), `Home`/`End` (hafta başı/sonu), `PageUp`/`PageDown` (ay), `Shift+PageUp/Down` (yıl), `Enter`/`Space` (seç), `Escape` (açık tooltip'i — hover, odak, dokunma veya persistent — odağı taşımadan kapatır; tuş yalnızca kapatılacak bir şey varken tüketilir). Pencere dışına çıkan focus ay değiştirir ve focus kaybolmaz.
 - `aria-label`: tam tarih + bugün/başlangıç/bitiş/aralıkta + engel sebebi. Engelli günler `aria-disabled` ile odaklanabilir kalır (sebep okunabilir).
 - Canlı bölge: seçim, ret ve yükleme duyuruları.
 - Ay ekleme/pencereleme sırasında focus korunur; "daha fazla" butonu sınırda kaybolursa focus yeni eklenen ilk güne taşınır.
@@ -358,7 +363,17 @@ Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo
 
 ## 18. SSR / Next.js
 
-Import sırasında global/DOM değişikliği yoktur; render'da `window`/`document` okunmaz. `today` (veya `defaultVisibleMonth`/`value`) verilirse sunucu tam ay HTML'i üretir ve hydration uyumsuzluğu oluşmaz (test edildi). Hiçbiri verilmezse sunucu ay tahmin etmez; yükleme yer tutucusu render edilir ve istemci ilk render'da tamamlar. Locale varsayılanları statik tablolardan gelir (sunucu/tarayıcı farkı yok). Next.js App Router'da `'use client'` bileşeni içinde kullanın.
+Import sırasında global/DOM değişikliği yoktur; render'da `window`/`document` okunmaz. `today` (veya `defaultVisibleMonth`/`value`) verilirse sunucu tam ay HTML'i üretir ve hydration uyumsuzluğu oluşmaz (test edildi). Hiçbiri verilmezse sunucu ay tahmin etmez; yükleme yer tutucusu render edilir ve istemci ilk render'da tamamlar. Locale varsayılanları statik tablolardan gelir (sunucu/tarayıcı farkı yok).
+
+**Giriş noktaları:**
+
+| Import | İçerik | `'use client'` |
+|---|---|---|
+| `calendar-kit/client` | `Calendar` ve React tipleri | var: Server Component'ten doğrudan render edilebilir (yalnızca serileştirilebilir prop'larla; `rules`, `onChange` gibi fonksiyonlar için kendi `'use client'` bileşeninizi yazın) |
+| `calendar-kit/core` | React'ten bağımsız yardımcılar: tarih modeli, motor, kurallar, adaptörler, mesajlar | yok; React yüklemez, sunucuda ve React dışı kodda çalışır |
+| `calendar-kit` | ikisinin toplamı (mevcut import'lar değişmedi) | yok: `'use client'` dosyalarında ve sunucuda yardımcılar için çalışır; `Calendar`'ı buradan doğrudan bir Server Component'te render etmek build'i durdurur (`useSyncExternalStore is not a function`) |
+
+Next.js App Router'da sunucu sayfasında `import { Calendar } from 'calendar-kit/client'` ve `import { toCalendarDate } from 'calendar-kit/core'` kullanın. `calendar-kit` girişine `'use client'` eklenmedi: eklenseydi o girişten alınan saf yardımcılar sunucuda istemci referansına dönüşüp çağrılamazdı ve mevcut sunucu import'ları kırılırdı. `import 'calendar-kit/styles.css'` `app/layout.tsx` içinde çalışır; `calendar-kit/styles.css` kendi tip bildirimiyle gelir (`exports["./styles.css"].types`); TypeScript 6+ `noUncheckedSideEffectImports` varsayılanında ortamın `*.css` bildirmesi gerekmez.
 
 ## 19. react-dates `DayPickerRangeController` karşılıkları
 
@@ -416,23 +431,31 @@ Bilinçli farklar: react-dates `focusedInput=startDate` iken bitişten önceki t
 
 | | min | gzip | brotli |
 |---|---|---|---|
-| Tümü (`export *`) | 65.7 kB | 22.5 kB | 20.0 kB |
-| Tipik: `Calendar` + `stayRules` + `messagesTr` | 55.7 kB | 19.1 kB | 17.4 kB |
-| Yalnız çekirdek (motor + adaptör + tarih) | 8.3 kB | 3.0 kB | 2.8 kB |
-| `styles.css` | 9.8 kB | 2.6 kB | 2.2 kB |
+| Tümü (`export *`) | 68.7 kB | 23.6 kB | 21.0 kB |
+| Tipik: `Calendar` + `stayRules` + `messagesTr` | 58.7 kB | 20.2 kB | 18.4 kB |
+| Yalnız çekirdek (motor + adaptör + tarih) | 8.5 kB | 3.1 kB | 2.9 kB |
+| `styles.css` | 9.4 kB | 2.6 kB | 2.2 kB |
 
-**Etkileşim** — Chrome, production React (`PROFILE=1` build), React Profiler `actualDuration` (takvim alt ağacının render+commit işi), 5 tekrarın medyanı:
+**Etkileşim** (`npm run perf`): demonun `bench.html` sayfası (yalnızca takvim + React Profiler) `react-dom/profiling` ile production modunda build edilir, sistem Chrome'u (156) gerçek fare/klavye girdisiyle sürülür; CPU yavaşlatma CDP `Emulation.setCPUThrottlingRate` ile yapılır. Ölçüm makinesi: Apple M5 Pro, macOS 26.6. Her eylem 10 kez (hover 30 kez); değerler medyan / p95, ms.
 
-| Ay / gün | Başlangıç tıklaması | Hover önizleme | Sonraki ay |
-|---|---|---|---|
-| 1 / 31 | 1.1 ms | 0.9 ms | 1.7 ms |
-| 2 / 61 | 2.3 ms | 1.4 ms | 2.1 ms |
-| 3 / 91 | 2.9 ms | 1.5 ms | 2.4 ms |
-| 12 / 365 | 15.9 ms | 5.9 ms | 10.1 ms |
+Sütunlar birbirinin yerine kullanılamaz:
+- **render**: etkileşimin yol açtığı commit'lerin React Profiler `actualDuration` toplamı — takvim alt ağacının render süresi (yalnızca render fazı; memo ile atlanan hücreler ve DOM yazımı dahil değil).
+- **işleme**: olayın sayfaya dağıtılmasından React'in DOM'u güncelleyip senkron işini bitirmesine (ilk MutationObserver geri çağrısı) kadar: zamanlama + render + commit (DOM yazımı, layout effect'ler).
+- **sonraki kare**: olayın zaman damgasından bir sonraki karenin ardındaki ilk göreve kadar (rAF + `setTimeout 0`) — girdiden sonraki çizime yaklaşık gecikme; tarayıcının stil/layout/paint işi ve kare hizalaması dahildir.
+- Ayrıca **girdi gecikmesi** (olay zaman damgası → dağıtım) ölçülür: Chrome sürekli girdiyi (hover) kareye hizaladığı için hover'da ~12–16 ms görünür; takvimden kaynaklanmaz ve "sonraki kare"ye dahildir.
 
-Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir (2 veya 12 ay fark etmez). Başlangıç seçimi tüm günlerin uygunluğunu değiştirdiği için tam geçiş yapar (beklenen). Tarih motoru 365 gün için ~0.34 ms (Node mikro ölçüm).
+| Ay / gün | CPU | Başlangıç tıklaması: render · işleme · sonraki kare | Hover: render · işleme | Bitiş tıklaması: render · işleme | Ok tuşu: render · işleme | Sonraki ay: render · işleme |
+|---|---|---|---|---|---|---|
+| 2 / 61 | 1× | 1.7 · 1.1 · 5.3 | 0.8 · 1.8 | 2.5 · 1.3 | 0.7 · 1.7 | 1.4 · 1.6 |
+| 2 / 61 | 4× | 3.8 · 2.4 · 11.7 | 1.6 · 3.1 | 4.8 · 2.6 | 1.3 · 2.8 | 2.9 · 3.5 |
+| 2 / 61 | 6× | 5.3 · 3.5 · 18.9 | 2.2 · 4.6 | 7.5 · 3.6 | 2.2 · 4.3 | 5.2 · 5.8 |
+| 12 / 365 | 1× | 6.1 · 2.7 · 12.6 | 2.5 · 4.1 | 9.3 · 3.8 | 1.9 · 3.0 | 4.1 · 4.6 |
+| 12 / 365 | 4× | 16.0 · 7.0 · 35.6 | 4.9 · 8.0 | 21.8 · 7.7 | 4.6 · 7.1 | 9.4 · 11.3 |
+| 12 / 365 | 6× | 24.9 · 10.7 · 57.0 | 7.4 · 12.0 | 31.7 · 11.7 | 6.4 · 10.9 | 13.9 · 17.2 |
 
-Ölçüm notu: 12 ayda tıklama ~16 ms'dir; çok uzun listeler için `navigation="continuous"` + makul `maxRenderedMonths` önerilir.
+(Medyanlar; p95 değerleri betik çıktısında. Son ölçüm 2026-11-07, Chrome 156, F16/F32/F37 değişikliklerinden sonra; önceki ölçümle (Chrome 155) farklar ölçüm gürültüsü içinde.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
+
+Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 32 ms, p95 43 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
 
 ## 21. Dağıtım, destek, lisans
 
@@ -445,9 +468,15 @@ Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ort
 
 Kapsam dışı (ilk sürüm, tasarım engellemiyor): birden fazla bağımsız aralık, Gregoryen dışı takvimler, saat seçici, tekrar eden rezervasyon motoru, çok günlük etkinlik yerleşimi, fiyat/kapasite hesabı, popup/modal yönetimi.
 
+Belgelenmiş sözleşmeler (doğrulama sırasında netleştirildi, `docs/verification-findings.md`):
+- `requireReachableEnd` en fazla 63 bitiş adayına bakar (minimum uzunluktan başlayarak). Başlangıç yalnızca geçerli bitiş olmadığı **kanıtlanırsa** reddedilir: `maxLength`'e kadar tüm adaylar geçersizse ya da dolu bir gece, `maxDate`/gelecek sınırı veya eksik veri aramayı bitirirse. 63 aday bu kanıta ulaşmadan biterse başlangıç seçilebilir kalır ("bulunamadı" ≠ "yok"); bitiş seçilirken her zamanki gibi doğrulanır (F26).
+- Hariç bitişli (konaklama) aynı gün aralığının uzunluğu 0'dır; `allowSameDay` ile birlikte `minNights`/`minLength` 0 veya tanımsız olmalıdır (F27).
+- Ay ekleme (load-more) referans ayı değiştirmez, bu yüzden `onVisibleMonthChange` göndermez; eklenen aylar `onLoadMore` ve `onRenderedMonthsChange` ile bildirilir (F29).
+- Tarih yardımcıları 0001–9999 yılları için tanımlıdır; bu aralığın dışına çıkan aritmetiğin sonucu tanımsızdır. `timeZone` geçerli bir IANA adı olmalıdır, aksi halde `Intl` `RangeError` fırlatır (F31).
+- Uncontrolled kullanımda `mode` değişince seçim yeni modun boş değerine sıfırlanır; eski moda dönülünce önceki seçim geri gelmez. Bu bir prop değişimi olduğundan `onChange`/`change` gönderilmez (sıfırlamayı tüketici zaten `mode` prop'unu değiştirerek bilir). Controlled kullanımda `value` hiç değiştirilmez (F32). `today` verilmediğinde görünen ay ilk bilinen "bugün"e göre bir kez belirlenir; gece yarısı veya sekme yeniden görünür olunca yenilenen "bugün" yalnızca bugün işaretini taşır, görünür ayı değiştirmez (F32).
+
 Bilinen sınırlar:
 - Continuous modda DOM sınırı ay bazlı kırpma ile sağlanır; ölçüme dayalı sanal kaydırma (virtualization) yok — ölçümler buna gerek göstermedi.
-- `requireReachableEnd` aramaları `maxLength` yoksa başlangıçtan en fazla ~62 gün ileri bakar.
-- Tooltip `container`'ı CSS `transform` içeren bir elementse `position: fixed` o elemente göre konumlanır; varsayılan `document.body` önerilir.
+- `requireReachableEnd` aramaları en fazla 63 bitiş adayına bakar; daha uzak bitişler için başlangıç reddedilmez ama önceden de doğrulanmaz.
 - Ay sayısı JS'te `minDaySize` ve sabit 8px ay padding'i ile hesaplanır; `unstyled` kullanımda kendi CSS'inizin bu ölçülerle uyumlu olması gerekir.
 - Hover önizlemesi aylar arası her render'da tüm gün durumlarını yeniden hesaplar (12 ayda 5.9 ms); ay düzeyinde memo gerekirse ileride eklenebilir.

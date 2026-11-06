@@ -1,9 +1,10 @@
 import { type ReactNode, type Ref, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { TooltipBoundary, TooltipPlacement } from './types';
-import { mergeRefs, useIsomorphicLayoutEffect } from './utils';
+import type { TooltipBoundary, TooltipPlacement } from './types.js';
+import { mergeRefs, useIsomorphicLayoutEffect } from './utils.js';
 
 const PAD = 8;
+const THEME_VARS = ['--cal-tooltip-bg', '--cal-tooltip-color', '--cal-tooltip-shadow', '--cal-tooltip-max-width'];
 
 export interface Rect {
   left: number;
@@ -61,6 +62,7 @@ export function computeTooltipPosition(
   const side: TooltipPlacement[] = preferred === 'left' || preferred === 'right' ? ['top', 'bottom'] : ['right', 'left'];
   const order = [preferred, OPPOSITE[preferred], ...side];
   let placement = order.find((p) => fits(place(p)));
+  let { x, y } = placement ? place(placement) : { x: 0, y: 0 };
   if (!placement) {
     const room: Record<TooltipPlacement, number> = {
       top: anchor.top - bounds.top,
@@ -69,8 +71,11 @@ export function computeTooltipPosition(
       right: bounds.right - anchor.left - anchor.width,
     };
     placement = (['top', 'bottom'] as const).reduce((a, b) => (room[b] > room[a] ? b : a), preferred === 'bottom' ? 'bottom' : 'top');
+    // Nothing fits: keep the whole tooltip inside the bounds (it may then
+    // overlap the anchor, but its text is never cut off).
+    ({ x, y } = place(placement));
+    y = clampY(y);
   }
-  const { x, y } = place(placement);
   const vertical = placement === 'top' || placement === 'bottom';
   const arrow = vertical ? Math.min(Math.max(cx - x, 10), Math.max(10, tip.width - 10)) : Math.min(Math.max(cy - y, 10), Math.max(10, tip.height - 10));
   return { x, y, placement, arrow, hidden };
@@ -81,6 +86,10 @@ export interface TooltipProps {
   anchor: HTMLElement | null;
   /** Element that clips the anchor (the months viewport); also the `calendar` boundary. */
   clipElement?: HTMLElement | null;
+  /** Element whose theme (tooltip CSS variables, font) the portalled tooltip copies. */
+  themeSource?: HTMLElement | null;
+  /** Vertical limits (viewport px) of the area the tooltip may use in `calendar` mode. */
+  getArea?: () => { top?: number; bottom?: number };
   boundary: TooltipBoundary;
   placement: TooltipPlacement;
   offset: number;
@@ -107,9 +116,30 @@ export function Tooltip(props: TooltipProps) {
   const { anchor, placement, offset, clipElement, boundary } = props;
   const elRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [pos, setPos] = useState<(TooltipPosition & { maxWidth: number }) | null>(null);
+  const [pos, setPos] = useState<(TooltipPosition & { tx: number; ty: number; maxWidth: number }) | null>(null);
+  const [theme, setTheme] = useState<Record<string, string>>({});
+  // Translation currently applied to the element. Comparing it with the
+  // element's on-screen rect gives the origin of its containing block: not
+  // the viewport when the portal container (or an ancestor) has a transform,
+  // filter or contain, where position: fixed becomes relative to that box.
+  const appliedRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => setMounted(true), []);
+
+  // The portal leaves the calendar's subtree, so CSS variables set on the
+  // calendar root would not reach the tooltip: copy the few it uses.
+  const themeSource = props.themeSource;
+  useIsomorphicLayoutEffect(() => {
+    if (!mounted || !themeSource) return;
+    const cs = getComputedStyle(themeSource);
+    const next: Record<string, string> = {};
+    for (const name of THEME_VARS) {
+      const v = cs.getPropertyValue(name).trim();
+      if (v) next[name] = v;
+    }
+    if (cs.fontFamily) next.fontFamily = cs.fontFamily;
+    setTheme((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+  }, [mounted, themeSource, anchor]);
 
   useIsomorphicLayoutEffect(() => {
     if (!mounted || !anchor) return;
@@ -120,7 +150,11 @@ export function Tooltip(props: TooltipProps) {
       if (!el || !anchor.isConnected) return;
       const viewport: Rect = { left: 0, top: 0, right: document.documentElement.clientWidth || window.innerWidth, bottom: window.innerHeight };
       const clip = clipElement?.getBoundingClientRect();
-      const bounds = boundary === 'calendar' && clip ? intersect(viewport, clip) : viewport;
+      let bounds = boundary === 'calendar' && clip ? intersect(viewport, clip) : viewport;
+      if (boundary === 'calendar') {
+        const area = props.getArea?.();
+        if (area) bounds = { ...bounds, top: Math.max(bounds.top, area.top ?? -Infinity), bottom: Math.min(bounds.bottom, area.bottom ?? Infinity) };
+      }
       const maxWidth = Math.max(80, Math.floor(bounds.right - bounds.left - 2 * PAD));
       const next = computeTooltipPosition(
         anchor.getBoundingClientRect(),
@@ -130,10 +164,14 @@ export function Tooltip(props: TooltipProps) {
         offset,
         clip ? intersect(viewport, clip) : viewport,
       );
+      const own = el.getBoundingClientRect();
+      const origin = { x: own.left - appliedRef.current.x, y: own.top - appliedRef.current.y };
+      const tx = Math.round(next.x - origin.x);
+      const ty = Math.round(next.y - origin.y);
       setPos((p) =>
-        p && p.x === next.x && p.y === next.y && p.placement === next.placement && p.hidden === next.hidden && p.arrow === next.arrow && p.maxWidth === maxWidth
+        p && p.tx === tx && p.ty === ty && p.placement === next.placement && p.hidden === next.hidden && p.arrow === next.arrow && p.maxWidth === maxWidth
           ? p
-          : { ...next, maxWidth },
+          : { ...next, tx, ty, maxWidth },
       );
     };
     const schedule = () => {
@@ -155,7 +193,8 @@ export function Tooltip(props: TooltipProps) {
 
   if (!mounted || !anchor) return null;
   const container = props.container ?? document.body;
-  const p = pos ?? { x: 0, y: 0, placement, arrow: 0, hidden: true, maxWidth: undefined };
+  const p = pos ?? { tx: 0, ty: 0, placement, arrow: 0, hidden: true, maxWidth: undefined };
+  appliedRef.current = { x: p.tx, y: p.ty };
   return createPortal(
     <div
       ref={mergeRefs(elRef, props.tooltipRef)}
@@ -164,11 +203,15 @@ export function Tooltip(props: TooltipProps) {
       className={props.className}
       data-placement={p.placement}
       style={{
+        ...theme,
         position: 'fixed',
         top: 0,
         left: 0,
+        // Width must not depend on the portal container's width (fixed elements
+        // inside a transformed box size against that box).
+        width: 'max-content',
         maxWidth: p.maxWidth ? `min(var(--cal-tooltip-max-width, 280px), ${p.maxWidth}px)` : undefined,
-        transform: `translate3d(${Math.round(p.x)}px, ${Math.round(p.y)}px, 0)`,
+        transform: `translate3d(${p.tx}px, ${p.ty}px, 0)`,
         visibility: p.hidden || !pos ? 'hidden' : 'visible',
         pointerEvents: 'none',
         ['--cal-tooltip-arrow' as string]: `${Math.round(p.arrow)}px`,

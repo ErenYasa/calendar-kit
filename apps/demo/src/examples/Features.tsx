@@ -85,9 +85,16 @@ export function TooltipExample() {
   const [boundary, setBoundary] = useState<TooltipBoundary>('calendar');
   const [placement, setPlacement] = useState<TooltipPlacement>('top');
   const [value, setValue] = useState<CalendarDate | null>(null);
+  // tooltip.container: a portal target inside a transformed box (as in many
+  // animated modals) must not shift the tooltip.
+  const [inTransformed, setInTransformed] = useState(false);
+  const [host, setHost] = useState<HTMLElement | null>(null);
   return (
     <div>
       <div className="row controls">
+        <label>
+          <input type="checkbox" checked={inTransformed} onChange={(e) => setInTransformed(e.target.checked)} /> container: transform içeren kutu
+        </label>
         <label>
           boundary{' '}
           <select value={boundary} onChange={(e) => setBoundary(e.target.value as TooltipBoundary)}>
@@ -114,12 +121,13 @@ export function TooltipExample() {
           value={value}
           onChange={setValue}
           maxBlockSize={300}
-          tooltip={{ boundary, placement }}
+          tooltip={{ boundary, placement, container: inTransformed ? host : undefined }}
           getDayTooltip={({ day }) =>
             day.selected ? { content: 'Bu uzun bir açıklama metni: sınıra göre satır kırar ve hiçbir zaman kesilmez.', persistent: true } : null
           }
         />
       </div>
+      <div ref={setHost} className="transformed-host" />
     </div>
   );
 }
@@ -200,12 +208,17 @@ export function LoadMoreExample() {
 export function SkeletonExample() {
   const [loading, setLoading] = useState(true);
   const [custom, setCustom] = useState(false);
+  // Calendar-wide `loading`: skeleton on the first load, a later one is a background refresh.
+  const [wide, setWide] = useState(false);
+  const [mountKey, setMountKey] = useState(0);
   return (
     <Calendar
+      key={mountKey}
       mode="single"
       locale="tr-TR"
       messages={messagesTr}
       numberOfMonths={2}
+      loading={wide}
       getDataStatus={(): DataStatus => (loading ? 'loading' : 'loaded')}
       renderLoading={custom ? ({ scope, months }) => (scope === 'month' ? <span className="badge-loading">{months[0]} yükleniyor</span> : null) : undefined}
       renderFooter={() => (
@@ -216,6 +229,19 @@ export function SkeletonExample() {
           <label>
             <input type="checkbox" checked={custom} onChange={(e) => setCustom(e.target.checked)} /> Ek gösterge (<code>renderLoading</code>)
           </label>
+          <label>
+            <input type="checkbox" checked={wide} onChange={(e) => setWide(e.target.checked)} /> Takvim geneli <code>loading</code> (veri gösterildikten sonra: arka plan yenilemesi)
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              setWide(true);
+              setMountKey((k) => k + 1);
+              setTimeout(() => setWide(false), 3000);
+            }}
+          >
+            İlk yüklemeyi göster
+          </button>
           <span className="note">Varsayılan: yalnızca eşit boyutlu iskelet; ekran okuyucu “yükleniyor” duyurusu alır.</span>
         </div>
       )}

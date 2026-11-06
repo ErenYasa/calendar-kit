@@ -1,5 +1,5 @@
 import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from 'react';
-import type { CalendarDate, CalendarMonth, Weekday } from '../date/calendarDate';
+import type { CalendarDate, CalendarMonth, Weekday } from '../date/calendarDate.js';
 import type {
   ActivationKind,
   DataStatus,
@@ -11,8 +11,8 @@ import type {
   SelectionRules,
   ValidationIssue,
   ValidationResult,
-} from '../core/types';
-import type { CalendarMessagesInput } from '../i18n/messages';
+} from '../core/types.js';
+import type { CalendarMessagesInput } from '../i18n/messages.js';
 
 // ------------------------------------------------------------------ events
 
@@ -381,7 +381,10 @@ export interface CalendarLayout {
 }
 
 export interface LoadingSnapshot {
+  /** `loading` is on and the calendar has not been shown without it yet (skeleton). */
   initial: boolean;
+  /** `loading` is on after data was shown: background refresh, the view is kept. */
+  refreshing: boolean;
   loadingMonths: readonly CalendarMonth[];
   errorMonths: readonly CalendarMonth[];
   busy: boolean;
@@ -478,7 +481,7 @@ export interface CalendarSnapshot {
 export interface SlotContext extends CalendarSnapshot {
   instanceId: string;
   actions: CalendarController;
-  messages: import('../i18n/messages').CalendarMessages;
+  messages: import('../i18n/messages.js').CalendarMessages;
   locale: string;
   formatDate: (date: CalendarDate, options?: Intl.DateTimeFormatOptions) => string;
 }
@@ -565,13 +568,19 @@ export interface CalendarBaseProps<TDayData = unknown, TContext = unknown> exten
    * min/max/fixed length, availability marked `schedule: true`) while real
    * availability, bounds and validators still apply. `true` relaxes both groups.
    */
-  relaxSchedule?: boolean | import('../core/rules').RelaxScheduleOptions;
+  relaxSchedule?: boolean | import('../core/rules.js').RelaxScheduleOptions;
 
   // data
   getDayData?: (date: CalendarDate) => TDayData | undefined;
   /** Month data status (also feeds the rules, see `unknownDataPolicy`). */
   getDataStatus?: (month: CalendarMonth) => DataStatus;
-  /** Calendar-wide initial loading flag. */
+  /**
+   * Calendar-wide loading flag. While the calendar has not yet been shown
+   * without it, it is the initial load: days are drawn as a skeleton and
+   * `renderLoading({ scope: 'initial' })` is used. Turned on again later it is
+   * a background refresh: days, selection and focus are kept, only `aria-busy`
+   * is set and `LoadingSnapshot.refreshing` reported.
+   */
   loading?: boolean;
   onRetry?: (months: readonly CalendarMonth[]) => void;
   modifiers?: Record<string, (day: DayState) => boolean>;

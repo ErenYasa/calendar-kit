@@ -3,8 +3,8 @@
  * (nights, check-in-only, …) into the generic `SelectionRules` of the core.
  * The core itself never knows about stays, boats or events.
  */
-import { type CalendarDate, type Weekday, addDays } from '../date/calendarDate';
-import type { DayAvailability, RuleContext, SelectionRules } from '../core/types';
+import { type CalendarDate, type Weekday, addDays } from '../date/calendarDate.js';
+import type { DayAvailability, RuleContext, SelectionRules } from '../core/types.js';
 
 type BaseRules<TContext> = Pick<
   SelectionRules<TContext>,
@@ -27,7 +27,11 @@ export interface StayRulesOptions<TContext = unknown> extends BaseRules<TContext
   minNights?: number;
   maxNights?: number;
   fixedNights?: number;
-  /** Allow `start === end` (day-use). Time rules stay in the consumer app. Default `false`. */
+  /**
+   * Allow `start === end` (day-use). Time rules stay in the consumer app.
+   * Default `false`. A day-use stay has 0 nights, so leave `minNights` unset
+   * or 0 when enabling it.
+   */
   allowSameDay?: boolean;
   checkInWeekdays?: readonly Weekday[];
   checkOutWeekdays?: readonly Weekday[];

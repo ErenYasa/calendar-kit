@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [development, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, tests, builds, SSR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck (package source, package tests/config, demo, demo config)
+        run: npm run typecheck
+      # Before the tests: test/package.test.ts checks the built dist/ against npm pack.
+      - name: Build (package + demo)
+        run: npm run build
+      - name: Tests (package + demo)
+        run: npm test
+      - name: SSR smoke test (built package via its exports)
+        run: npm run smoke:ssr -w calendar-kit
+
+  browser:
+    name: Browser checks (Google Chrome)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # scripts/browser-checks.mjs drives the system Google Chrome (channel
+      # "chrome") through playwright-core; install it explicitly instead of
+      # relying on whatever the runner image ships.
+      - name: Install Google Chrome
+        run: npx playwright-core install --with-deps chrome
+      - run: google-chrome --version
+      - name: Browser regression checks
+        run: npm run test:browser

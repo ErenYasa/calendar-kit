@@ -7,7 +7,7 @@ import {
   parseDate,
   toEpochDay,
   fromEpochDay,
-} from '../date/calendarDate';
+} from '../date/calendarDate.js';
 import type {
   ActivationPlan,
   DataStatus,
@@ -22,7 +22,7 @@ import type {
   SelectionState,
   ValidationIssue,
   ValidationResult,
-} from './types';
+} from './types.js';
 
 export interface ResolvedAvailability {
   closed: boolean;
@@ -284,18 +284,29 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
     if (!rules.requireReachableEnd || rules.fixedLength != null) return null;
     const minLen = Math.max(rules.minLength ?? 0, allowSameDay ? 0 : 1);
     const firstEndOffset = semantics === 'exclusive' ? minLen : Math.max(0, minLen - 1);
-    const maxLen = rules.maxLength ?? minLen + 62;
+    const maxLen = rules.maxLength ?? Infinity;
     const lastEndOffset = semantics === 'exclusive' ? maxLen : maxLen - 1;
+    const searchEnd = Math.min(lastEndOffset, firstEndOffset + 62);
     let lastIssue: ValidationIssue | null = null;
-    for (let off = firstEndOffset; off <= Math.min(lastEndOffset, firstEndOffset + 62); off++) {
+    let settled = searchEnd === lastEndOffset;
+    for (let off = firstEndOffset; off <= searchEnd; off++) {
       const issue = validateRangeBuiltIn(start, addDays(start, off));
       if (!issue) return null;
       lastIssue = issue;
-      // Once the interior is blocked, no later end can work.
-      if (issue.code === 'blocked-in-range' || issue.code.startsWith('data-')) break;
+      // Once the interior is blocked or a bound is passed, no later end can work.
+      if (issue.code === 'blocked-in-range' || issue.code === 'after-max' || issue.code === 'future' || issue.code.startsWith('data-')) {
+        settled = true;
+        break;
+      }
     }
-    if (lastIssue?.code.startsWith('data-')) return lastIssue;
-    if (rules.minLength != null && minLen > 0)
+    // The search budget ran out without proving that no end exists: a later end
+    // may still be valid, so the start is not rejected (the end is validated on selection).
+    if (!settled) return null;
+    // Bounds, past/future and data problems are reported as such. "Minimum N"
+    // only when a configured minimum above the natural one is the reason.
+    if (lastIssue && /^(before-min|after-max|past|future|data-)/.test(lastIssue.code)) return lastIssue;
+    const naturalMin = semantics === 'inclusive' ? 1 : allowSameDay ? 0 : 1;
+    if (rules.minLength != null && rules.minLength > naturalMin)
       return { code: 'min-length', date: start, params: { min: rules.minLength, unit }, ...(lastIssue?.dayReason ? { dayReason: lastIssue.dayReason } : {}) };
     return lastIssue;
   }
@@ -392,8 +403,8 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
           return planned('toggle-off', date, { mode: 'multiple', value: sel.value.filter((d) => d !== date) });
         const issue =
           checkStartBasic(date) ??
-          (rules.maxSelections != null && sel.value.length >= rules.maxSelections
-            ? { code: 'max-selections' as const, date, params: { max: rules.maxSelections, actual: sel.value.length + 1 } }
+          (rules.maxSelections != null && new Set(sel.value).size >= rules.maxSelections
+            ? { code: 'max-selections' as const, date, params: { max: rules.maxSelections, actual: new Set(sel.value).size + 1 } }
             : null);
         return planned('toggle-on', date, { mode: 'multiple', value: [...sel.value, date] }, issue);
       }

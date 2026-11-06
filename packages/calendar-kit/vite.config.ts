@@ -12,12 +12,18 @@ export default defineConfig({
     minify: false,
     emptyOutDir: false,
     lib: {
-      entry: 'src/index.ts',
+      entry: { index: 'src/index.ts', core: 'src/core.ts', client: 'src/client.ts' },
       formats: ['es'],
-      fileName: () => 'index.js',
+      fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client', 'react-dom/server'],
+      // 'use client' is the first statement of the client entry and is kept
+      // there (checked by test/build-output.test.ts); the generic warning is noise.
+      onLog(level, log, handler) {
+        if (log.code === 'MODULE_LEVEL_DIRECTIVE' && log.id?.endsWith('src/client.ts')) return;
+        handler(level, log);
+      },
     },
   },
   test: {
