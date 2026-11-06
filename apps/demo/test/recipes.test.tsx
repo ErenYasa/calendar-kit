@@ -1,7 +1,7 @@
 /**
- * F22 regression: the stay demo's "Özel tarih" switch must drive relaxSchedule
- * and the mobile example must use loadMoreLabels (both were lost once when the
- * file was overwritten outside the editor session).
+ * F22 regression (moved with the docs site): the home rental recipe's
+ * "Custom dates" switch must drive relaxSchedule, and the progressive months
+ * example must use loadMoreLabels.
  */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -15,20 +15,16 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-async function loadStay() {
-  const mod = await import('../src/examples/Stay');
-  return mod;
-}
 
 const flushData = () =>
   act(async () => {
     await vi.advanceTimersByTimeAsync(2000);
   });
 
-describe('F22 stay demo', () => {
-  it('"Özel tarih" relaxes the 2-night minimum', async () => {
-    const { StayReference } = await loadStay();
-    const { container } = render(<StayReference />);
+describe('F22 docs examples', () => {
+  it('"Custom dates" relaxes the 2-night minimum in the home rental recipe', async () => {
+    const { default: HomeRental } = await import('../src/examples/recipes/HomeRental');
+    const { container } = render(<HomeRental />);
     await flushData();
     const btn = (date: string) => container.querySelector<HTMLElement>(`button[data-date="${date}"]`);
     const next = (date: string) => {
@@ -41,11 +37,11 @@ describe('F22 stay demo', () => {
     for (const b of [...container.querySelectorAll<HTMLElement>('button[data-date]:not([aria-disabled])')]) {
       fireEvent.click(b, { detail: 1 });
       const n = btn(next(b.dataset.date!));
-      if (n && n.getAttribute('aria-label')?.includes('Minimum 2 gece')) {
+      if (n && n.getAttribute('aria-label')?.includes('Minimum 2 nights')) {
         start = b.dataset.date!;
         break;
       }
-      fireEvent.click(screen.getByText('Temizle'));
+      fireEvent.click(screen.getByText('Clear'));
     }
     expect(start, 'a start with a min-stay-blocked next day').not.toBeNull();
     expect(btn(next(start!))!.getAttribute('aria-disabled')).toBe('true');
@@ -55,12 +51,11 @@ describe('F22 stay demo', () => {
     expect(btn(next(start!))!.getAttribute('aria-disabled')).toBeNull();
   });
 
-  it('mobile example labels both load-more buttons "Daha fazla tarih göster"', async () => {
-    const { StayMobile } = await loadStay();
-    render(<StayMobile />);
+  it('the progressive months example labels both load-more buttons', async () => {
+    const { default: LoadMore } = await import('../src/examples/features/LoadMore');
+    render(<LoadMore />);
     await flushData();
     const buttons = screen.getAllByRole('button').filter((b) => b.classList.contains('cal-load-more'));
-    expect(buttons.length).toBeGreaterThan(0);
-    for (const b of buttons) expect(b.textContent).toBe('Daha fazla tarih göster');
+    expect(buttons.map((b) => b.textContent).sort()).toEqual(['Show earlier dates', 'Show more dates']);
   });
 });
