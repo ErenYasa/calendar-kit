@@ -483,3 +483,42 @@ describe('F26 reachable-end search budget vs "no valid end"', () => {
     expect(engine(stayRules({ minNights: 2, getDayStatus: (x) => (x === '2026-11-03' ? 'booked' : undefined) })).checkStart(S)?.code).toBe('min-length');
   });
 });
+
+describe('F32 a refreshed "today" does not move the visible month', () => {
+  const months = () => [...document.querySelectorAll('.cal-month')].map((m) => m.getAttribute('data-month'));
+  const crossMidnight = async () => {
+    await act(async () => {
+      vi.setSystemTime(new Date(2026, 10, 1, 0, 0, 5)); // local 1 Nov 2026
+      await vi.advanceTimersByTimeAsync(20_000);
+    });
+  };
+
+  it('without user navigation the month stays; the today marker moves', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    vi.setSystemTime(new Date(2026, 9, 31, 23, 59, 50));
+    try {
+      render(<Calendar mode="single" />);
+      expect(months()).toEqual(['2026-10']);
+      expect(document.querySelector('.cal-day[data-today] button')!.getAttribute('data-date')).toBe('2026-10-31');
+      await crossMidnight();
+      expect(months()).toEqual(['2026-10']);
+      expect(document.querySelector('.cal-day[data-today]')).toBeNull(); // 1 Nov is not rendered
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('after the user navigated, the position is kept', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    vi.setSystemTime(new Date(2026, 9, 31, 23, 59, 50));
+    try {
+      render(<Calendar mode="single" numberOfMonths={1} />);
+      fireEvent.click(document.querySelector<HTMLElement>('.cal-nav-button[data-direction="previous"]')!);
+      expect(months()).toEqual(['2026-09']);
+      await crossMidnight();
+      expect(months()).toEqual(['2026-09']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

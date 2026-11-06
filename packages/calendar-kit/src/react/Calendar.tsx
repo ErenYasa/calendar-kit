@@ -262,6 +262,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     () => parseMonth(props.defaultVisibleMonth) ?? selectionAnchorMonth(selection),
   );
   const anchorProp = props.visibleMonth ? parseMonth(props.visibleMonth) : null;
+  // The first known "today" fixes the default month; a later refresh of today
+  // (midnight, tab becoming visible) only moves the today marker.
+  if (!anchorProp && !anchorState && today) setAnchorState(getMonth(today));
   const referenceMonth: CalendarMonth | null = anchorProp ?? anchorState ?? (today ? getMonth(today) : null);
 
   const pagedWindow = referenceMonth
