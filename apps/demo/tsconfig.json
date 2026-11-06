@@ -1,3 +1,4 @@
+// Browser app and its tests; vite.config.ts is checked by tsconfig.node.json.
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
@@ -13,7 +14,6 @@
   },
   "include": [
     "src",
-    "test",
-    "vite.config.ts"
+    "test"
   ]
 }

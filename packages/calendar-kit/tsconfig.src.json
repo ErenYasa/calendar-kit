@@ -1,0 +1,11 @@
+// Library source only: runs in browsers and on the server, so no Node or test globals.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [],
+    "noEmit": true
+  },
+  "include": [
+    "src"
+  ]
+}

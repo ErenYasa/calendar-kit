@@ -1,8 +1,16 @@
+// Tests and build config (Node + Vitest globals). The source is also checked without them via tsconfig.src.json.
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vitest/globals"],
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
     "noEmit": true
   },
-  "include": ["src", "test", "vite.config.ts"]
+  "include": [
+    "src",
+    "test",
+    "vite.config.ts"
+  ]
 }
