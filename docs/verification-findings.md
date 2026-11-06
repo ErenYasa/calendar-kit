@@ -66,6 +66,7 @@ Ek (bulgu değil, kullanıcı isteği): `calendar-kit/client` (`'use client'`) v
 | F35 | 7 | `transform` içeren portal kabında tooltip kabın konumu kadar kayıyor; dar kapta genişliği kaba göre daralıyor (S01'den) | kanıtlandı (Chrome: +300 px kayma; demo: −332 px boşluk) | düzeltildi |
 | F36 | düşük | `calendar-kit/styles.css` export'unun tip bildirimi yok: TypeScript 6+ (`noUncheckedSideEffectImports` varsayılan açık) ortamı `*.css` bildirmiyorsa `import 'calendar-kit/styles.css'` TS2882 verir. Vite (`vite/client`) ve Next'te sorun yok | kanıtlandı (temiz tüketici, TS 7.0.2) | düzeltildi: `exports["./styles.css"].types` → `dist/styles.css.d.ts` (kullanıcı onayıyla) |
 | F37 | 6 | `loading` ile ilk yüklemede fareyle seçim (CSS katmanı) engelleniyor ama klavyeyle ve `ref.select()` ile veri bilinmeden seçim yapılabiliyordu | kanıtlandı (test; Chrome) | düzeltildi: tüm yollar aynı `data-loading` doğrulamasından geçer, odak/gezinti ayrı |
+| F38 | düşük | `DefaultDayData.icon` + `label` birlikteyken ikon sayının üstünde akışta durduğu için etiket aşağı itiliyor; minimum hücre boyutunda (40 px) etiket bugün/seçim halkasını aşıyor. Yalnızca etiket veya etiket + rozet sorunsuz | kanıtlandı (Chrome, docs "Day content" örneği: 2026-11-01 "★" + "$158", etiketin 2 köşesi halkanın dışında) | açık (dokümantasyon işinde paket davranışı değiştirilmedi) |
 | S01 | şüphe | `transform` içeren portal container'da tooltip kayması | yeniden üretildi → F35 | F35'e taşındı |
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | bu makinede yeniden üretilemedi (macOS overlay scrollbar, genişlik 0) | doğrulanamadı |
@@ -120,6 +121,12 @@ Next.js sayfaları (her biri `start` ve `dev` ile):
   ekran okuyucular (VoiceOver/NVDA).
 
 ## Tarayıcı regresyon kontrolleri
+
+Not (2026-11-07, `feature/demo-documentation`): demo dokümantasyon sitesine dönüştü. Kontroller
+aynı doğrulamalarla yeni örneklere taşındı (ör. F30 → "Day content", F34 → "Progressive
+months", F35 → "Inline, modal & portal" içindeki `<dialog>`; F30 ikonlu günleri kapsamaz,
+bkz. F38). Siteye ait D01–D04 kontrolleri eklendi: tüm sayfalar/örnekler hatasız yüklenir,
+menü ve başlık odağı, mobil menü + 375 px'te yatay taşma yok, View code sekmeleri + kopyalama.
 
 `npm run test:browser` (playwright-core + sistem Chrome, demo üzerinde) jsdom'un
 doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F16, F17,

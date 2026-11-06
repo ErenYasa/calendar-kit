@@ -6,7 +6,8 @@ React + TypeScript için hafif, erişilebilir, responsive ve genişletilebilir t
 
 - Bağımlılık yok (React/ReactDOM peer). Moment, react-dates veya başka tarih kütüphanesi kullanılmaz.
 - Tipik kullanım **20.2 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
-- 142 paket testi + 2 demo testi, gerçek Chrome'da 9 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
+- Vitest paket ve demo testleri, gerçek Chrome'da tarayıcı regresyon ve dokümantasyon sitesi kontrolleri (`npm run test:browser`) ve dist üzerinden SSR duman testi.
+- İngilizce dokümantasyon sitesi `apps/demo` içindedir: her özellik açıklama, canlı örnek ve aynı dosyadan gelen "View code" ile anlatılır.
 
 ---
 
@@ -26,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Demo: **http://127.0.0.1:5173**
+Dokümantasyon / demo: **http://127.0.0.1:5173** (hash rotaları, ör. `#/tooltip`)
 
 | Komut (kök dizinde) | Ne yapar |
 |---|---|
@@ -56,12 +57,17 @@ calendar-kit/
 │  ├─ src/styles/index.scss      ← varsayılan tema → dist/styles.css
 │  ├─ test/                      ← vitest
 │  └─ scripts/                   ← size.mjs, ssr-smoke.mjs
-└─ apps/demo/                    ← yalnızca public API'yi kullanan demo
+└─ apps/demo/                    ← dokümantasyon sitesi (yalnızca public API)
+   ├─ src/docs/                  ← kabuk, menü, sayfalar (pages/), Example/kod bileşenleri
+   ├─ src/examples/              ← her örnek tek dosya (+ CSS); canlı bileşen ve gösterilen kod buradan
+   ├─ src/snippets/              ← canlı olmayan kod parçaları (kurulum, Next.js) — typecheck edilir
+   ├─ code-plugin.ts             ← `?code` import'u: dosya + yerel bağımlılıkları, build'de renklendirilir
+   └─ bench.html, src/bench.tsx  ← `npm run perf` ölçüm sayfası
 ```
 
 Katmanlar tek yönlü bağımlıdır: `date` ← `core` ← `adapters` ← `react`. Çekirdek (`createSelectionEngine`) React olmadan da kullanılabilir (ör. sunucuda aynı kurallarla doğrulama; 2.9 kB gzip).
 
-**Demo ve public API ayrımı:** demo kodu yalnızca public adları import eder (`import { Calendar } from 'calendar-kit'`, `import 'calendar-kit/styles.css'`). Geliştirmede (HMR, paket build'i gerekmeden) bu iki public giriş noktası demonun `vite.config.ts` ve `tsconfig.json` dosyalarında workspace kaynaklarına eşlenir. Yayımlanan paketin `exports` haritası yalnızca `dist`'i gösterir; her hedefin tarball'da bulunduğu `test/package.test.ts` ile doğrulanır.
+**Demo ve public API ayrımı:** dokümantasyon örnekleri yalnızca public adları import eder (`calendar-kit`, `calendar-kit/core`, `calendar-kit/client`, `calendar-kit/styles.css`); bu `apps/demo/test/examples.test.tsx` ile denetlenir. Geliştirmede (HMR, paket build'i gerekmeden) bu public giriş noktaları demonun `vite.config.ts` ve `tsconfig.json` dosyalarında workspace kaynaklarına eşlenir. Yayımlanan paketin `exports` haritası yalnızca `dist`'i gösterir; her hedefin tarball'da bulunduğu `test/package.test.ts` ile doğrulanır.
 
 **Temel kararlar (kısa gerekçe):**
 
@@ -262,7 +268,7 @@ Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unk
 - Varsayılan ay/ay-ekleme yükleme görünümü **yalnızca gün iskeletidir**: her gün için eşit boyutlu bir hap (rakam genişliğinden bağımsız), görünür "Yükleniyor" yazısı yok. Ekran okuyucular için gizli durum metni, kök `aria-busy` ve canlı bölge duyurusu vardır. Görünür bir gösterge isterseniz `renderLoading` verin.
 - `onLoadingChange` yalnızca durum geçişlerinde gelir.
 
-**Hızlı gezinmede bayat veri koruması** (`apps/demo/src/data.ts`): her ay kendi `AbortController`'ı ve sıra numarasıyla istenir; yanıt yalnızca istendiği aya ve hâlâ güncel istekse yazılır; artık render edilmeyen ayların istekleri iptal edilir.
+**Hızlı gezinmede bayat veri koruması** (`apps/demo/src/examples/shared/availability.ts`): her ay kendi `AbortController`'ı ve sıra numarasıyla istenir; yanıt yalnızca istendiği aya ve hâlâ güncel istekse yazılır; artık render edilmeyen ayların istekleri iptal edilir.
 
 ## 12. Tooltip
 
@@ -350,7 +356,7 @@ Sonradan mount olan takvim güncel değeri gösterir; birinin unmount olması or
 - `messages`: kısmi override. Hazır paketler: `messagesEn` (varsayılan), `messagesTr`, `messagesDe`, `messagesFr`, `messagesEs`, `messagesIt`, `messagesNl`, `messagesAr` (tree-shake edilir).
 - Stil: `import 'calendar-kit/styles.css'` (JS CSS import etmez). Özelleştirme sırası: **CSS değişkenleri** (`--cal-accent`, `--cal-range`, `--cal-preview`, `--cal-focus`, `--cal-circle`, `--cal-radius`, …) → **`data-*` durum öznitelikleri** (`data-range-start`, `data-in-range`, `data-disabled`, `data-mod-*`, …) → **`classNames`** (`root, header, footer, viewport, months, month, monthHeader, monthTitle, navigation, navButton, weekdays, weekday, grid, week, dayCell, dayButton, dayContent, rangeBackground, tooltip, loadMore, loading, error, liveRegion, readOnlyNotice`; `dayCell/dayButton/dayContent` fonksiyon da alır) → **`unstyled`** (varsayılan sınıf adları hiç eklenmez). `!important` gerekmez.
 
-Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo/src/demo.css` → `.ref-look`.
+Özelleştirme örnekleri (CSS kodlarıyla birlikte): dokümantasyon sitesinin "Styling & Customization" sayfası (`apps/demo/src/examples/styling/`).
 
 ## 17. Erişilebilirlik
 
@@ -459,9 +465,9 @@ Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 m
 
 ## 21. Dağıtım, destek, lisans
 
-- `dist/index.js` (ESM, sourcemap), `dist/types/**/*.d.ts`, `dist/styles.css`. `exports`: `"."`, `"./styles.css"`. `sideEffects: ["*.css"]`. React/ReactDOM bundle'a dahil değil.
-- React: peer `>=18.2` (`useId`, `useSyncExternalStore` gerekir). Testler React 19.3 ile çalıştırıldı; React 18 ile ayrıca test edilmedi.
-- Tarayıcılar (container query `cqmin` + `color-mix`): Chrome/Edge 111+, Safari 16.2+, Firefox 113+.
+- `dist/index.js`, `dist/core.js`, `dist/client.js` (ESM, sourcemap), `dist/types/**/*.d.ts`, `dist/styles.css` (+ `styles.css.d.ts`). `exports`: `"."`, `"./core"`, `"./client"`, `"./styles.css"`. `sideEffects: ["*.css"]`. React/ReactDOM bundle'a dahil değil.
+- React: peer `>=18.2` (`useId`, `useSyncExternalStore` gerekir). Paket testleri React 19.3 ile çalışır; `npm pack` çıktısı React 18.3 ve 19.2 tüketicilerinde yalnızca yerelde denendi (`docs/verification-findings.md`).
+- Tarayıcı gereksinimi (container query `cqmin` + `color-mix`): Chrome/Edge 111+, Safari 16.2+, Firefox 113+. Yalnızca Chrome otomatik olarak test edilir; Safari, Firefox ve mobil cihazlar doğrulanmadı.
 - Lisans: MIT (varsayım — yayın öncesi onaylanmalı; `LICENSE`).
 
 ## 22. Desteklenen davranışlar ve bilinen sınırlar
