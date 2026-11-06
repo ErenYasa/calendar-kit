@@ -71,4 +71,43 @@ describe.each(['bundler', 'node16', 'nodenext'] as const)('plain TypeScript cons
     const trace = run(['-p', config, '--traceResolution']);
     expect(trace).toMatch(/'calendar-kit\/styles\.css' was successfully resolved to '[^']*node_modules\/calendar-kit\/dist\/styles\.css\.d\.ts'/);
   }, 60_000);
+
+  it('core and client entry points are typed (not any)', () => {
+    writeFileSync(
+      join(tmp, `entries-${resolution}.ts`),
+      `import { type CalendarDate, stayRules, toCalendarDate } from 'calendar-kit/core';
+import { Calendar, type CalendarProps } from 'calendar-kit/client';
+import { Calendar as Same } from 'calendar-kit';
+const d: CalendarDate = toCalendarDate('2026-11-13');
+// @ts-expect-error plain strings are not CalendarDate
+const bad: CalendarDate = '2026-11-13';
+// @ts-expect-error activeEndpoint is not allowed in single mode
+const p: CalendarProps = { mode: 'single', activeEndpoint: 'end' };
+// @ts-expect-error Calendar must not be \`any\`
+const c: { totallyWrong: true } = Calendar;
+// @ts-expect-error the core entry has no React component
+import { Calendar as None } from 'calendar-kit/core';
+export const same: typeof Calendar = Same;
+export { d, bad, p, c, None, stayRules };
+`,
+    );
+    const config = join(tmp, `tsconfig.entries-${resolution}.json`);
+    writeFileSync(
+      config,
+      JSON.stringify({
+        compilerOptions: {
+          target: 'ES2022',
+          lib: ['ES2022', 'DOM'],
+          module: resolution === 'bundler' ? 'ESNext' : resolution,
+          moduleResolution: resolution,
+          strict: true,
+          noEmit: true,
+          skipLibCheck: false,
+          types: [],
+        },
+        files: [`entries-${resolution}.ts`],
+      }),
+    );
+    expect(run(['-p', config])).toBe('');
+  }, 60_000);
 });

@@ -47,6 +47,7 @@ Demo production önizleme: `npm run build -w demo` ardından `npx vite preview` 
 ```
 calendar-kit/
 ├─ packages/calendar-kit/        ← yayımlanacak paket
+│  ├─ src/index.ts · core.ts · client.ts ← giriş noktaları: calendar-kit, /core (React'siz), /client ('use client')
 │  ├─ src/date/                  ← CalendarDate, saf takvim aritmetiği, Intl yardımcıları
 │  ├─ src/core/                  ← seçim/doğrulama motoru (React'ten bağımsız)
 │  ├─ src/adapters/              ← stayRules, dayRangeRules, closedDates (isteğe bağlı)
@@ -362,7 +363,17 @@ Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo
 
 ## 18. SSR / Next.js
 
-Import sırasında global/DOM değişikliği yoktur; render'da `window`/`document` okunmaz. `today` (veya `defaultVisibleMonth`/`value`) verilirse sunucu tam ay HTML'i üretir ve hydration uyumsuzluğu oluşmaz (test edildi). Hiçbiri verilmezse sunucu ay tahmin etmez; yükleme yer tutucusu render edilir ve istemci ilk render'da tamamlar. Locale varsayılanları statik tablolardan gelir (sunucu/tarayıcı farkı yok). Next.js App Router'da `Calendar`'ı `'use client'` ile işaretli kendi bileşeninizin içinde kullanın; paket `'use client'` yönergesi içermez, böylece saf yardımcılar (`stayRules`, `addDays`, `countNights`, `getToday` …) Server Component'lerde de çalışır. `Calendar` doğrudan bir Server Component'e konursa Next build'i prerender sırasında bir hook hatasıyla (`useSyncExternalStore is not a function`) durur. `import 'calendar-kit/styles.css'` `app/layout.tsx` içinde çalışır. `calendar-kit/styles.css` kendi tip bildirimiyle gelir (`exports["./styles.css"].types`); TypeScript 6+ `noUncheckedSideEffectImports` varsayılanında ortamın `*.css` bildirmesi gerekmez.
+Import sırasında global/DOM değişikliği yoktur; render'da `window`/`document` okunmaz. `today` (veya `defaultVisibleMonth`/`value`) verilirse sunucu tam ay HTML'i üretir ve hydration uyumsuzluğu oluşmaz (test edildi). Hiçbiri verilmezse sunucu ay tahmin etmez; yükleme yer tutucusu render edilir ve istemci ilk render'da tamamlar. Locale varsayılanları statik tablolardan gelir (sunucu/tarayıcı farkı yok).
+
+**Giriş noktaları:**
+
+| Import | İçerik | `'use client'` |
+|---|---|---|
+| `calendar-kit/client` | `Calendar` ve React tipleri | var: Server Component'ten doğrudan render edilebilir (yalnızca serileştirilebilir prop'larla; `rules`, `onChange` gibi fonksiyonlar için kendi `'use client'` bileşeninizi yazın) |
+| `calendar-kit/core` | React'ten bağımsız yardımcılar: tarih modeli, motor, kurallar, adaptörler, mesajlar | yok; React yüklemez, sunucuda ve React dışı kodda çalışır |
+| `calendar-kit` | ikisinin toplamı (mevcut import'lar değişmedi) | yok: `'use client'` dosyalarında ve sunucuda yardımcılar için çalışır; `Calendar`'ı buradan doğrudan bir Server Component'te render etmek build'i durdurur (`useSyncExternalStore is not a function`) |
+
+Next.js App Router'da sunucu sayfasında `import { Calendar } from 'calendar-kit/client'` ve `import { toCalendarDate } from 'calendar-kit/core'` kullanın. `calendar-kit` girişine `'use client'` eklenmedi: eklenseydi o girişten alınan saf yardımcılar sunucuda istemci referansına dönüşüp çağrılamazdı ve mevcut sunucu import'ları kırılırdı. `import 'calendar-kit/styles.css'` `app/layout.tsx` içinde çalışır; `calendar-kit/styles.css` kendi tip bildirimiyle gelir (`exports["./styles.css"].types`); TypeScript 6+ `noUncheckedSideEffectImports` varsayılanında ortamın `*.css` bildirmesi gerekmez.
 
 ## 19. react-dates `DayPickerRangeController` karşılıkları
 
