@@ -9,7 +9,7 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız, 35 bulgu + 4 şüphe)
+## Sayım (çakışmasız, 36 bulgu + 4 şüphe)
 
 Her madde tam olarak bir grupta sayılır.
 
@@ -17,7 +17,7 @@ Her madde tam olarak bir grupta sayılır.
 |---|---|---|
 | Düzeltildi | 31 | F01–F26, F28, F30, F33, F34, F35 |
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 3 | F27, F29, F31 |
-| Bekleyen (karar gerekli) | 1 | F32 — (a) kısmı düzeltildi, (b) mod değişiminde sıfırlama önerisi onay bekliyor |
+| Bekleyen (karar gerekli) | 2 | F32 — (a) kısmı düzeltildi, (b) mod değişiminde sıfırlama önerisi onay bekliyor; F36 — `styles.css` için tip bildirimi önerisi |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
@@ -61,6 +61,7 @@ Firefox, gerçek mobil cihaz (dokunma), ekran okuyucu (VoiceOver/NVDA).
 | F33 | 6 | İskelet (yükleme) günlerinde klavye odak halkası gizleniyor (iskelet kuralı 0,5,1 > odak 0,4,1); F17 düzeltmesi sırasında bulundu | kanıtlandı (özgüllük) | düzeltildi |
 | F34 | 9 | Dar (<~300 px) continuous görünümde ortak hafta günü satırı takvim kökünden taşıyor (kırpmayan bir üst öğede sayfayı genişletir) ve aylar yatay kaydırılınca kolonlarla hizasını kaybediyor (S02'den) | kanıtlandı (Chrome: kökten 122 px taşma, hizalama 57 vs −3 px) | düzeltildi |
 | F35 | 7 | `transform` içeren portal kabında tooltip kabın konumu kadar kayıyor; dar kapta genişliği kaba göre daralıyor (S01'den) | kanıtlandı (Chrome: +300 px kayma; demo: −332 px boşluk) | düzeltildi |
+| F36 | düşük | `calendar-kit/styles.css` export'unun tip bildirimi yok: TypeScript 6+ (`noUncheckedSideEffectImports` varsayılan açık) ortamı `*.css` bildirmiyorsa `import 'calendar-kit/styles.css'` TS2882 verir. Vite (`vite/client`) ve Next'te sorun yok | kanıtlandı (temiz tüketici, TS 7.0.2) | bekliyor: öneri `exports["./styles.css"].types` → boş `styles.css.d.ts`; kapsam dışı olduğu için uygulanmadı |
 | S01 | şüphe | `transform` içeren portal container'da tooltip kayması | yeniden üretildi → F35 | F35'e taşındı |
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | bu makinede yeniden üretilemedi (macOS overlay scrollbar, genişlik 0) | doğrulanamadı |
@@ -80,10 +81,31 @@ saklanmaz. Controlled kullanım değişmez (değer ebeveynindir; uyumsuz değer
 bugünkü gibi doğrulama sorunu olarak raporlanır). `defaultValue` yalnızca ilk
 kurulumda okunur. Bu davranış değişikliği olduğu için onay bekliyor.
 
+## Uyumluluk: npm pack çıktısı temiz tüketicilerde (2026-11-07)
+
+Tarball: `calendar-kit-0.1.0.tgz` (22 dosya, yalnızca `dist`, README, LICENSE,
+package.json). Her tüketici ayrı klasörde, yalnızca tarball'dan kuruldu.
+
+| Tüketici | Tipler | Build | SSR / hydration (Chrome 155) | CSS | Etkileşim |
+|---|---|---|---|---|---|
+| Vite 8 + React 19.2.0 | `bundler`, `node16` (skipLibCheck false), `nodenext`, JSX (`vite/client`): 0 hata; `@ts-expect-error` yoklamaları tutuyor | geçti; bundle'da kaynak yolu yok | `renderToString` + `hydrateRoot` (StrictMode): 122 gün butonu, konsol hatası / kurtarılabilir hata yok | `--cal-accent` uygulanmış | aralık seçimi: 4 gece |
+| Vite 8 + React 18.3.1 (`@types/react` 18.3) | aynı: 0 hata | geçti | aynı: hata yok | uygulanmış | 4 gece |
+| Next.js 16.4.5 App Router (React 19.3.1) | `next build` TypeScript (skipLibCheck false): 0 hata | geçti | `next start` ve `next dev`: hydration hatası yok | `app/layout.tsx` import'u uygulanmış | 4 gece |
+
+- Client Component sınırı: `'use client'` dosyasında `Calendar` çalışıyor; Server
+  Component'te yalnızca saf yardımcılar (`addDays`, `countNights`, `getToday`,
+  `toCalendarDate`) sunucuda render edildi. `Calendar` doğrudan Server
+  Component'e konunca build prerender'da `useSyncExternalStore is not a
+  function` ile duruyor (beklenen; README §18'de belgelendi).
+- Özel yollar (`calendar-kit/src/...`) `ERR_PACKAGE_PATH_NOT_EXPORTED`.
+- Next'te React 18 denenmedi: App Router kendi React 19 kopyasını kullanır.
+- Yapılmayanlar (bekleyen): Safari, Firefox, gerçek mobil cihaz, ekran
+  okuyucular (VoiceOver/NVDA). Hiçbiri bu ortamda çalıştırılmadı.
+
 ## Tarayıcı regresyon kontrolleri
 
 `npm run test:browser` (playwright-core + sistem Chrome, demo üzerinde) jsdom'un
-doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F17,
+doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F16, F17,
 F21, F30, F34, F35 (F34 ve F35 düzeltme öncesi/sonrası ayrıca çalıştırıldı: başarısız → geçti). Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
 altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da geçiyor.
 

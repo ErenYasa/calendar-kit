@@ -5,8 +5,8 @@ React + TypeScript için hafif, erişilebilir, responsive ve genişletilebilir t
 > `calendar-kit` geçici addır. Bileşen adları (`Calendar`) ve CSS önekleri (`cal-`) paket adından bağımsızdır: önek tek yerden değişir (`src/react/utils.ts` → `PREFIX`, `src/styles/index.scss` → `$p`). Paket `private: true`; npm'e yayımlanmadı.
 
 - Bağımlılık yok (React/ReactDOM peer). Moment, react-dates veya başka tarih kütüphanesi kullanılmaz.
-- Tipik kullanım **20.1 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
-- 119 paket testi + 2 demo testi, gerçek Chrome'da 8 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
+- Tipik kullanım **20.2 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
+- 127 paket testi + 2 demo testi, gerçek Chrome'da 9 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
 
 ---
 
@@ -362,7 +362,7 @@ Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo
 
 ## 18. SSR / Next.js
 
-Import sırasında global/DOM değişikliği yoktur; render'da `window`/`document` okunmaz. `today` (veya `defaultVisibleMonth`/`value`) verilirse sunucu tam ay HTML'i üretir ve hydration uyumsuzluğu oluşmaz (test edildi). Hiçbiri verilmezse sunucu ay tahmin etmez; yükleme yer tutucusu render edilir ve istemci ilk render'da tamamlar. Locale varsayılanları statik tablolardan gelir (sunucu/tarayıcı farkı yok). Next.js App Router'da `'use client'` bileşeni içinde kullanın.
+Import sırasında global/DOM değişikliği yoktur; render'da `window`/`document` okunmaz. `today` (veya `defaultVisibleMonth`/`value`) verilirse sunucu tam ay HTML'i üretir ve hydration uyumsuzluğu oluşmaz (test edildi). Hiçbiri verilmezse sunucu ay tahmin etmez; yükleme yer tutucusu render edilir ve istemci ilk render'da tamamlar. Locale varsayılanları statik tablolardan gelir (sunucu/tarayıcı farkı yok). Next.js App Router'da `Calendar`'ı `'use client'` ile işaretli kendi bileşeninizin içinde kullanın; paket `'use client'` yönergesi içermez, böylece saf yardımcılar (`stayRules`, `addDays`, `countNights`, `getToday` …) Server Component'lerde de çalışır. `Calendar` doğrudan bir Server Component'e konursa Next build'i prerender sırasında bir hook hatasıyla (`useSyncExternalStore is not a function`) durur. `import 'calendar-kit/styles.css'` `app/layout.tsx` içinde çalışır. TypeScript 6+ `noUncheckedSideEffectImports` varsayılanıyla CSS import'u için ortamın `*.css` bildirimi gerekir (Vite: `vite/client`, Next: dahili).
 
 ## 19. react-dates `DayPickerRangeController` karşılıkları
 
@@ -420,10 +420,10 @@ Bilinçli farklar: react-dates `focusedInput=startDate` iken bitişten önceki t
 
 | | min | gzip | brotli |
 |---|---|---|---|
-| Tümü (`export *`) | 68.5 kB | 23.5 kB | 20.9 kB |
-| Tipik: `Calendar` + `stayRules` + `messagesTr` | 58.5 kB | 20.1 kB | 18.2 kB |
-| Yalnız çekirdek (motor + adaptör + tarih) | 8.4 kB | 3.1 kB | 2.8 kB |
-| `styles.css` | 9.5 kB | 2.6 kB | 2.2 kB |
+| Tümü (`export *`) | 68.6 kB | 23.5 kB | 21.0 kB |
+| Tipik: `Calendar` + `stayRules` + `messagesTr` | 58.6 kB | 20.2 kB | 18.4 kB |
+| Yalnız çekirdek (motor + adaptör + tarih) | 8.5 kB | 3.1 kB | 2.9 kB |
+| `styles.css` | 9.6 kB | 2.6 kB | 2.2 kB |
 
 **Etkileşim** (`npm run perf`): demonun `bench.html` sayfası (yalnızca takvim + React Profiler) `react-dom/profiling` ile production modunda build edilir, sistem Chrome'u (155) gerçek fare/klavye girdisiyle sürülür; CPU yavaşlatma CDP `Emulation.setCPUThrottlingRate` ile yapılır. Ölçüm makinesi: Apple M5 Pro, macOS 26.6. Her eylem 10 kez (hover 30 kez); değerler medyan / p95, ms.
 
