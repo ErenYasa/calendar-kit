@@ -9,6 +9,21 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
+## Sayım (çakışmasız, 35 bulgu + 4 şüphe)
+
+Her madde tam olarak bir grupta sayılır.
+
+| Grup | Sayı | Maddeler |
+|---|---|---|
+| Düzeltildi | 31 | F01–F26, F28, F30, F33, F34, F35 |
+| Yalnızca belgelendi (davranış bilinçli olarak aynı) | 3 | F27, F29, F31 |
+| Bekleyen (karar gerekli) | 1 | F32 — (a) kısmı düzeltildi, (b) mod değişiminde sıfırlama önerisi onay bekliyor |
+| Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
+| Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
+
+Bulgu listesi dışında, hiç yapılmamış ve bekleyen ortam kontrolleri: Safari,
+Firefox, gerçek mobil cihaz (dokunma), ekran okuyucu (VoiceOver/NVDA).
+
 | ID | Öncelik | Bulgu | Kanıt | Durum |
 |---|---|---|---|---|
 | F01 | 1 | node16/nodenext TS tüketicilerinde `.d.ts` göreli import'ları çözülmüyor; `skipLibCheck: true` ile tipler sessizce `any` | kanıtlandı (tüketici app) | düzeltildi |
@@ -42,7 +57,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F29 | düşük | `onVisibleMonthChange` için load-more sebebi yok | kanıtlandı (okuma) | sözleşme (belgelendi) |
 | F30 | düşük | Etiket genişliği daire yerine hücreye göre; 40 px hücrede etiket köşeleri bugün halkasına değiyor | kanıtlandı (Chrome ölçümü: 61/61 etiket) | düzeltildi |
 | F31 | düşük | `addDays` yıl 1–9999 dışına çıkabiliyor; `eachMonth` 9999'da tekrar ay üretiyor; geçersiz `timeZone` hata fırlatıyor | kanıtlandı | sözleşme (belgelendi) |
-| F32 | düşük | (a) `today` prop'u yokken görünen ay gece yarısı kayıyor; (b) kontrolsüz modda mod değişimi eski seçimi geri getiriyor | kanıtlandı (test) | (a) düzeltildi; (b) belgelendi, sıfırlama önerisi karar bekliyor |
+| F32 | düşük | (a) `today` prop'u yokken görünen ay gece yarısı kayıyor; (b) kontrolsüz modda mod değişimi eski seçimi geri getiriyor | kanıtlandı (test) | bekliyor: (a) düzeltildi, (b) sıfırlama önerisi karar bekliyor |
 | F33 | 6 | İskelet (yükleme) günlerinde klavye odak halkası gizleniyor (iskelet kuralı 0,5,1 > odak 0,4,1); F17 düzeltmesi sırasında bulundu | kanıtlandı (özgüllük) | düzeltildi |
 | F34 | 9 | Dar (<~300 px) continuous görünümde ortak hafta günü satırı takvim kökünden taşıyor (kırpmayan bir üst öğede sayfayı genişletir) ve aylar yatay kaydırılınca kolonlarla hizasını kaybediyor (S02'den) | kanıtlandı (Chrome: kökten 122 px taşma, hizalama 57 vs −3 px) | düzeltildi |
 | F35 | 7 | `transform` içeren portal kabında tooltip kabın konumu kadar kayıyor; dar kapta genişliği kaba göre daralıyor (S01'den) | kanıtlandı (Chrome: +300 px kayma; demo: −332 px boşluk) | düzeltildi |
