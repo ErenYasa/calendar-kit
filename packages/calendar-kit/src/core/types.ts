@@ -167,8 +167,11 @@ export interface SelectionRules<TContext = unknown> {
    * Range mode: reject a start when no valid end can follow it
    * (e.g. the next night is booked under a 2-night minimum).
    * The search checks at most 63 end candidates, starting at the minimum
-   * length (up to `maxLength` when that is smaller); a start whose only
-   * valid ends lie further away is rejected.
+   * length. A start is rejected only when the search proves there is no
+   * valid end (all candidates up to `maxLength` fail, or a blocked night,
+   * `maxDate`/future bound or missing data ends the search). When the 63
+   * candidates run out first, the start is allowed and its end is validated
+   * on selection as usual.
    */
   requireReachableEnd?: boolean;
 }

@@ -458,7 +458,7 @@ Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 m
 Kapsam dışı (ilk sürüm, tasarım engellemiyor): birden fazla bağımsız aralık, Gregoryen dışı takvimler, saat seçici, tekrar eden rezervasyon motoru, çok günlük etkinlik yerleşimi, fiyat/kapasite hesabı, popup/modal yönetimi.
 
 Belgelenmiş sözleşmeler (doğrulama sırasında netleştirildi, `docs/verification-findings.md`):
-- `requireReachableEnd` en fazla 63 bitiş adayına bakar (minimum uzunluktan başlayarak); geçerli bitişi daha uzakta olan başlangıçlar reddedilir (F26).
+- `requireReachableEnd` en fazla 63 bitiş adayına bakar (minimum uzunluktan başlayarak). Başlangıç yalnızca geçerli bitiş olmadığı **kanıtlanırsa** reddedilir: `maxLength`'e kadar tüm adaylar geçersizse ya da dolu bir gece, `maxDate`/gelecek sınırı veya eksik veri aramayı bitirirse. 63 aday bu kanıta ulaşmadan biterse başlangıç seçilebilir kalır ("bulunamadı" ≠ "yok"); bitiş seçilirken her zamanki gibi doğrulanır (F26).
 - Hariç bitişli (konaklama) aynı gün aralığının uzunluğu 0'dır; `allowSameDay` ile birlikte `minNights`/`minLength` 0 veya tanımsız olmalıdır (F27).
 - Ay ekleme (load-more) referans ayı değiştirmez, bu yüzden `onVisibleMonthChange` göndermez; eklenen aylar `onLoadMore` ve `onRenderedMonthsChange` ile bildirilir (F29).
 - Tarih yardımcıları 0001–9999 yılları için tanımlıdır; bu aralığın dışına çıkan aritmetiğin sonucu tanımsızdır. `timeZone` geçerli bir IANA adı olmalıdır, aksi halde `Intl` `RangeError` fırlatır (F31).
@@ -466,6 +466,6 @@ Belgelenmiş sözleşmeler (doğrulama sırasında netleştirildi, `docs/verific
 
 Bilinen sınırlar:
 - Continuous modda DOM sınırı ay bazlı kırpma ile sağlanır; ölçüme dayalı sanal kaydırma (virtualization) yok — ölçümler buna gerek göstermedi.
-- `requireReachableEnd` aramaları `maxLength` yoksa başlangıçtan en fazla ~62 gün ileri bakar.
+- `requireReachableEnd` aramaları en fazla 63 bitiş adayına bakar; daha uzak bitişler için başlangıç reddedilmez ama önceden de doğrulanmaz.
 - Ay sayısı JS'te `minDaySize` ve sabit 8px ay padding'i ile hesaplanır; `unstyled` kullanımda kendi CSS'inizin bu ölçülerle uyumlu olması gerekir.
 - Hover önizlemesi aylar arası her render'da tüm gün durumlarını yeniden hesaplar (12 ayda 5.9 ms); ay düzeyinde memo gerekirse ileride eklenebilir.

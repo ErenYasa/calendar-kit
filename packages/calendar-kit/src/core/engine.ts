@@ -284,16 +284,24 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
     if (!rules.requireReachableEnd || rules.fixedLength != null) return null;
     const minLen = Math.max(rules.minLength ?? 0, allowSameDay ? 0 : 1);
     const firstEndOffset = semantics === 'exclusive' ? minLen : Math.max(0, minLen - 1);
-    const maxLen = rules.maxLength ?? minLen + 62;
+    const maxLen = rules.maxLength ?? Infinity;
     const lastEndOffset = semantics === 'exclusive' ? maxLen : maxLen - 1;
+    const searchEnd = Math.min(lastEndOffset, firstEndOffset + 62);
     let lastIssue: ValidationIssue | null = null;
-    for (let off = firstEndOffset; off <= Math.min(lastEndOffset, firstEndOffset + 62); off++) {
+    let settled = searchEnd === lastEndOffset;
+    for (let off = firstEndOffset; off <= searchEnd; off++) {
       const issue = validateRangeBuiltIn(start, addDays(start, off));
       if (!issue) return null;
       lastIssue = issue;
-      // Once the interior is blocked, no later end can work.
-      if (issue.code === 'blocked-in-range' || issue.code.startsWith('data-')) break;
+      // Once the interior is blocked or a bound is passed, no later end can work.
+      if (issue.code === 'blocked-in-range' || issue.code === 'after-max' || issue.code === 'future' || issue.code.startsWith('data-')) {
+        settled = true;
+        break;
+      }
     }
+    // The search budget ran out without proving that no end exists: a later end
+    // may still be valid, so the start is not rejected (the end is validated on selection).
+    if (!settled) return null;
     // Bounds, past/future and data problems are reported as such. "Minimum N"
     // only when a configured minimum above the natural one is the reason.
     if (lastIssue && /^(before-min|after-max|past|future|data-)/.test(lastIssue.code)) return lastIssue;

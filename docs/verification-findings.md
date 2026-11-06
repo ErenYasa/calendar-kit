@@ -36,7 +36,7 @@ Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 | F23 | 9 | Yayımlanan `exports`'taki `source` koşulu tarball'da olmayan `src/`'yi gösteriyor | kanıtlandı (pack) | düzeltildi |
 | F24 | 9 | README: reddedilen tıklama olay sırası "test edildi" deniyor ama test yok; Escape iddiası; DayState listesinde `outOfSchedule` yok; test yorumu yanlış ("Exclusive semantics") | kanıtlandı (okuma) | düzeltildi |
 | F25 | düşük | `reachableEndIssue` gerçek sebep ne olursa olsun `min-length` raporluyor ("Minimum 0 gece" dahil) | kanıtlandı | düzeltildi |
-| F26 | düşük | Ulaşılabilir bitiş araması en fazla 63 bitiş adayına bakıyor | kanıtlandı | sözleşme (belgelendi) |
+| F26 | düşük | Ulaşılabilir bitiş araması en fazla 63 bitiş adayına bakıyor; sınır dolunca "geçerli bitiş yok" diye başlangıcı reddediyordu (80 gece sonraki geçerli bitiş kaçıyordu) | kanıtlandı (test) | düzeltildi (sınır aynı; sınır dolması artık ret sebebi değil, public API değişmedi) |
 | F27 | düşük | `stayRules({ allowSameDay: true, minNights: 1 })` aynı gün konaklamaya izin vermiyor | kanıtlandı | sözleşme (belgelendi) |
 | F28 | düşük | Çoklu modda tekrarlanan tarihlerde `plan()` ve `validate()` sayımı tutarsız | kanıtlandı | düzeltildi |
 | F29 | düşük | `onVisibleMonthChange` için load-more sebebi yok | kanıtlandı (okuma) | sözleşme (belgelendi) |

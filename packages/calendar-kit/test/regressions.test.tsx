@@ -460,3 +460,26 @@ describe('F16 calendar-wide loading: initial skeleton vs background refresh', ()
     expect(document.activeElement).toBe(btn);
   });
 });
+
+describe('F26 reachable-end search budget vs "no valid end"', () => {
+  const S = d('2026-11-02');
+  const END = d('2027-01-21'); // 80 nights after S
+  // Check-out is closed until END (nights can pass through): the only valid ends are far away.
+  const farEnd: SelectionRules = { getDayAvailability: (x) => (x > S && x < END ? { canEnd: false, reason: 'no-checkout' } : undefined) };
+
+  it('a start whose only valid end is beyond the search budget is not rejected', () => {
+    const e = engine(stayRules({ ...farEnd }));
+    expect(e.validate(range(S, END)).valid).toBe(true);
+    expect(e.checkStart(S)).toBeNull();
+    expect(e.plan(S).kind).toBe('start');
+  });
+
+  it('a start with provably no valid end is still rejected', () => {
+    // Same rule, but maxNights makes the search exhaustive.
+    expect(engine(stayRules({ ...farEnd, maxNights: 30 })).checkStart(S)?.code).toBe('end-not-allowed');
+    // maxDate ends the search before the budget.
+    expect(engine(stayRules({ ...farEnd, maxDate: d('2026-12-31') })).checkStart(S)).not.toBeNull();
+    // A booked night blocks every later end.
+    expect(engine(stayRules({ minNights: 2, getDayStatus: (x) => (x === '2026-11-03' ? 'booked' : undefined) })).checkStart(S)?.code).toBe('min-length');
+  });
+});
