@@ -81,9 +81,9 @@ export function ReactNext() {
         <PropsTable
           caption="Import paths"
           rows={[
-            { name: 'calendar-kit', type: 'everything', description: <>Calendar, helpers and types. No <code>&apos;use client&apos;</code> directive. Use it in plain React apps and inside your own Client Components.</> },
+            { name: 'calendar-kit', type: <>everything</>, description: <>Calendar, helpers and types. No <code>&apos;use client&apos;</code> directive. Use it in plain React apps and inside your own Client Components.</> },
             { name: 'calendar-kit/client', type: "'use client'", description: <>The <code>Calendar</code> component and React types, marked as a Client Component boundary: a Server Component can render it directly.</> },
-            { name: 'calendar-kit/core', type: 'no React', description: 'Date model, selection engine, rules, adapters and messages. Never loads React; safe in Server Components and non-React code.' },
+            { name: 'calendar-kit/core', type: <>no React</>, description: 'Date model, selection engine, rules, adapters and messages. Never loads React; safe in Server Components and non-React code.' },
             { name: 'calendar-kit/styles.css', type: 'CSS', description: 'The default theme (with a type declaration).' },
           ]}
         />

@@ -495,7 +495,7 @@ export function MessagesReference() {
         <PropsTable
           caption="CalendarMessagesInput"
           rows={[
-            { name: 'any CalendarMessages key', type: 'same as in CalendarMessages', description: 'Optional; replaces the base value.' },
+            { name: <>any <code>CalendarMessages</code> key</>, type: <>same as in <code>CalendarMessages</code></>, description: 'Optional; replaces the base value.' },
             { name: 'reasons', type: 'Partial<Record<ReasonCode, ReasonMessage>>', description: 'Only the reason codes to change.' },
             { name: 'dayReasons', type: 'Record<string, string>', description: 'Added to or replacing the base day-reason texts.' },
           ]}
