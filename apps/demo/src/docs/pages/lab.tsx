@@ -17,8 +17,8 @@ export function LayoutLab() {
       <Section title="The lab">
         <p>
           The calendar sits in a box you can narrow by dragging its bottom corner. The layout follows that box, not the window, so you can try a phone width
-          on a desktop screen. The side column shows the React Profiler measurements and the {c('onEvent')} stream; on narrow screens it moves below the
-          calendar.
+          on a desktop screen. The box starts at the full width of the example. Below the calendar, the React Profiler measurements and the{' '}
+          {c('onEvent')} stream sit next to each other when there is room and stack on narrow screens.
         </p>
         <Example src="lab/LayoutLab" title="Layout, events and measurement" />
         <Note>
@@ -75,7 +75,7 @@ export function LayoutLab() {
 
       <Section title="Measurements">
         <p>
-          Only the {c('<Calendar>')} is wrapped in a React {c('<Profiler>')}; the side column is outside it, so its own renders are not counted. Each row is
+          Only the {c('<Calendar>')} is wrapped in a React {c('<Profiler>')}; the measurement and event panels are outside it, so its own renders are not counted. Each row is
           one React commit that rendered the calendar (the last 20 are kept).
         </p>
         <DataTable

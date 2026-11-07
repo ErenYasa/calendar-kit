@@ -21,15 +21,9 @@
   align-self: flex-end;
 }
 
-/* Calendar column and side column; the side column wraps below when narrow. */
-.lab-split {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
-}
+/* The calendar on top at full width; measurements and events below it,
+   side by side when there is room and stacked when narrow. */
 .lab-stage {
-  flex: 3 1 320px;
   min-width: 0;
 }
 .lab-resizable {
@@ -50,8 +44,13 @@
   color: #59636e;
 }
 
-.lab-side {
-  flex: 1 1 240px;
+.lab-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.lab-panel {
   min-width: 0;
   box-sizing: border-box;
   padding: 12px;
@@ -60,21 +59,18 @@
   background: #fff;
   font-size: 13px;
 }
-.lab-side h3 {
+.lab-panel h3 {
   margin: 0 0 8px;
   font-size: 14px;
 }
-.lab-side h3:not(:first-child) {
-  margin-top: 16px;
-}
-.lab-side-head {
+.lab-panel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
 }
-.lab-side-head h3 {
+.lab-panel-head h3 {
   margin: 0;
 }
 .lab-empty {

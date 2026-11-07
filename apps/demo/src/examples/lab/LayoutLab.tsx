@@ -14,8 +14,8 @@ import './LayoutLab.css';
 // Layout lab: drag the dashed box's corner to change the calendar's container
 // width, change the props above it, and watch which events fire and how long
 // React spends rendering the calendar. Only the <Calendar> is inside the
-// Profiler; the side panel reads a small store, so logging never re-renders
-// the calendar and the panel's own renders are never measured.
+// Profiler; the panels below it read a small store, so logging never re-renders
+// the calendar and the panels' own renders are never measured.
 
 const MAX_COMMITS = 20;
 const MAX_EVENTS = 30;
@@ -203,101 +203,103 @@ export default function LayoutLab() {
         </label>
       </div>
 
-      <div className="lab-split">
-        <div className="lab-stage">
-          <div className="lab-resizable">
-            <Profiler id="calendar" onRender={onRender}>
-              <Calendar
-                mode="range"
-                locale={rtl ? 'ar-EG' : undefined}
-                messages={rtl ? messagesAr : undefined}
-                orientation={orientation}
-                navigation={navigation}
-                overflow={overflow}
-                numberOfMonths={months}
-                monthPosition={Math.min(position, months)}
-                minDaySize={minDaySize}
-                disableFuture={disableFuture}
-                maxBlockSize={navigation === 'continuous' ? 480 : undefined}
-                loadDirections="both"
-                onEvent={onEvent}
-              />
-            </Profiler>
-          </div>
-          <p className="lab-hint">
-            Drag the bottom corner of the dashed box to resize. Today: {today}
-            {disableFuture ? ' (later days are disabled)' : ''}.
-          </p>
+      <div className="lab-stage">
+        <div className="lab-resizable">
+          <Profiler id="calendar" onRender={onRender}>
+            <Calendar
+              mode="range"
+              locale={rtl ? 'ar-EG' : undefined}
+              messages={rtl ? messagesAr : undefined}
+              orientation={orientation}
+              navigation={navigation}
+              overflow={overflow}
+              numberOfMonths={months}
+              monthPosition={Math.min(position, months)}
+              minDaySize={minDaySize}
+              disableFuture={disableFuture}
+              maxBlockSize={navigation === 'continuous' ? 480 : undefined}
+              loadDirections="both"
+              onEvent={onEvent}
+            />
+          </Profiler>
         </div>
-        <LabPanel store={store} />
+        <p className="lab-hint">
+          Drag the bottom corner of the dashed box to resize. Today: {today}
+          {disableFuture ? ' (later days are disabled)' : ''}.
+        </p>
       </div>
+      <LabPanels store={store} />
     </div>
   );
 }
 
 const ms = (n: number) => n.toFixed(2);
 
-function LabPanel({ store }: { store: LabStore }) {
+function LabPanels({ store }: { store: LabStore }) {
   const { commits, events, profiling } = useSyncExternalStore(store.subscribe, store.get, store.get);
   const actual = commits.map((c) => c.actual);
   return (
-    <aside className="lab-side" aria-label="Measurements and events">
-      <div className="lab-side-head">
-        <h3>Render time (React Profiler)</h3>
-        <button type="button" onClick={store.clear}>
-          Clear
-        </button>
-      </div>
-      {profiling === 'off' ? (
-        <p className="lab-empty">
-          No measurements: this is a production React build, where the Profiler does not report. Run the docs locally (<code>npm run dev</code>) to see
-          render times.
-        </p>
-      ) : commits.length === 0 ? (
-        <p className="lab-empty">Interact with the calendar to record a commit.</p>
-      ) : (
-        <>
-          <p className="lab-stats">
-            last {ms(actual[0]!)} ms · max {ms(Math.max(...actual))} ms · {commits.length} commits
+    <div className="lab-panels">
+      <section className="lab-panel" aria-label="Render time">
+        <div className="lab-panel-head">
+          <h3>Render time (React Profiler)</h3>
+          <button type="button" onClick={store.clear}>
+            Clear
+          </button>
+        </div>
+        {profiling === 'off' ? (
+          <p className="lab-empty">
+            No measurements: this is a production React build, where the Profiler does not report. Run the docs locally (<code>npm run dev</code>) to see
+            render times.
           </p>
-          <div className="lab-scroll lab-commits">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">phase</th>
-                  <th scope="col">actual ms</th>
-                  <th scope="col">base ms</th>
-                </tr>
-              </thead>
-              <tbody>
-                {commits.map((c) => (
-                  <tr key={c.n}>
-                    <td>{c.n}</td>
-                    <td>{c.phase}</td>
-                    <td>{ms(c.actual)}</td>
-                    <td>{ms(c.base)}</td>
+        ) : commits.length === 0 ? (
+          <p className="lab-empty">Interact with the calendar to record a commit.</p>
+        ) : (
+          <>
+            <p className="lab-stats">
+              last {ms(actual[0]!)} ms · max {ms(Math.max(...actual))} ms · {commits.length} commits
+            </p>
+            <div className="lab-scroll lab-commits">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">phase</th>
+                    <th scope="col">actual ms</th>
+                    <th scope="col">base ms</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+                </thead>
+                <tbody>
+                  {commits.map((c) => (
+                    <tr key={c.n}>
+                      <td>{c.n}</td>
+                      <td>{c.phase}</td>
+                      <td>{ms(c.actual)}</td>
+                      <td>{ms(c.base)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </section>
 
-      <h3>Events (onEvent)</h3>
-      {events.length === 0 ? (
-        <p className="lab-empty">No events yet.</p>
-      ) : (
-        <ol className="lab-scroll lab-events">
-          {events.map((row) => (
-            <li key={row.id}>
-              <strong>{row.type}</strong>
-              {row.count > 1 && <span className="lab-count"> ×{row.count}</span>} {row.text}
-            </li>
-          ))}
-        </ol>
-      )}
-    </aside>
+      <section className="lab-panel" aria-label="Events">
+        <h3>Events (onEvent)</h3>
+        {events.length === 0 ? (
+          <p className="lab-empty">No events yet.</p>
+        ) : (
+          <ol className="lab-scroll lab-events">
+            {events.map((row) => (
+              <li key={row.id}>
+                <strong>{row.type}</strong>
+                {row.count > 1 && <span className="lab-count"> ×{row.count}</span>} {row.text}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+    </div>
   );
 }
