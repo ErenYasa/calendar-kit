@@ -33,13 +33,20 @@ export function App() {
 
   useEffect(() => {
     document.title = `${page.title} — calendar-kit`;
-    setMenuOpen(false);
     if (first.current) {
       first.current = false;
       return;
     }
     window.scrollTo(0, 0);
   }, [page]);
+
+  // Navigation closes the menu synchronously with the hash change (a passive
+  // effect after the render could run late and close a menu reopened meanwhile).
+  useEffect(() => {
+    const onHash = () => setMenuOpen(false);
+    addEventListener('hashchange', onHash);
+    return () => removeEventListener('hashchange', onHash);
+  }, []);
 
   const closeMenu = () => {
     setMenuOpen(false);

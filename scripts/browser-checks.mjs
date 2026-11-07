@@ -401,6 +401,8 @@ await check('D03', 'mobile menu: hidden by default, toggles, Escape returns focu
 });
 
 await check('D06', 'sidebar: the last item is reachable and clickable at short heights (desktop and mobile)', async (page) => {
+  // Slow CPU (as on CI runners): navigation must not close a menu opened right after it.
+  await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 6 });
   const out = [];
   for (const [w, h] of [[1280, 900], [1280, 420], [1000, 360], [375, 560], [375, 420]]) {
     await page.setViewportSize({ width: w, height: h });
