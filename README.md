@@ -452,16 +452,16 @@ Sütunlar birbirinin yerine kullanılamaz:
 
 | Ay / gün | CPU | Başlangıç tıklaması: render · işleme · sonraki kare | Hover: render · işleme | Bitiş tıklaması: render · işleme | Ok tuşu: render · işleme | Sonraki ay: render · işleme |
 |---|---|---|---|---|---|---|
-| 2 / 61 | 1× | 1.7 · 1.1 · 5.3 | 0.8 · 1.8 | 2.5 · 1.3 | 0.7 · 1.7 | 1.4 · 1.6 |
-| 2 / 61 | 4× | 3.8 · 2.4 · 11.7 | 1.6 · 3.1 | 4.8 · 2.6 | 1.3 · 2.8 | 2.9 · 3.5 |
-| 2 / 61 | 6× | 5.3 · 3.5 · 18.9 | 2.2 · 4.6 | 7.5 · 3.6 | 2.2 · 4.3 | 5.2 · 5.8 |
-| 12 / 365 | 1× | 6.1 · 2.7 · 12.6 | 2.5 · 4.1 | 9.3 · 3.8 | 1.9 · 3.0 | 4.1 · 4.6 |
-| 12 / 365 | 4× | 16.0 · 7.0 · 35.6 | 4.9 · 8.0 | 21.8 · 7.7 | 4.6 · 7.1 | 9.4 · 11.3 |
-| 12 / 365 | 6× | 24.9 · 10.7 · 57.0 | 7.4 · 12.0 | 31.7 · 11.7 | 6.4 · 10.9 | 13.9 · 17.2 |
+| 2 / 61 | 1× | 1.8 · 1.2 · 6.0 | 0.9 · 2.0 | 2.2 · 1.4 | 0.7 · 2.0 | 1.5 · 1.8 |
+| 2 / 61 | 4× | 3.7 · 2.5 · 12.0 | 1.6 · 3.0 | 4.6 · 2.4 | 1.0 · 2.9 | 3.4 · 3.7 |
+| 2 / 61 | 6× | 6.0 · 3.9 · 19.5 | 2.1 · 4.4 | 6.6 · 3.8 | 2.0 · 4.3 | 5.1 · 6.6 |
+| 12 / 365 | 1× | 5.9 · 2.7 · 12.5 | 2.5 · 4.1 | 9.5 · 3.9 | 1.8 · 2.8 | 4.2 · 4.8 |
+| 12 / 365 | 4× | 17.5 · 6.9 · 36.8 | 5.1 · 8.1 | 21.9 · 7.3 | 4.2 · 7.1 | 9.0 · 10.9 |
+| 12 / 365 | 6× | 24.9 · 10.3 · 54.5 | 7.3 · 12.3 | 33.7 · 12.0 | 7.3 · 10.9 | 13.7 · 17.2 |
 
-(Medyanlar; p95 değerleri betik çıktısında. Son ölçüm 2026-11-07, Chrome 156, F16/F32/F37 değişikliklerinden sonra; önceki ölçümle (Chrome 155) farklar ölçüm gürültüsü içinde.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
+(Medyanlar; p95 değerleri betik çıktısında. Son ölçüm 2026-11-07, Chrome 156, F38–F51 paket değişikliklerinden sonra. Aynı oturumda, aynı makinede değişiklik öncesi commit (60336d3) ile A/B çalıştırıldı; tüm satırlarda farklar ölçüm gürültüsü içinde, en büyük medyan farkı 2 ay · 6× · sonraki ay işleme 5.1 → 6.6 ms.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
 
-Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 32 ms, p95 43 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
+Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 34 ms, p95 43 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
 
 ## 21. Dağıtım, destek, lisans
 
