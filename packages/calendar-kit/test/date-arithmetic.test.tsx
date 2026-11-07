@@ -44,3 +44,19 @@ describe('F40 invalid instants', () => {
     expect(() => fromJSDate(new Date('not a date'))).toThrow(RangeError);
   });
 });
+describe('F39 results outside 0001-01-01…9999-12-31', () => {
+  it('addDays clamps to the nearest supported bound, like addMonths', () => {
+    expect(addDays(d('9999-12-30'), 5)).toBe('9999-12-31');
+    expect(addDays(d('0001-01-02'), -5)).toBe('0001-01-01');
+    expect(addDays(d('2026-01-01'), Number.POSITIVE_INFINITY)).toBe('9999-12-31');
+    expect(addDays(d('2026-01-01'), -1e12)).toBe('0001-01-01');
+    expect(addDays(d('9999-12-31'), 0)).toBe('9999-12-31');
+    expect(addMonths(d('9999-11-30'), 5)).toBe('9999-12-30');
+    expect(addMonths(d('0001-02-10'), -5)).toBe('0001-01-10');
+  });
+  it('a NaN amount throws RangeError in addDays and addMonths (there is no nearest bound)', () => {
+    expect(() => addDays(d('2026-01-01'), Number.NaN)).toThrow(RangeError);
+    expect(() => addMonths(d('2026-01-01'), Number.NaN)).toThrow(RangeError);
+    expect(() => addMonthsToMonth(toCalendarMonth('2026-01'), Number.NaN)).toThrow(RangeError);
+  });
+});
