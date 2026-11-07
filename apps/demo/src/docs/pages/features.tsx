@@ -249,7 +249,8 @@ export function LoadMore() {
           load adds <code>monthsPerLoad</code> months (default: <code>numberOfMonths</code>) at the start or the end of the list, in the directions allowed by{' '}
           <code>loadDirections</code>, and stops at the months containing <code>minDate</code>/<code>maxDate</code>. Adding earlier months keeps the scroll
           position, so the dates under the user&apos;s finger do not jump. At most <code>maxRenderedMonths</code> (default 24) stay in the DOM: months are
-          dropped at the far end, never the one holding keyboard focus. Every addition calls <code>onLoadMore</code> and <code>onRenderedMonthsChange</code>{' '}
+          dropped at the far end, never the one holding keyboard focus. Every addition, including months added when keyboard focus moves past the end of
+          the list, calls <code>onLoadMore</code> and <code>onRenderedMonthsChange</code>{' '}
           (load your data there); it does not change the reference month, so <code>onVisibleMonthChange</code> is not called. Paged navigation (the default)
           instead replaces the window with previous/next arrows — see <a href="#/orientation">Orientation &amp; months</a>.
         </p>
@@ -269,8 +270,10 @@ export function LoadMore() {
       <Section title="A different control: renderLoadMore">
         <p>
           <code>renderLoadMore(&#123; direction, canLoad, loading, loadMore, label &#125;, ctx)</code> renders your own control in place of each button. Use it
-          when the control must look or behave differently (a link, a text when the limit is reached). You are responsible for its accessibility; if the
-          control disappears at a limit while focused, the calendar moves focus to the first newly added day.
+          when the control must look or behave differently (for example a link). It is only called while more months can load in that direction: at{' '}
+          <code>minDate</code>/<code>maxDate</code> (or outside <code>loadDirections</code>) no control is rendered, so it cannot show a text at the limit,
+          and <code>canLoad</code> is <code>true</code> in practice. You are responsible for its accessibility; if the control disappears at a limit while
+          focused, the calendar moves focus to the first newly added day.
         </p>
         <Example src="features/LoadMoreRender" title="renderLoadMore" />
       </Section>
@@ -369,7 +372,7 @@ export function DayContent() {
         rows={[
           { name: 'label', type: 'ReactNode', description: 'Short text under the number (e.g. a price).' },
           { name: 'badge', type: 'ReactNode', description: 'A small badge.' },
-          { name: 'icon', type: 'ReactNode', description: 'A small icon.' },
+          { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner (the badge sits in the top end corner); it does not move the number or label.' },
           { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Dots; each label is announced.' },
           { name: 'description', type: 'string', description: 'Added to the accessible label.' },
         ]}
@@ -447,9 +450,9 @@ export function I18n() {
       </Section>
       <Section title="Several languages on one page">
         <p>
-          Every instance has its own locale and messages. The French, Spanish, Italian, Dutch, German and Arabic packs translate the most common texts; some
-          rarer rejection reasons still fall back to English (see <a href="#/api-messages">Messages &amp; formatting</a>) — override them through{' '}
-          <code>messages</code> if you need them.
+          Every instance has its own locale and messages. The French, Spanish, Italian, Dutch, German and Arabic packs are complete, like English and
+          Turkish: every text and rejection reason is translated (see <a href="#/api-messages">Messages &amp; formatting</a>). Override single texts
+          through <code>messages</code> if you need different wording.
         </p>
         <Example src="features/MoreLocales" title="French, Spanish, Italian and Dutch" />
       </Section>
@@ -549,6 +552,32 @@ export function Synced() {
           immediately. Its tooltip portal points into the dialog (top layer).
         </p>
         <Example src="features/SyncedDialog" title="Inline and dialog in sync" />
+      </Section>
+      <Section title="Inline, modal and portal">
+        <p>
+          The same idea works wherever a calendar is rendered. Here one range is edited by three calendars: inline in the page, inside a modal{' '}
+          <code>&lt;dialog&gt;</code> and in a popover rendered with <code>createPortal</code> into <code>document.body</code>. There is no hidden store:
+          all three receive the same <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code>, <code>onActiveEndpointChange</code> and{' '}
+          <code>rules</code>. Pick a start inline and finish it in the dialog; the popover then opens on the full range.
+        </p>
+        <ul>
+          <li>
+            <strong>Shared</strong> (because you pass it): the selection, the endpoint to fill next and the rules.
+          </li>
+          <li>
+            <strong>Per calendar</strong>: the visible month, keyboard focus, hover and the tooltip. Each calendar keeps its own unless you control them.
+          </li>
+          <li>
+            The dialog is in the top layer, so its calendar gets <code>tooltip={'{{ container: dialogContentElement }}'}</code>; a tooltip portaled into{' '}
+            <code>document.body</code> would sit behind the dialog.
+          </li>
+          <li>
+            The portal only moves the DOM. Positioning the popover (following the trigger, flipping, staying in the viewport) and closing it are the
+            app&apos;s job; see <a href="#/placement">Placement</a>.
+          </li>
+          <li>A calendar mounted later shows the current value, and closing or unmounting one does not reset the others.</li>
+        </ul>
+        <Example src="features/SyncedEverywhere" title="Inline, modal and portal in sync" />
       </Section>
       <PropsTable
         caption="What is shared"

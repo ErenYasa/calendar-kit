@@ -109,7 +109,8 @@ export function RulesReference() {
               description: (
                 <>
                   Whether <code>start === end</code> is a valid range. When it is not, clicking the lone start again clears it, and validating such a range gives{' '}
-                  <code>same-day</code>. A same-day range needs a day that allows both starting and ending. In exclusive semantics a same-day range has length 0,
+                  <code>same-day</code>. A same-day range needs a day that passes both the start and the end checks (<code>canStart</code>, <code>canEnd</code>,{' '}
+                  <code>startWeekdays</code>, <code>endWeekdays</code>). In exclusive semantics a same-day range has length 0,
                   so it is only valid when <code>minLength</code> is unset or 0.
                 </>
               ),
@@ -180,7 +181,7 @@ export function RulesReference() {
               type: 'readonly Weekday[]',
               description: (
                 <>
-                  Weekdays a range may end on; others fail with <code>weekday-end</code>. Not checked for same-day ranges.
+                  Weekdays a range may end on; others fail with <code>weekday-end</code>. Also checked for same-day ranges, whose end is the start day.
                 </>
               ),
             },
@@ -289,9 +290,10 @@ export function RulesReference() {
           <code>maxLength</code> failed. When the 63 candidates run out first, the start stays selectable and its end is validated when it is picked.
         </p>
         <p>
-          The rejection reports the bound or data issue when that ended the search. Otherwise, if a <code>minLength</code> above 1 is configured, it is reported
-          as <code>min-length</code> on the start (with the <code>dayReason</code> of the last failure); without one, the last candidate&apos;s issue is
-          reported. The search is skipped when <code>fixedLength</code> is set (a fixed range is validated as a whole instead) and it is not part of{' '}
+          The rejection reports the bound or data issue when that ended the search. Otherwise it reports <code>min-length</code> on the start (with the{' '}
+          <code>dayReason</code> of the last failure) only when the minimum is what blocks: a <code>minLength</code> above the natural one (1 night / 1 day) is
+          configured and a shorter end would be valid without the length rule. In every other case the last candidate&apos;s issue is reported, so a start
+          with no possible check-out after it gets e.g. <code>end-not-allowed</code>, not “Minimum N”. The search is skipped when <code>fixedLength</code> is set (a fixed range is validated as a whole instead) and it is not part of{' '}
           <code>validate()</code>.
         </p>
         <Snippet files={reachableEnd} label="requireReachableEnd" />
@@ -452,7 +454,7 @@ export function RulesReference() {
               description: (
                 <>
                   Shortest stay in nights; becomes <code>minLength</code>. Also used by the reachable-end search, so a check-in whose only possible stays are too
-                  short is disabled.
+                  short is disabled (reported as <code>min-length</code>).
                 </>
               ),
             },
@@ -492,7 +494,9 @@ export function RulesReference() {
               type: 'readonly Weekday[]',
               description: (
                 <>
-                  Weekdays with service. Other days are closed entirely, including for departures — see the note below.
+                  Weekdays with service (schedule rule). Nights on other weekdays cannot be booked: no check-in (<code>start-not-allowed</code>) and no night
+                  inside a stay (<code>blocked-in-range</code>), reason <code>out-of-schedule</code>. The morning after the last available night is still a valid
+                  check-out, so <code>[5, 6]</code> allows Friday → Sunday. Unlike <code>SelectionRules.availableWeekdays</code>, which closes the whole day.
                 </>
               ),
             },
@@ -563,13 +567,11 @@ export function RulesReference() {
         </p>
         <Example src="rules/StayStatuses" title="Stay statuses" />
         <Snippet files={stayStatuses} label="Stay statuses, checked by the engine" />
-        <Note>
-          <p>
-            <code>availableWeekdays</code> closes the other weekdays as whole days, not only their nights. With <code>availableWeekdays: [5, 6]</code> (Friday
-            and Saturday nights) a Friday → Sunday stay fails because Sunday cannot be a check-out day. To keep departures, restrict the other days yourself
-            with <code>canStart: false, canPassThrough: false, schedule: true</code>:
-          </p>
-        </Note>
+        <p>
+          <code>availableWeekdays</code> restricts nights, not days. With <code>availableWeekdays: [5, 6]</code> (Friday and Saturday nights) a Friday → Sunday
+          stay is valid because Sunday is only the check-out morning; a stay that includes the Sunday night, or starts on it, is rejected. The restriction is
+          a schedule rule, so <code>relaxRules</code> and the <code>relaxSchedule</code> prop remove it.
+        </p>
         <Snippet files={stayWeekdays} label="availableWeekdays and check-out days" />
       </Section>
 

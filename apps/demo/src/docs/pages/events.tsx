@@ -475,12 +475,12 @@ export function EventsReference() {
       <Section title="onLoadMore">
         <p>
           Continuous mode only. Fires when months are added by the default button (or the <code>loadMore()</code> of a custom <code>renderLoadMore</code>),
-          by the automatic sentinel (<code>loadMore=&quot;auto&quot;</code>) or by <code>ref.loadMore()</code>. It is emitted at the time of the action;{' '}
+          by the automatic sentinel (<code>loadMore=&quot;auto&quot;</code>), by <code>ref.loadMore()</code> or when moving focus past the first or last
+          rendered month extends the list (a target at most <code>monthsPerLoad</code> months away; farther targets jump instead). It is emitted at the time of the action;{' '}
           <code>renderedMonthsChange</code> follows after the render.
         </p>
         <p>
-          Does not fire in paged mode, at <code>minDate</code>/<code>maxDate</code> when nothing can be added, when keyboard navigation extends the list
-          (only <code>renderedMonthsChange</code> reports that), or for <code>goToMonth</code>. Adding months never emits <code>visibleMonthChange</code>.
+          Does not fire in paged mode, at <code>minDate</code>/<code>maxDate</code> when nothing can be added, or for <code>goToMonth</code>. Adding months never emits <code>visibleMonthChange</code>.
         </p>
         <Signature>{'onLoadMore?: (e: LoadMoreEvent) => void'}</Signature>
         <Payload
@@ -488,13 +488,16 @@ export function EventsReference() {
           rows={[
             ['direction', "'next' | 'previous'", 'Where the months were added.'],
             ['months', 'readonly CalendarMonth[]', <>The added months (up to <code>monthsPerLoad</code>, fewer at min/max). Months dropped from the other end are in <code>renderedMonthsChange.removed</code>.</>],
-            ['source', 'EventSource', "Always 'load-more'."],
+            ['source', 'EventSource', <>
+              <code>load-more</code>, except for trigger <code>keyboard</code>, which carries the source of the focus move: <code>keyboard</code> (arrow or
+              Page keys) or <code>programmatic</code> (<code>ref.focusDate()</code>).
+            </>],
             [
               'trigger',
               "'button' | 'auto' | 'manual' | 'keyboard'",
               <>
                 <code>button</code>: the default or custom control. <code>auto</code>: the sentinel scrolled into view. <code>manual</code>:{' '}
-                <code>ref.loadMore()</code>. <code>keyboard</code> is declared but not emitted by the current version.
+                <code>ref.loadMore()</code>. <code>keyboard</code>: focus moved past the end of the list (arrow or Page keys, or <code>ref.focusDate()</code>).
               </>,
             ],
           ]}
@@ -913,7 +916,8 @@ export function ControllerReference() {
         <p>
           If the day is not rendered, the calendar navigates first: paged mode moves the window (<code>visibleMonthChange</code> with{' '}
           <code>source: &apos;programmatic&apos;</code> and <code>reason: &apos;keyboard&apos;</code>); continuous mode extends the list when the month is
-          within <code>monthsPerLoad</code> of an end, otherwise it rebuilds the list around it. Focus follows once the day is rendered, unless the user has
+          within <code>monthsPerLoad</code> of an end (<code>onLoadMore</code> with trigger <code>keyboard</code>, source <code>programmatic</code>),
+          otherwise it rebuilds the list around it. Focus follows once the day is rendered, unless the user has
           moved focus elsewhere in the meantime. It does not select anything.
         </p>
       </Section>

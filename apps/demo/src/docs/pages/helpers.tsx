@@ -61,8 +61,8 @@ export function DateHelpers() {
           <p>
             Functions that take a <code>CalendarDate</code> trust it and do not re-validate. Values cast with <code>as CalendarDate</code> instead of parsed
             give meaningless results. Arithmetic that crosses the year limits is not checked either: <code>addDays</code> past 9999-12-31 returns a string such
-            as <code>"10000-01-01"</code> that no parser would accept, and a fractional <code>amount</code> produces an invalid string. Pass whole numbers and
-            stay inside the supported years.
+            as <code>"10000-01-01"</code> that no parser would accept; the result outside 0001–9999 is undefined. Stay inside the supported years.
+            (<code>addMonths</code> and <code>addMonthsToMonth</code> clamp instead, see below.)
           </p>
         </Note>
       </Section>
@@ -131,12 +131,12 @@ export function DateHelpers() {
         <Fn name="addDays" sig="function addDays(date: CalendarDate, amount: number): CalendarDate">
           <p>
             Returns the day <code>amount</code> days after <code>date</code> (before it when negative). Month and year boundaries are handled; DST cannot
-            make a day go missing or repeat. <code>amount</code> must be an integer.
+            make a day go missing or repeat. A fractional <code>amount</code> is truncated toward zero (<code>1.5</code> → 1, <code>-1.5</code> → −1).
           </p>
         </Fn>
         <Fn name="addMonths" sig="function addMonths(date: CalendarDate, amount: number): CalendarDate">
           <p>
-            Moves a date by whole months and keeps the day of month when it exists. When it does not, the day is clamped to the last day of the target month:
+            Moves a date by whole months (a fractional <code>amount</code> is truncated toward zero) and keeps the day of month when it exists. When it does not, the day is clamped to the last day of the target month:
             31 January + 1 month is 28 February (29 in a leap year). Clamping is not undone later, so adding one month twice to 31 January gives 28 March,
             not 31 March; add the total in one call when that matters. Results never leave 0001–9999: a move past either end stops at the first or last
             month.
@@ -144,7 +144,8 @@ export function DateHelpers() {
         </Fn>
         <Fn name="addMonthsToMonth" sig="function addMonthsToMonth(month: CalendarMonth, amount: number): CalendarMonth">
           <p>
-            The month equivalent of <code>addMonths</code>, for navigation and month lists where there is no day to clamp. Results are kept within
+            The month equivalent of <code>addMonths</code>, for navigation and month lists where there is no day to clamp. Fractional amounts are
+            truncated toward zero. Results are kept within
             0001-01 to 9999-12 (for example <code>9999-12</code> + 1 stays <code>9999-12</code>).
           </p>
         </Fn>
@@ -277,7 +278,7 @@ export function DateHelpers() {
           </p>
           <p>
             An unknown zone name makes <code>Intl.DateTimeFormat</code> throw a <code>RangeError</code>. An invalid <code>now</code> (e.g.{' '}
-            <code>NaN</code>) throws a <code>RangeError</code> when a time zone is given; without one it returns <code>null</code> despite the return type.
+            <code>NaN</code> or an invalid <code>Date</code>) throws <code>RangeError(&apos;Invalid time value&apos;)</code>, with or without a time zone.
           </p>
         </Fn>
         <Fn name="fromJSDate" sig="function fromJSDate(date: Date, timeZone?: string): CalendarDate">
@@ -458,26 +459,18 @@ export function MessagesReference() {
           caption="Built-in bundles (all of type CalendarMessages)"
           head={['Export', 'Language', 'Coverage']}
           rows={[
-            [<code key="a">messagesEn</code>, 'English', 'Complete; the default and the fallback for the others.'],
+            [<code key="a">messagesEn</code>, 'English', 'Complete; the default (the Calendar merges messages over it).'],
             [<code key="a">messagesTr</code>, 'Turkish', 'Complete, including every reason and day reason.'],
             [
               <code key="a">messagesDe, messagesFr, messagesEs, messagesIt, messagesNl, messagesAr</code>,
               'German, French, Spanish, Italian, Dutch, Arabic',
               <>
-                All UI texts and announcements. Reasons: only <code>closed</code> (also used for <code>custom</code>), <code>past</code>,{' '}
-                <code>blocked-in-range</code>, <code>min-length</code>, <code>max-length</code>; the other reasons are the English texts. Day reasons:{' '}
-                <code>check-in-only</code>, <code>check-out-only</code>, <code>booked</code>, <code>closed</code> only.
+                Complete: all UI texts and announcements, every reason and every day reason (including <code>start-only</code>, <code>end-only</code> and{' '}
+                <code>out-of-schedule</code>), with the language&apos;s plural forms for night and day counts (in Arabic: one, two, 3–10, 11–99 and the rest).
               </>,
             ],
           ]}
         />
-        <Note>
-          <p>
-            With the partial bundles, untranslated reasons (for example <code>fixed-length</code>, <code>same-day</code>,{' '}
-            <code>start-not-allowed</code>) appear in English, and the <code>start-only</code>/<code>end-only</code> tags of <code>dayRangeRules</code> fall
-            back to those English reason texts. Supply the missing ones with an override as shown below.
-          </p>
-        </Note>
       </Section>
 
       <Section title="Overriding messages">
@@ -490,7 +483,8 @@ export function MessagesReference() {
           <p>
             Returns a new complete bundle: top-level keys of <code>override</code> replace those of <code>base</code>, while <code>reasons</code> and{' '}
             <code>dayReasons</code> are merged key by key, so overriding one reason keeps all others. Without an override it returns <code>base</code>{' '}
-            itself. A key present with the value <code>undefined</code> replaces the base text with <code>undefined</code>, so omit keys instead. Build the
+            itself. A key present with the value <code>undefined</code> counts as not listed and keeps the base text, at the top level as well as in{' '}
+            <code>reasons</code> and <code>dayReasons</code>. Build the
             result once (module scope or <code>useMemo</code>); the Calendar re-merges whenever the <code>messages</code> object changes identity.
           </p>
         </Fn>
