@@ -9,7 +9,7 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız: 51 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 54 madde; + 7 şüphe/gözlem)
+## Sayım (çakışmasız: 51 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 54 madde; + 8 şüphe/gözlem)
 
 Her madde tam olarak bir grupta sayılır.
 
@@ -19,7 +19,7 @@ Her madde tam olarak bir grupta sayılır.
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 5 | F27, F29, F31, F47, F50b |
 | Bekleyen (karar gerekli) | 0 | — |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
-| Gözlem (hata olarak kanıtlanmadı) | 3 | S05, S06, S07 |
+| Gözlem (hata olarak kanıtlanmadı) | 4 | S05, S06, S07, S08 |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
 Bulgu listesi dışında, hiç yapılmamış ve **doğrulanmamış** ortam kontrolleri:
@@ -202,3 +202,9 @@ Kalan açık: **0**. Kararlar 2026-11-07'de verildi (aşağıdaki seçenekler ka
 - S05: Aynı JS görevinde iki `element.click()` ilkini kaybediyor (aktivasyon son render edilen durumu okur). Gerçek kullanıcı etkileşiminde oluşmaz; betikler/testler için not.
 - S06: Her gün tıklaması bir `update` ve bir `nested-update` commit'i üretiyor (layout effect'ten durum güncellemesi). Performans ölçümünde bir karenin altında; azaltılabilir mi incelenmeli.
 - S07: `element.click()` (detail 0) `source: 'keyboard'` olarak raporlanıyor; Enter/Space ile aynı tıklama türü olduğundan beklenen davranış.
+- S08 (açık gözlem, yeniden üretilemedi): 2026-11-07'de `npm run test:browser` ilk çalıştırmasında D01, React'in "change in the order of Hooks" console hatasıyla bir kez başarısız oldu. Bileşen adı çıktıda yoktu. O sırada başka bir ajan paket kaynaklarını (`Calendar.tsx`, `engine.ts`) düzenliyordu ve kontrol Vite dev sunucusunda (HMR açık) çalışıyordu; hiçbir şey değişmeden yapılan ikinci çalıştırma 17/17 geçti. Araştırma (yeniden üretilemedi):
+  - Statik denetim: `packages/calendar-kit/src` ve `apps/demo/src` içindeki 140 dosya, 207 bileşen/hook, 282 hook çağrısı; koşul, döngü, iç içe fonksiyon veya erken `return` sonrasında hook yok (denetim betiği bilinen hatalı örneklerin dördünü de yakaladı).
+  - Temiz production build (`vite build` + `vite preview`, HMR yok) ve düzenleme yapılmayan yeni bir dev sunucusu: her biri 3 tur, 1440×900 ve 375×812, farklı sayfa sıralarıyla 117 sayfa ziyareti, 582 gün tıklaması, 909 tuş, 123 kontrol değişikliği (Lab'ın bütün seçenekleri dahil), popover/dialog tetikleyicileri; `pageerror` ve console hata/uyarısı yok (yalnız `/favicon.ico` 404).
+  - HMR denemesi: dev sunucusu açıkken `Calendar.tsx`'e bileşenin ortasına `useRef` ve ayrı bir layout effect eklendi; React Refresh güncellemeyi aynı belgede hatasız uyguladı.
+  - `npm run test:browser` düzenleme olmadan üç kez art arda: 17/17, hook uyarısı yok.
+  Yeniden görülürse: tam console çıktısını (bileşen yığını) ve o anda değişen dosyaları kaydedin.
