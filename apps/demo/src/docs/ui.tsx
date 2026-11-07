@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react';
+import { useUi } from './i18n';
 
 // Set by the router when the user navigated: the next page to mount moves
 // focus to its heading (pages load lazily, so the router cannot do it).
@@ -7,43 +8,50 @@ export const requestPageFocus = () => {
   focusOnMount = true;
 };
 
+/**
+ * A string `name`, `type` or `default` is an API value and is shown as code;
+ * pass JSX (e.g. `<>from locale</>`) for prose, which is translated.
+ */
 export interface PropRow {
-  name: string;
-  type: string;
-  default?: string;
+  name: ReactNode;
+  type: ReactNode;
+  default?: ReactNode;
   required?: boolean;
   description: ReactNode;
 }
 
+const codeOrProse = (v: ReactNode, className?: string) => (typeof v === 'string' ? <code className={className}>{v}</code> : v);
+
 /** Props / options table: name, type, default, required, description. */
 export function PropsTable({ rows, caption }: { rows: readonly PropRow[]; caption?: string }) {
+  const ui = useUi();
   return (
-    <div className="docs-table-wrap" tabIndex={0} role="region" aria-label={caption ?? 'Props'}>
+    <div className="docs-table-wrap" tabIndex={0} role="region" aria-label={caption ?? ui.propsCaption}>
       <table className="docs-table">
         {caption && <caption>{caption}</caption>}
         <thead>
           <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Type</th>
-            <th scope="col">Default</th>
-            <th scope="col">Description</th>
+            <th scope="col">{ui.colName}</th>
+            <th scope="col">{ui.colType}</th>
+            <th scope="col">{ui.colDefault}</th>
+            <th scope="col">{ui.colDescription}</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.name}>
+          {rows.map((r, i) => (
+            <tr key={i}>
               <th scope="row">
                 <div className="docs-cell-limit">
-                  <code>{r.name}</code>
-                  {r.required && <span className="docs-required"> required</span>}
+                  {codeOrProse(r.name)}
+                  {r.required && <span className="docs-required"> {ui.required}</span>}
                 </div>
               </th>
               <td>
                 <div className="docs-cell-limit">
-                  <code className="docs-type">{r.type}</code>
+                  {codeOrProse(r.type, 'docs-type')}
                 </div>
               </td>
-              <td>{r.default ? <code>{r.default}</code> : <span className="docs-muted">—</span>}</td>
+              <td>{r.default ? codeOrProse(r.default) : <span className="docs-muted">—</span>}</td>
               <td>{r.description}</td>
             </tr>
           ))}
@@ -113,7 +121,14 @@ export function Page({ title, lead, children }: { title: string; lead: ReactNode
 
 /** One feature: name, purpose, live example(s), then props and behaviour notes. */
 export function Section({ title, children }: { title: string; children: ReactNode }) {
-  const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  // Turkish titles: ı → i and accents dropped, so ids stay ASCII (e.g. "Seçim modları" → "secim-modlari").
+  const id = title
+    .replace(/ı/g, 'i')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
   return (
     <section className="docs-section" aria-labelledby={id}>
       <h2 id={id}>{title}</h2>

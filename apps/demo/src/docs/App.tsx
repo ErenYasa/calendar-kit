@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
+import { LangContext, type Lang, UI, readStoredLang, storeLang } from './i18n';
 import { NAV, PAGES } from './nav';
 import { requestPageFocus } from './ui';
 
@@ -30,9 +31,21 @@ export function App() {
   const index = PAGES.indexOf(page);
   const prev = PAGES[index - 1];
   const next = PAGES[index + 1];
+  // English on the first visit; the choice is stored. Switching keeps the page.
+  const [lang, setLang] = useState<Lang>(readStoredLang);
+  const ui = UI[lang];
+  const PageComponent = page.Component[lang];
+  const chooseLang = (l: Lang) => {
+    setLang(l);
+    storeLang(l);
+  };
 
   useEffect(() => {
-    document.title = `${page.title} — calendar-kit`;
+    document.documentElement.lang = lang;
+    document.title = `${page.title[lang]} — ${ui.docTitleSuffix}`;
+  }, [page, lang, ui]);
+
+  useEffect(() => {
     if (first.current) {
       first.current = false;
       return;
@@ -75,15 +88,28 @@ export function App() {
   }, [menuOpen]);
 
   return (
+    <LangContext.Provider value={lang}>
     <div className="docs-app">
       <a className="docs-skip" href="#main" onClick={(e) => (e.preventDefault(), document.getElementById('page-title')?.focus())}>
-        Skip to content
+        {ui.skipToContent}
       </a>
       <header className="docs-header">
         <a className="docs-brand" href="#/introduction">
           calendar-kit
         </a>
-        <span className="docs-muted docs-version">0.1.0 · not published</span>
+        <span className="docs-muted docs-version">{ui.version}</span>
+        <div className="docs-lang" role="group" aria-label={ui.languageLabel}>
+          {(
+            [
+              ['en', 'EN', 'English'],
+              ['tr', 'TR', 'Türkçe'],
+            ] as const
+          ).map(([l, short, name]) => (
+            <button key={l} type="button" className="docs-lang-button" lang={l} aria-label={name} aria-pressed={lang === l} onClick={() => chooseLang(l)}>
+              {short}
+            </button>
+          ))}
+        </div>
         <button
           ref={menuButton}
           type="button"
@@ -92,20 +118,20 @@ export function App() {
           aria-controls="docs-nav"
           onClick={() => setMenuOpen((o) => !o)}
         >
-          {menuOpen ? 'Close menu' : 'Menu'}
+          {menuOpen ? ui.closeMenu : ui.menu}
         </button>
       </header>
       <div className="docs-layout">
         <div className="docs-backdrop" data-open={menuOpen || undefined} onClick={closeMenu} aria-hidden="true" />
-        <nav id="docs-nav" className="docs-nav" data-open={menuOpen || undefined} aria-label="Documentation">
+        <nav id="docs-nav" className="docs-nav" data-open={menuOpen || undefined} aria-label={ui.navLabel}>
           {NAV.map((group) => (
-            <div key={group.title} className="docs-nav-group">
-              <h2 className="docs-nav-title">{group.title}</h2>
+            <div key={group.title.en} className="docs-nav-group">
+              <h2 className="docs-nav-title">{group.title[lang]}</h2>
               <ul>
                 {group.pages.map((p) => (
                   <li key={p.slug}>
                     <a href={`#/${p.slug}`} aria-current={p.slug === slug ? 'page' : undefined}>
-                      {p.title}
+                      {p.title[lang]}
                     </a>
                   </li>
                 ))}
@@ -114,17 +140,18 @@ export function App() {
           ))}
         </nav>
         <main id="main" className="docs-main">
-          <div key={slug} data-page={slug}>
-            <Suspense fallback={<p className="docs-muted">Loading…</p>}>
-              <page.Component />
+          <div key={`${lang}:${slug}`} data-page={slug} data-lang={lang}>
+            <Suspense fallback={<p className="docs-muted">{ui.loadingPage}</p>}>
+              <PageComponent />
             </Suspense>
           </div>
-          <nav className="docs-pager" aria-label="Previous and next page">
-            {prev ? <a href={`#/${prev.slug}`}>← {prev.title}</a> : <span />}
-            {next ? <a href={`#/${next.slug}`}>{next.title} →</a> : <span />}
+          <nav className="docs-pager" aria-label={ui.pagerLabel}>
+            {prev ? <a href={`#/${prev.slug}`}>← {prev.title[lang]}</a> : <span />}
+            {next ? <a href={`#/${next.slug}`}>{next.title[lang]} →</a> : <span />}
           </nav>
         </main>
       </div>
     </div>
+    </LangContext.Provider>
   );
 }

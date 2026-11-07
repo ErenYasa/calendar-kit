@@ -401,7 +401,94 @@ await check('D03', 'mobile menu: hidden by default, toggles, Escape returns focu
   return `menu ok, ${ROUTES.length} pages fit 375px`;
 });
 
-await check('D06', 'sidebar: the last item is reachable and clickable at short heights (desktop and mobile)', async (page) => {
+await check('D09', 'language switch: English first, EN/TR toggle keeps the page, lang/title update, choice stored, View code in Turkish', async (page) => {
+  await page.goto(`${base}#/tooltip`);
+  await page.waitForSelector('#ex-features-tooltip .cal-root[data-measured]');
+  const first = await page.evaluate(() => ({ lang: document.documentElement.lang, title: document.title, pressed: document.querySelector('.docs-lang-button[aria-pressed="true"]')?.textContent }));
+  assert(first.lang === 'en' && first.pressed === 'EN' && first.title.startsWith('Tooltip'), `first visit: ${JSON.stringify(first)}`);
+  // Keyboard: Tab from EN to TR and press Enter; focus stays on TR.
+  await page.focus('.docs-lang-button[lang="en"]');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('[data-page="tooltip"][data-lang="tr"] .docs-page h1');
+  await page.waitForSelector('#ex-features-tooltip .cal-root[data-measured]');
+  const tr = await page.evaluate(() => ({
+    lang: document.documentElement.lang,
+    title: document.title,
+    hash: location.hash,
+    h1: document.querySelector('.docs-page h1')?.textContent,
+    focus: document.activeElement?.getAttribute('lang'),
+    pressed: document.querySelector('.docs-lang-button[aria-pressed="true"]')?.textContent,
+    nav: document.querySelector('#docs-nav a[href="#/tooltip"]')?.textContent,
+    untranslated: document.querySelectorAll('.docs-untranslated').length,
+  }));
+  assert(tr.lang === 'tr' && tr.hash === '#/tooltip' && tr.pressed === 'TR' && tr.focus === 'tr', `switch: ${JSON.stringify(tr)}`);
+  assert(tr.title === `${tr.h1} — calendar-kit` && tr.h1 !== 'Tooltip' && tr.nav === tr.h1, `texts: ${JSON.stringify(tr)}`);
+  assert(tr.untranslated === 0, 'an example on the Turkish page has no Turkish version');
+  // View code shows the Turkish example file.
+  await page.click('#ex-features-tooltip .docs-example-bar button');
+  await page.waitForSelector('#ex-features-tooltip .docs-code');
+  const code = await page.evaluate(() => ({
+    button: document.querySelector('#ex-features-tooltip .docs-example-bar button')?.textContent,
+    file: document.querySelector('#ex-features-tooltip .docs-code-file, #ex-features-tooltip [role=tab][aria-selected=true]')?.textContent,
+    copy: document.querySelector('#ex-features-tooltip .docs-copy')?.textContent,
+  }));
+  assert(code.button === 'Kodu gizle' && /\.tr\.tsx$/.test(code.file ?? '') && code.copy === 'Kopyala', `view code: ${JSON.stringify(code)}`);
+  // Stored: a reload and another page stay Turkish; switching back restores English on the same page.
+  await page.reload();
+  await page.waitForSelector('[data-page="tooltip"][data-lang="tr"] .docs-page h1');
+  await page.goto(`${base}#/selection-modes`);
+  await page.waitForSelector('[data-page="selection-modes"][data-lang="tr"] .docs-page h1');
+  await page.click('.docs-lang-button[lang="en"]');
+  await page.waitForSelector('[data-page="selection-modes"][data-lang="en"] .docs-page h1');
+  const back = await page.evaluate(() => ({ lang: document.documentElement.lang, stored: localStorage.getItem('calendar-kit-docs-lang'), hash: location.hash }));
+  assert(back.lang === 'en' && back.stored === 'en' && back.hash === '#/selection-modes', `back: ${JSON.stringify(back)}`);
+  return `tr: "${tr.h1}", view code ${code.file}, stored`;
+});
+
+await check('D10', 'Turkish: every page renders its examples without errors, no untranslated example, no overflow at 375px', async (page) => {
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  await page.goto(`${base}#/introduction`);
+  await page.evaluate(() => localStorage.setItem('calendar-kit-docs-lang', 'tr'));
+  await page.reload(); // the stored language is read on load
+  await page.waitForSelector('[data-lang="tr"] .docs-page h1');
+  let examples = 0;
+  const untranslated = [];
+  const wide = [];
+  let headerFits = true;
+  for (const [w, h] of [[1280, 900], [375, 800]]) {
+    await page.setViewportSize({ width: w, height: h });
+    for (const route of ROUTES) {
+      await page.goto(`${base}#/${route}`);
+      await page.waitForSelector(`[data-page="${route}"][data-lang="tr"] .docs-page h1`);
+      const figures = await page.$$eval('figure.docs-example', (f) => f.map((x) => x.id));
+      for (const id of figures) {
+        await page
+          .waitForSelector(`#${id} .docs-preview [data-measured], #${id} .docs-preview > div > button`, { timeout: 8000 })
+          .catch(() => errors.push(`${route}: ${id} did not render`));
+        if (w > 400) examples++;
+      }
+      if ((await page.$$('.docs-untranslated')).length) untranslated.push(route);
+      const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (over > 0) wide.push(`${w}px ${route} +${over}px`);
+    }
+    // The header (brand, language switch, menu button) fits the viewport.
+    headerFits &&= await page.evaluate(() =>
+      [...document.querySelectorAll('.docs-header > *:not(.docs-skip)')]
+        .filter((e) => getComputedStyle(e).display !== 'none')
+        .every((e) => e.getBoundingClientRect().right <= document.documentElement.clientWidth + 0.5),
+    );
+  }
+  assert(errors.length === 0, errors.slice(0, 3).join(' | '));
+  assert(untranslated.length === 0, `examples without a Turkish version on: ${untranslated.join(', ')}`);
+  assert(wide.length === 0, `horizontal overflow: ${wide.join(', ')}`);
+  assert(headerFits, 'header items overflow');
+  return `${ROUTES.length} pages × 2 widths, ${examples} examples`;
+});
+
+await check('D06','sidebar: the last item is reachable and clickable at short heights (desktop and mobile)', async (page) => {
   // Slow CPU (as on CI runners): navigation must not close a menu opened right after it.
   await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 6 });
   const out = [];
