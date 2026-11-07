@@ -170,11 +170,13 @@ export type CalendarMessagesInput = Partial<Omit<CalendarMessages, 'reasons' | '
 
 export function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages {
   if (!override) return base;
+  // A key set to `undefined` keeps the base text (partial override).
+  const defined = <T extends object>(o: T | undefined) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined)) as Partial<T>;
   return {
     ...base,
-    ...override,
-    reasons: { ...base.reasons, ...override.reasons },
-    dayReasons: { ...base.dayReasons, ...override.dayReasons },
+    ...defined(override),
+    reasons: { ...base.reasons, ...defined(override.reasons) },
+    dayReasons: { ...base.dayReasons, ...defined(override.dayReasons) },
   } as CalendarMessages;
 }
 
