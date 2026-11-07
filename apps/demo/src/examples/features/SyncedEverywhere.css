@@ -1,0 +1,36 @@
+.synced-everywhere-summary {
+  margin: 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+.synced-everywhere-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.synced-everywhere-dialog {
+  width: min(720px, calc(100vw - 32px));
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+}
+.synced-everywhere-dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+.synced-everywhere-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.synced-everywhere-popover {
+  position: fixed;
+  z-index: 50;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 16px));
+  overflow: auto;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #d0d4d9;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
