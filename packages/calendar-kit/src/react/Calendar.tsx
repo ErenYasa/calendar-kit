@@ -768,6 +768,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           else last = addMonthsToMonth(last, -(total - maxRenderedMonths));
         }
         setList({ key: listKey, first, last });
+        // Months added by moving focus past the list end are a load like any other.
+        const added = extendNext ? eachMonth(addMonthsToMonth(lastRendered, 1), diffMonths(lastRendered, tm)) : eachMonth(tm, diffMonths(tm, firstRendered));
+        emit({ type: 'loadMore', instanceId, direction: extendNext ? 'next' : 'previous', months: added, source, trigger: 'keyboard' });
       } else navigateTo(tm, source, 'keyboard');
     }
   }
