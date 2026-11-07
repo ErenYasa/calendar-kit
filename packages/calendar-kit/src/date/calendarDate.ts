@@ -119,8 +119,9 @@ export function fromEpochDay(epochDay: number): CalendarDate {
   return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}` as CalendarDate;
 }
 
+/** Adds whole days; a fractional amount is truncated toward zero (1.5 → 1, -1.5 → -1). */
 export function addDays(date: CalendarDate, amount: number): CalendarDate {
-  return fromEpochDay(toEpochDay(date) + amount);
+  return fromEpochDay(toEpochDay(date) + Math.trunc(amount));
 }
 
 /** Calendar-day difference `b - a` (DST independent). */
@@ -207,8 +208,9 @@ function monthFromIndex(index: number): CalendarMonth {
   return `${pad(clampedYear, 4)}-${pad(clampedYear === year ? m : clampedYear === MIN_YEAR ? 1 : 12, 2)}` as CalendarMonth;
 }
 
+/** Adds whole months (fractions truncated toward zero), clamped to 0001-01…9999-12. */
 export function addMonthsToMonth(month: CalendarMonth, amount: number): CalendarMonth {
-  return monthFromIndex(monthIndex(month) + amount);
+  return monthFromIndex(monthIndex(month) + Math.trunc(amount));
 }
 
 /** Number of months from `a` to `b` (`b - a`). */
@@ -260,6 +262,8 @@ export function eachMonth(start: CalendarMonth, count: number): CalendarMonth[] 
  */
 export function getToday(options: { timeZone?: string; now?: Date | number } = {}): CalendarDate {
   const now = options.now === undefined ? new Date() : new Date(options.now);
+  // Same error with or without a time zone (Intl throws this for invalid instants).
+  if (Number.isNaN(now.getTime())) throw new RangeError('Invalid time value');
   if (!options.timeZone) {
     return createDate(now.getFullYear(), now.getMonth() + 1, now.getDate()) as CalendarDate;
   }
