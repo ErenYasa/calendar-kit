@@ -94,14 +94,16 @@ export function codePlugin(): Plugin {
   return {
     name: 'docs-code',
     enforce: 'pre',
+    // A virtual id without the file extension: otherwise Vite's CSS plugin
+    // would claim `x.css?code` before this plugin can load it.
     async resolveId(source, importer) {
       if (!source.endsWith('?code')) return null;
       const resolved = await this.resolve(source.slice(0, -5), importer, { skipSelf: true });
-      return resolved ? `${resolved.id.split('?')[0]}?code` : null;
+      return resolved ? `\0docs-code:${resolved.id.split('?')[0]}` : null;
     },
     load(id) {
-      if (!id.endsWith('?code')) return null;
-      const entry = id.slice(0, -5);
+      if (!id.startsWith('\0docs-code:')) return null;
+      const entry = id.slice('\0docs-code:'.length);
       const files: CodeFile[] = collectFiles(entry).map((file) => {
         this.addWatchFile(file);
         const code = readFileSync(file, 'utf8').replace(/\s+$/, '') + '\n';
