@@ -415,10 +415,25 @@ export function Placement() {
       </Section>
       <Section title="Popover through a portal">
         <p>
-          A calendar can be portalled anywhere. Here a popover opens under its button, moves focus into the grid with <code>ref.focusDate()</code> and closes on
-          selection, Escape or an outside click.
+          A portal only moves the calendar&apos;s DOM elsewhere (here into <code>document.body</code>); it does not position anything. Positioning a popover is
+          your app&apos;s responsibility — the calendar positions only its own tooltip. A popover with <code>position: fixed</code> that is placed once stays
+          where it was put while the page scrolls, so it detaches from its trigger and can hang off the screen. The example recomputes the position from the
+          trigger on every scroll (of any scroll container, captured) and resize, coalesced to one update per frame; opens above when there is more room there;
+          keeps the popover inside the viewport horizontally and limits its height to the available room; and closes when the trigger scrolls out of view.
+        </p>
+        <p>
+          Closing is also the app&apos;s job: Escape (the calendar consumes Escape only while one of its tooltips is open), an outside click reported by{' '}
+          <code>onOutsideClick</code> (the calendar&apos;s own portals count as inside), a selection in <code>onChange</code>, or unmounting with the page. Focus
+          moves into the grid with <code>ref.focusDate()</code> on <code>onReady</code> and returns to the trigger on close with{' '}
+          <code>focus(&#123; preventScroll: true &#125;)</code>. The calendar itself never scrolls the page to focus a day inside a fixed popover.
         </p>
         <Example src="features/Popover" title="Popover" />
+        <Note>
+          <p>
+            Need collision handling for many components? A positioning library (for example Floating UI) does the same job; the calendar works inside any
+            positioned container.
+          </p>
+        </Note>
       </Section>
     </Page>
   );

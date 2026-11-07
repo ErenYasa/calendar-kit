@@ -464,6 +464,71 @@ await check('D07', 'mobile menu: background does not scroll, scroll position and
   return 'lock, restore, Escape, backdrop, selection';
 });
 
+await check('D08', 'popover follows its trigger on scroll/resize, flips, closes when the trigger leaves the view, returns focus', async (page) => {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await page.goto(`${base}#/placement`);
+  const trigger = '#ex-features-popover .docs-preview button';
+  await page.waitForSelector(trigger);
+  // Room to scroll the example anywhere in the viewport (test setup only).
+  await page.evaluate(() => (document.querySelector('.docs-main').style.paddingBottom = '1500px'));
+  // Put the trigger at a given viewport y (page scroll), then measure.
+  const at = (y) => page.evaluate(([sel, y]) => window.scrollBy(0, document.querySelector(sel).getBoundingClientRect().top - y), [trigger, y]);
+  const geo = () =>
+    page.evaluate((sel) => {
+      const t = document.querySelector(sel).getBoundingClientRect();
+      const p = document.querySelector('.popover')?.getBoundingClientRect();
+      return p && { side: document.querySelector('.popover').dataset.side, below: Math.round(p.top - t.bottom), above: Math.round(t.top - p.bottom), left: Math.round(p.left), right: Math.round(p.right), top: Math.round(p.top), bottom: Math.round(p.bottom), vw: document.documentElement.clientWidth, vh: innerHeight };
+    }, trigger);
+  const settle = () => page.waitForTimeout(250);
+  const open = async () => {
+    await page.$eval(trigger, (b) => b.click());
+    await page.waitForSelector('.popover .cal-root[data-measured]');
+    await settle();
+  };
+  const isOpen = () => page.evaluate(() => !!document.querySelector('.popover'));
+
+  await at(150);
+  const y0 = await page.evaluate(() => scrollY);
+  await open();
+  const g1 = await geo();
+  assert(g1.side === 'bottom' && g1.below === 8 && (await page.evaluate(() => scrollY)) === y0, `open: ${JSON.stringify(g1)}`);
+  await page.mouse.wheel(0, 60);
+  await settle();
+  const g2 = await geo();
+  assert(g2 && g2.below === 8, `after scroll: ${JSON.stringify(g2)}`);
+  await at(700); // trigger near the bottom: not enough room below
+  await settle();
+  const g3 = await geo();
+  assert(g3.side === 'top' && g3.above === 8 && g3.top >= 8, `flip: ${JSON.stringify(g3)}`);
+  await page.setViewportSize({ width: 380, height: 800 });
+  await at(150);
+  await settle();
+  const g4 = await geo();
+  assert(g4.left >= 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize: ${JSON.stringify(g4)}`);
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await at(-60); // trigger scrolled above the viewport
+  await settle();
+  assert(!(await isOpen()), 'popover stays open after its trigger left the view');
+
+  await at(150);
+  await open();
+  await page.keyboard.press('Escape');
+  await settle();
+  const esc = await page.evaluate((sel) => ({ open: !!document.querySelector('.popover'), focus: document.activeElement === document.querySelector(sel) }), trigger);
+  assert(!esc.open && esc.focus, `escape: ${JSON.stringify(esc)}`);
+  await open();
+  await page.mouse.click(1050, 400);
+  await settle();
+  assert(!(await isOpen()), 'outside click did not close');
+  await open();
+  const day = await page.$eval('.popover button[data-date]:not([aria-disabled])', (b) => b.dataset.date);
+  await page.click(`.popover button[data-date="${day}"]`);
+  await settle();
+  const sel = await page.evaluate((s) => ({ open: !!document.querySelector('.popover'), text: document.querySelector(s).textContent, focus: document.activeElement === document.querySelector(s) }), trigger);
+  assert(!sel.open && sel.text === day && sel.focus, `selection: ${JSON.stringify(sel)}`);
+  return 'attached, flips, resize, closes out of view, Escape/outside/selection, focus back';
+});
+
 await check('D04', 'View code: file tabs, keyboard, copy with an announced result', async (page) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
   await open(page, 'slots', 'ex-features-slots');
