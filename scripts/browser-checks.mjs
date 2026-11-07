@@ -177,7 +177,7 @@ await check('F21', 'root tooltip theme reaches the portalled tooltip', async (pa
   return actual;
 });
 
-await check('F30', 'day label stays inside the circle at the minimum cell size', async (page) => {
+await check('F30', 'day label stays inside the circle at the minimum cell size (also with badge/icon, F38)', async (page) => {
   await open(page, 'day-content', 'ex-features-daycontent');
   await page.evaluate(() => (document.querySelector('#ex-features-daycontent .cal-root').style.width = '300px'));
   await page.waitForTimeout(300);
@@ -185,16 +185,17 @@ await check('F30', 'day label stays inside the circle at the minimum cell size',
     const out = [];
     for (const btn of document.querySelectorAll('#ex-features-daycontent .cal-day-button')) {
       const lbl = btn.querySelector('.cal-day-label');
-      // F30 covers labels (with or without a badge). An icon above the number
-      // pushes the label down: that is open finding F38, not checked here.
-      if (!lbl || btn.querySelector('.cal-day-icon')) continue;
+      // Every label, with or without a badge or icon (F38).
+      if (!lbl) continue;
       const cell = btn.getBoundingClientRect();
       const L = lbl.getBoundingClientRect();
       const rad = (0.84 * Math.min(cell.width, cell.height)) / 2;
       const cx = cell.left + cell.width / 2;
       const cy = cell.top + cell.height / 2;
       const outside = [[L.left, L.top], [L.right, L.top], [L.left, L.bottom], [L.right, L.bottom]].filter(([x, y]) => Math.hypot(x - cx, y - cy) > rad - 1.5).length; // inside the 1.5px today ring
-      out.push({ cell: Math.round(cell.height), outside, date: btn.dataset.date, text: btn.textContent });
+      const icon = btn.querySelector('.cal-day-icon')?.getBoundingClientRect();
+      const iconOut = icon ? icon.left < cell.left - 0.5 || icon.top < cell.top - 0.5 || icon.right > cell.right + 0.5 || icon.bottom > cell.bottom + 0.5 : false;
+      out.push({ cell: Math.round(cell.height), outside: outside + (iconOut ? 1 : 0), date: btn.dataset.date, text: btn.textContent });
     }
     return out;
   });

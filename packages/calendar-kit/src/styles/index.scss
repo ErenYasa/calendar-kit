@@ -238,7 +238,12 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
   color: var(--cal-accent-contrast);
 }
 
+// Out of the flow (top start corner, mirroring the badge) so an icon does not
+// push the number and label down and out of the circle at small cell sizes.
 .#{$p}-day-icon {
+  position: absolute;
+  top: calc(-14cqmin);
+  inset-inline-start: calc(-14cqmin);
   display: flex;
   font-size: clamp(9px, 20cqmin, 13px);
   line-height: 1;

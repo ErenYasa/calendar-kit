@@ -133,3 +133,10 @@ describe('custom day content stays above the selection circle', () => {
     expect(circle.some((r) => /z-index:\s*-1\b/.test(r.body)), 'circle behind content').toBe(true);
   });
 });
+
+describe('F38 a day icon does not push the label out of the circle', () => {
+  it('the icon is positioned out of the content flow, like the badge', () => {
+    const icon = find((r) => !r.media && r.selector === '.cal-day-icon', 'icon rule');
+    expect(icon.some((r) => /position:\s*absolute/.test(r.body))).toBe(true);
+  });
+});
