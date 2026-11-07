@@ -36,7 +36,8 @@ describe.each(['2026-01-15T10:00:00', '2026-11-20T10:00:00', '2026-12-31T23:30:0
       if (ON_DEMAND.has(name)) expect(container.querySelector('button'), name).not.toBeNull();
       else {
         expect(container.querySelector('[role=grid]'), `${name} renders a calendar`).not.toBeNull();
-        const enabled = container.querySelectorAll('button[data-date]:not([aria-disabled])').length;
+        // Day elements are <button>s, or role="button" elements from getDayProps({ type: null }).
+        const enabled = container.querySelectorAll('button[data-date]:not([aria-disabled]), [role=button][data-date]:not([aria-disabled])').length;
         if (!ALL_DISABLED_BY_DESIGN.has(name)) expect(enabled, `${name} has selectable days`).toBeGreaterThan(0);
       }
       unmount();
