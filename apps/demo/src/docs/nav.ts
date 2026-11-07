@@ -13,6 +13,7 @@ const helpers = from(() => import('./pages/helpers'));
 const events = from(() => import('./pages/events'));
 const recipes = from(() => import('./pages/recipes'));
 const project = from(() => import('./pages/project'));
+const lab = from(() => import('./pages/lab'));
 
 export interface DocPage {
   slug: string;
@@ -57,6 +58,7 @@ export const NAV: NavGroup[] = [
       p('placement', 'Inline, modal & portal', features('Placement')),
       p('synced', 'Synced calendars', features('Synced')),
       p('accessibility', 'Keyboard & accessibility', features('Accessibility')),
+      p('layout-lab', 'Layout, events & measurement', lab('LayoutLab')),
     ],
   },
   {
