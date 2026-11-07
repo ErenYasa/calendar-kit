@@ -1,12 +1,13 @@
+import { useState } from 'react';
 import { Calendar, addDays, addMonthsToMonth, getMonth, getToday } from 'calendar-kit';
 
-const today = getToday();
-
-// Continuous navigation: two months first (starting two months ahead), more on
-// request in both directions until minDate/maxDate.
-// `loadMoreLabels` only changes the buttons' content; the default buttons,
-// their behaviour and accessibility stay.
+// `loadMoreLabels` only changes the content of the default buttons; their
+// behaviour and accessibility stay. The list starts two months after the
+// current month (computed once when the example mounts: opened in January it
+// shows March, in November the next January) so both directions can load,
+// down to today and up to a year ahead.
 export default function LoadMore() {
+  const [today] = useState(() => getToday());
   return (
     <div style={{ maxWidth: 380 }}>
       <Calendar
@@ -20,7 +21,10 @@ export default function LoadMore() {
         minDate={today}
         maxDate={addDays(today, 365)}
         maxBlockSize={480}
-        loadMoreLabels={{ previous: 'Show earlier dates', next: 'Show more dates' }}
+        loadMoreLabels={{
+          previous: <span>↑ Show earlier dates</span>,
+          next: <span>Show more dates ↓</span>,
+        }}
       />
     </div>
   );

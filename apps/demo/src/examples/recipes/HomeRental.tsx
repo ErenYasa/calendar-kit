@@ -12,6 +12,7 @@ interface Booking {
 export default function HomeRental() {
   const [booking, setBooking] = useState<Booking>({ dates: { start: null, end: null }, checkOutTime: '11:00' });
   const [customDates, setCustomDates] = useState(false);
+  const [today] = useState(() => getToday());
   const { getDataStatus, dayInfo, ensure, retry } = useAvailability();
 
   const rules = useMemo<SelectionRules<Booking>[]>(
@@ -34,7 +35,7 @@ export default function HomeRental() {
     <Calendar<{ label: string }, Booking>
       mode="range"
       numberOfMonths={2}
-      minDate={getToday()}
+      minDate={today}
       value={booking.dates}
       onChange={(dates) => setBooking((b) => ({ ...b, dates }))}
       rules={rules}

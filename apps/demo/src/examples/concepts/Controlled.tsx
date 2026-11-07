@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Calendar, type CalendarDate, addDays, getToday } from 'calendar-kit';
 
-const today = getToday();
-
 // Controlled: the app owns `value`; every change goes through `onChange`.
 export default function Controlled() {
-  const [date, setDate] = useState<CalendarDate | null>(addDays(today, 3));
+  const [today] = useState(() => getToday());
+  const [date, setDate] = useState<CalendarDate | null>(() => addDays(today, 3));
 
   return (
     <div>

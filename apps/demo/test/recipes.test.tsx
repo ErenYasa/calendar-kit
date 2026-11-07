@@ -56,6 +56,6 @@ describe('F22 docs examples', () => {
     render(<LoadMore />);
     await flushData();
     const buttons = screen.getAllByRole('button').filter((b) => b.classList.contains('cal-load-more'));
-    expect(buttons.map((b) => b.textContent).sort()).toEqual(['Show earlier dates', 'Show more dates']);
+    expect(buttons.map((b) => b.textContent).sort()).toEqual(['Show more dates ↓', '↑ Show earlier dates']);
   });
 });
