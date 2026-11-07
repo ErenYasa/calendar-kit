@@ -405,7 +405,8 @@ await check('D06', 'sidebar: the last item is reachable and clickable at short h
   for (const [w, h] of [[1280, 900], [1280, 420], [1000, 360], [375, 560], [375, 420]]) {
     await page.setViewportSize({ width: w, height: h });
     await page.goto(`${base}#/introduction`);
-    await page.waitForSelector('.docs-page h1');
+    await page.waitForSelector('[data-page="introduction"] .docs-page h1');
+    await page.waitForTimeout(100);
     if (w < 860) await page.click('.docs-menu-button');
     const last = await page.evaluate(async () => {
       const nav = document.getElementById('docs-nav');
@@ -500,11 +501,22 @@ await check('D08', 'popover follows its trigger on scroll/resize, flips, closes 
   await settle();
   const g3 = await geo();
   assert(g3.side === 'top' && g3.above === 8 && g3.top >= 8, `flip: ${JSON.stringify(g3)}`);
-  await page.setViewportSize({ width: 380, height: 800 });
+  // Resize with the popover open (the trigger stays in view): the position follows.
   await at(150);
   await settle();
+  await page.setViewportSize({ width: 900, height: 700 });
+  await settle();
   const g4 = await geo();
-  assert(g4.left >= 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize: ${JSON.stringify(g4)}`);
+  assert(g4 && g4.below === 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize: ${JSON.stringify(g4)}`);
+  // Narrow screen: the popover fits the viewport horizontally.
+  await page.setViewportSize({ width: 380, height: 800 });
+  await settle();
+  if (!(await isOpen())) {
+    await at(150);
+    await open();
+  }
+  const g5 = await geo();
+  assert(g5.left >= 8 && g5.right <= g5.vw - 8 && g5.bottom <= g5.vh - 8, `narrow: ${JSON.stringify(g5)}`);
   await page.setViewportSize({ width: 1100, height: 800 });
   await at(-60); // trigger scrolled above the viewport
   await settle();
