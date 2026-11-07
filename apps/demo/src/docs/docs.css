@@ -3,6 +3,7 @@
    inside each example). */
 :root {
   color-scheme: dark;
+  --docs-header: 56px;
   --docs-bg: #0b0b0d;
   --docs-panel: #131317;
   --docs-code-bg: #101014;
@@ -15,7 +16,7 @@
 }
 
 html {
-  scroll-padding-top: 72px;
+  scroll-padding-top: calc(var(--docs-header) + 16px);
 }
 body {
   margin: 0;
@@ -69,7 +70,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 56px;
+  box-sizing: border-box;
+  height: var(--docs-header);
   padding: 0 20px;
   background: color-mix(in srgb, var(--docs-bg) 92%, transparent);
   border-bottom: 1px solid var(--docs-border);
@@ -94,12 +96,19 @@ body {
 }
 .docs-nav {
   position: sticky;
-  top: 56px;
+  top: var(--docs-header);
   align-self: start;
-  max-height: calc(100vh - 56px);
+  box-sizing: border-box;
+  /* dvh: the visible height, also with mobile browser toolbars and zoom (vh is the largest possible viewport). */
+  height: calc(100vh - var(--docs-header));
+  height: calc(100dvh - var(--docs-header));
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 20px 12px 40px 20px;
   border-inline-end: 1px solid var(--docs-border);
+}
+.docs-backdrop {
+  display: none;
 }
 .docs-nav-group + .docs-nav-group {
   margin-top: 18px;
@@ -362,17 +371,25 @@ body {
   .docs-nav {
     display: none;
     position: fixed;
-    inset: 56px 0 0 0;
+    inset: var(--docs-header) auto 0 0;
     /* align-self: start (desktop) would size the fixed panel to its content and stop it from scrolling. */
     align-self: stretch;
     z-index: 9;
-    max-height: none;
+    width: min(320px, 85vw);
+    height: auto;
     background: var(--docs-bg);
-    border: 0;
-    padding: 16px;
+    border-inline-end: 1px solid var(--docs-border);
+    padding: 16px 16px 32px;
   }
   .docs-nav[data-open] {
     display: block;
+  }
+  .docs-backdrop[data-open] {
+    display: block;
+    position: fixed;
+    inset: var(--docs-header) 0 0 0;
+    z-index: 8;
+    background: rgb(0 0 0 / 0.55);
   }
   .docs-main {
     padding: 24px 16px 48px;

@@ -41,15 +41,30 @@ export function App() {
     window.scrollTo(0, 0);
   }, [page]);
 
+  const closeMenu = () => {
+    setMenuOpen(false);
+    menuButton.current?.focus({ preventScroll: true }); // keep the page where it was
+  };
+
+  // Open mobile menu: the page behind it does not scroll (its scroll position
+  // is kept), focus moves into the menu, Escape closes it. The previous inline
+  // overflow value is restored on close/unmount.
   useEffect(() => {
     if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      setMenuOpen(false);
-      menuButton.current?.focus();
-    };
+    const root = document.documentElement;
+    const previous = root.style.overflow;
+    root.style.overflow = 'hidden';
+    // Focus the current page's link without scrolling the page; scroll only the menu.
+    const nav = document.getElementById('docs-nav')!;
+    const link = nav.querySelector<HTMLElement>('[aria-current="page"]') ?? nav.querySelector<HTMLElement>('a')!;
+    link.focus({ preventScroll: true });
+    nav.scrollTop = Math.max(0, link.offsetTop - nav.clientHeight / 2);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeMenu();
     addEventListener('keydown', onKey);
-    return () => removeEventListener('keydown', onKey);
+    return () => {
+      root.style.overflow = previous;
+      removeEventListener('keydown', onKey);
+    };
   }, [menuOpen]);
 
   return (
@@ -74,6 +89,7 @@ export function App() {
         </button>
       </header>
       <div className="docs-layout">
+        <div className="docs-backdrop" data-open={menuOpen || undefined} onClick={closeMenu} aria-hidden="true" />
         <nav id="docs-nav" className="docs-nav" data-open={menuOpen || undefined} aria-label="Documentation">
           {NAV.map((group) => (
             <div key={group.title} className="docs-nav-group">
@@ -91,9 +107,11 @@ export function App() {
           ))}
         </nav>
         <main id="main" className="docs-main">
-          <Suspense fallback={<p className="docs-muted">Loading…</p>}>
-            <page.Component />
-          </Suspense>
+          <div key={slug} data-page={slug}>
+            <Suspense fallback={<p className="docs-muted">Loading…</p>}>
+              <page.Component />
+            </Suspense>
+          </div>
           <nav className="docs-pager" aria-label="Previous and next page">
             {prev ? <a href={`#/${prev.slug}`}>← {prev.title}</a> : <span />}
             {next ? <a href={`#/${next.slug}`}>{next.title} →</a> : <span />}

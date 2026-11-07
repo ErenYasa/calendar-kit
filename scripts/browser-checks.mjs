@@ -264,6 +264,63 @@ await check('F35', 'tooltip in a transformed portal container stays on its ancho
 
 // ---------------------------------------------------------------- docs site
 
+await check('D05', 'renderDay numbers are visibly drawn on selected, in-range, hovered, focused and disabled days', async (page) => {
+  const ex = '#ex-styling-renderday';
+  await open(page, 'styling', ex.slice(1));
+  const days = await page.$$eval(`${ex} .cal-month:nth-of-type(2) button[data-date]`, (b) => b.map((x) => x.dataset.date));
+  const sel = (d) => `${ex} button[data-date="${d}"]`;
+  await page.click(sel(days[3]));
+  await page.click(sel(days[8]));
+  // A day whose text is painted looks different once its text is made transparent.
+  // Pixels that clearly change when the day's text is made transparent = text
+  // actually painted (not hidden under the selection circle). Decoding happens
+  // in the page; a few antialiasing pixels of noise are ignored.
+  const changedPixels = (a, b) =>
+    page.evaluate(async ([a, b]) => {
+      const pixels = async (b64) => {
+        const img = new Image();
+        img.src = `data:image/png;base64,${b64}`;
+        await img.decode();
+        const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        return g.getImageData(0, 0, c.width, c.height).data;
+      };
+      const [pa, pb] = await Promise.all([pixels(a), pixels(b)]);
+      let n = 0;
+      for (let i = 0; i < pa.length; i += 4) if (Math.abs(pa[i] - pb[i]) + Math.abs(pa[i + 1] - pb[i + 1]) + Math.abs(pa[i + 2] - pb[i + 2]) > 90) n++;
+      return n;
+    }, [a.toString('base64'), b.toString('base64')]);
+  const visible = async (d, prepare) => {
+    await page.mouse.move(0, 0);
+    if (prepare) await prepare();
+    await page.waitForTimeout(300);
+    const shot = () => page.locator(sel(d)).screenshot({ animations: 'disabled', caret: 'hide' });
+    const withText = await shot();
+    await page.$eval(sel(d), (el) => (el.style.color = 'transparent'));
+    await page.waitForTimeout(50);
+    const withoutText = await shot();
+    await page.$eval(sel(d), (el) => (el.style.color = ''));
+    return (await changedPixels(withText, withoutText)) >= 12;
+  };
+  const past = await page.$eval(`${ex} button[data-date][data-past]`, (b) => b.dataset.date).catch(() => null);
+  const results = {
+    start: await visible(days[3]),
+    end: await visible(days[8]),
+    inRange: await visible(days[5]),
+    hovered: await visible(days[12], () => page.hover(sel(days[12]))),
+    focused: await visible(days[14], async () => {
+      await page.focus(sel(days[13]));
+      await page.keyboard.press('ArrowRight');
+    }),
+    ...(past ? { disabled: await visible(past) } : {}),
+  };
+  const hidden = Object.entries(results).filter(([, v]) => !v).map(([k]) => k);
+  assert(hidden.length === 0, `numbers not visible on: ${hidden.join(', ')}`);
+  return Object.keys(results).join(', ');
+});
+
+
 const ROUTES = await (async () => {
   const page = await browser.newPage();
   await page.goto(base);
@@ -281,7 +338,7 @@ await check('D01', 'every page renders its examples without errors', async (page
   for (const route of ROUTES) {
     await page.goto(`${base}#/${route}`);
     // The heading of this page (pages load lazily; the previous page may still be shown).
-    await page.waitForFunction((route) => document.querySelector('.docs-page h1')?.textContent === document.querySelector(`#docs-nav a[href="#/${route}"]`).textContent, route);
+    await page.waitForSelector(`[data-page="${route}"] .docs-page h1`);
     // Each example renders a calendar, except dialog/popover ones, which render a button until opened.
     const figures = await page.$$eval('figure.docs-example', (f) => f.map((x) => x.id));
     for (const id of figures) {
@@ -332,13 +389,79 @@ await check('D03', 'mobile menu: hidden by default, toggles, Escape returns focu
   const wide = [];
   for (const route of ROUTES) {
     await page.goto(`${base}#/${route}`);
-    await page.waitForFunction((route) => document.querySelector('.docs-page h1')?.textContent === document.querySelector(`#docs-nav a[href="#/${route}"]`).textContent, route);
+    await page.waitForSelector(`[data-page="${route}"] .docs-page h1`, { timeout: 8000 }).catch(() => {
+      throw new Error(`${route} did not render`);
+    });
     await page.waitForTimeout(250);
     const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (over > 0) wide.push(`${route} +${over}px`);
   }
   assert(wide.length === 0, `horizontal page overflow at 375px: ${wide.join(', ')}`);
   return `menu ok, ${ROUTES.length} pages fit 375px`;
+});
+
+await check('D06', 'sidebar: the last item is reachable and clickable at short heights (desktop and mobile)', async (page) => {
+  const out = [];
+  for (const [w, h] of [[1280, 900], [1280, 420], [1000, 360], [375, 560], [375, 420]]) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.goto(`${base}#/introduction`);
+    await page.waitForSelector('.docs-page h1');
+    if (w < 860) await page.click('.docs-menu-button');
+    const last = await page.evaluate(async () => {
+      const nav = document.getElementById('docs-nav');
+      nav.scrollTop = nav.scrollHeight;
+      await new Promise((r) => setTimeout(r, 100));
+      const a = [...nav.querySelectorAll('a')].at(-1);
+      const r = a.getBoundingClientRect();
+      return { href: a.getAttribute('href'), bottom: r.bottom, navBottom: nav.getBoundingClientRect().bottom, vh: innerHeight, hit: document.elementFromPoint(r.left + 4, r.top + r.height / 2) === a };
+    });
+    assert(last.hit && last.bottom <= last.vh && last.navBottom <= last.vh, `${w}x${h}: ${JSON.stringify(last)}`);
+    await page.click(`#docs-nav a[href="${last.href}"]`);
+    await page.waitForFunction((h) => location.hash === h, last.href);
+    out.push(`${w}x${h}`);
+  }
+  return out.join(', ');
+});
+
+await check('D07', 'mobile menu: background does not scroll, scroll position and styles restored, closes on Escape/backdrop/selection', async (page) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto(`${base}#/api-props`);
+  await page.waitForSelector('[data-page="api-props"] .docs-page h1');
+  await page.waitForTimeout(300);
+  await page.evaluate(() => window.scrollTo(0, 600));
+  assert((await page.evaluate(() => Math.round(scrollY))) === 600, 'page too short for the scroll test');
+  // Real pointer clicks: page.click() would first scroll the sticky header button "into view".
+  const menuButton = async () => {
+    const b = await page.locator('.docs-menu-button').boundingBox();
+    await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+    await page.waitForTimeout(100);
+  };
+  const state = () => page.evaluate(() => ({ y: Math.round(scrollY), overflow: document.documentElement.style.overflow, open: !!document.querySelector('#docs-nav[data-open]'), focus: document.activeElement?.className || document.activeElement?.tagName }));
+  await menuButton();
+  const opened = await state();
+  // Wheel over the menu scrolls the menu, not the page; wheel over the backdrop does not scroll the page.
+  const navBox = await page.locator('#docs-nav').boundingBox();
+  await page.mouse.move(navBox.x + 40, navBox.y + 200);
+  await page.mouse.wheel(0, 800);
+  await page.mouse.move(navBox.x + navBox.width + 20, navBox.y + 200);
+  await page.mouse.wheel(0, 800);
+  await page.waitForTimeout(300);
+  const scrolled = await page.evaluate(() => ({ y: Math.round(scrollY), nav: document.getElementById('docs-nav').scrollTop }));
+  await page.keyboard.press('Escape');
+  const afterEsc = await state();
+  await menuButton();
+  await page.mouse.click(370, 400); // backdrop
+  const afterBackdrop = await state();
+  await menuButton();
+  await page.click('#docs-nav a[href="#/tooltip"]');
+  await page.waitForSelector('#ex-features-tooltip');
+  const afterSelect = await state();
+  assert(opened.open && opened.overflow === 'hidden' && opened.y === 600 && /^A$/.test(opened.focus), `open: ${JSON.stringify(opened)}`);
+  assert(scrolled.y === 600 && scrolled.nav > 0, `background scrolled: ${JSON.stringify(scrolled)}`);
+  assert(!afterEsc.open && afterEsc.overflow === '' && afterEsc.y === 600 && afterEsc.focus.includes('docs-menu-button'), `escape: ${JSON.stringify(afterEsc)}`);
+  assert(!afterBackdrop.open && afterBackdrop.y === 600 && afterBackdrop.focus.includes('docs-menu-button'), `backdrop: ${JSON.stringify(afterBackdrop)}`);
+  assert(!afterSelect.open && afterSelect.overflow === '', `selection: ${JSON.stringify(afterSelect)}`);
+  return 'lock, restore, Escape, backdrop, selection';
 });
 
 await check('D04', 'View code: file tabs, keyboard, copy with an announced result', async (page) => {
