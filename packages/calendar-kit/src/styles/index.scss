@@ -1,6 +1,7 @@
 // Default theme. Import once: `import 'calendar-kit/styles.css'`.
-// Everything is driven by CSS custom properties on `.cal-root`; override them
-// on the root (or any ancestor) instead of fighting selectors.
+// Everything is driven by CSS custom properties declared on `.cal-root`;
+// override them on the root element itself (className/style), not on an
+// ancestor: the root's own declarations would win over inherited values.
 // Sizing variables (--cal-day-min-*, --cal-day-max, --cal-month-*) are set
 // inline by the component from its props.
 

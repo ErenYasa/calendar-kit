@@ -437,7 +437,7 @@ export interface MonthHeaderRenderProps {
 export interface GoToMonthOptions {
   /** Move keyboard focus to the first day of the month. */
   focus?: boolean;
-  /** Scroll behaviour; `auto` respects `prefers-reduced-motion`. */
+  /** Scroll behaviour. `smooth` falls back to an instant jump under `prefers-reduced-motion`; `auto`/`instant` (and omitting it) jump. */
   behavior?: 'auto' | 'smooth' | 'instant';
 }
 
