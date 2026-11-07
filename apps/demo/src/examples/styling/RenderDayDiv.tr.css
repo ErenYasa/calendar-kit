@@ -1,0 +1,6 @@
+/* div, cal-day-button sınıfını korur; bu yüzden varsayılan daire, imleç,
+   odak halkası ve seçili/devre dışı renkleri uygulanır. <button>’dan farklı
+   olarak bir div’in metni çift tıklamayla seçilebilir; bunu kapatın. */
+.rdd-day {
+  user-select: none;
+}

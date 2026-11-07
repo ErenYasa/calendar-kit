@@ -1,0 +1,78 @@
+/* Her durum için bir renk; takvim ve açıklama (legend) ortak kullanır. */
+.sr-demo {
+  --sr-today: #7048e8;
+  --sr-start: #2f9e44;
+  --sr-end: #e03131;
+  --sr-band: #d0ebff;
+  --sr-preview: #ffec99;
+  --sr-weekend: #1971c2;
+  --sr-off: #c9a3a3;
+}
+
+/* Varsayılan tema her durumu bir CSS değişkeninden çizer; bu yüzden bir
+   durumu yeniden renklendirmenin en ucuz yolu, durum niteliğini taşıyan
+   hücrede o değişkeni ayarlamaktır. Hücrenin çocukları (düğme, aralık bandı) onu miras alır. */
+.sr-cell[data-today] {
+  --cal-today: var(--sr-today);
+}
+.sr-cell[data-range-start] {
+  --cal-accent: var(--sr-start);
+  --cal-ring: color-mix(in srgb, var(--sr-start) 35%, white);
+}
+.sr-cell[data-range-end] {
+  --cal-accent: var(--sr-end);
+  --cal-ring: color-mix(in srgb, var(--sr-end) 35%, white);
+}
+.sr-cell[data-band] {
+  --cal-range: var(--sr-band);
+}
+/* Yeni bir bitiş önizlenirken bant önizlemeyi gösterir. */
+.sr-cell[data-band-preview] {
+  --cal-preview: var(--sr-preview);
+}
+.sr-cell[data-preview-end] {
+  --cal-accent: #f08c00;
+}
+.sr-cell[data-unavailable] {
+  --cal-muted: var(--sr-off);
+}
+
+/* Kendi sınıfınızda kendi özellikleriniz: hafta sonu sayıları mavi.
+   Varsayılan devre dışı ve seçili renkleri daha özgüldür ve yine kazanır. */
+.sr-btn[data-mod-weekend] {
+  color: var(--sr-weekend);
+}
+.sr-btn[data-today] {
+  font-style: italic;
+}
+
+/* Açıklama */
+.sr-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+.sr-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, monospace;
+}
+.sr-key::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sr-swatch);
+}
+.sr-key[data-key='today'] { --sr-swatch: var(--sr-today); }
+.sr-key[data-key='start'] { --sr-swatch: var(--sr-start); }
+.sr-key[data-key='end'] { --sr-swatch: var(--sr-end); }
+.sr-key[data-key='band'] { --sr-swatch: var(--sr-band); }
+.sr-key[data-key='preview'] { --sr-swatch: var(--sr-preview); }
+.sr-key[data-key='weekend'] { --sr-swatch: var(--sr-weekend); }
+.sr-key[data-key='off'] { --sr-swatch: var(--sr-off); }
