@@ -14,6 +14,11 @@ export function SelectionModes() {
       <Section title="Multiple dates">
         <p>Clicks toggle dates. <code>rules.maxSelections</code> limits how many distinct dates can be selected.</p>
         <Example src="features/ModeMultiple" title="Multiple dates" />
+        <p>
+          Weekday rules apply to every picked date in multiple mode: <code>startWeekdays</code> limits which weekdays can be chosen. Rejections are announced
+          and shown in the day&apos;s tooltip; their wording comes from <code>messages.reasons</code>.
+        </p>
+        <Example src="features/SessionDays" title="Tuesday and Thursday sessions" />
       </Section>
       <Section title="Read-only">
         <p>Shows availability with the same rules and data, but nothing can be selected. A notice explains this above the grid.</p>
@@ -440,6 +445,14 @@ export function I18n() {
       <Section title="Week start">
         <Example src="features/WeekStart" title="Monday start in en-US" />
       </Section>
+      <Section title="Several languages on one page">
+        <p>
+          Every instance has its own locale and messages. The French, Spanish, Italian, Dutch, German and Arabic packs translate the most common texts; some
+          rarer rejection reasons still fall back to English (see <a href="#/api-messages">Messages &amp; formatting</a>) — override them through{' '}
+          <code>messages</code> if you need them.
+        </p>
+        <Example src="features/MoreLocales" title="French, Spanish, Italian and Dutch" />
+      </Section>
       <PropsTable
         rows={[
           { name: 'locale', type: 'string', default: "'en-US'", description: 'BCP 47 locale for Intl formatting.' },
@@ -529,6 +542,13 @@ export function Synced() {
     <Page title="Synced calendars" lead="Several calendars can show and edit the same selection. There is no hidden store: share state through props.">
       <Section title="Shared value and endpoint">
         <Example src="features/Synced" title="Two calendars, one selection" />
+      </Section>
+      <Section title="Inline and in a dialog">
+        <p>
+          A calendar in a dialog is just another instance: give it the same state. It shows the current value when it mounts and its changes appear inline
+          immediately. Its tooltip portal points into the dialog (top layer).
+        </p>
+        <Example src="features/SyncedDialog" title="Inline and dialog in sync" />
       </Section>
       <PropsTable
         caption="What is shared"

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import more from '../../snippets/props/more.tsx?code';
 import overview from '../../snippets/props/overview.tsx?code';
 import { Snippet } from '../Code';
 import { DataTable, Note, Page, PropsTable, Section } from '../ui';
@@ -32,6 +33,8 @@ export function PropsReference() {
           <code>ref</code> for controls outside the calendar.
         </p>
         <Snippet files={overview} label="Common props" />
+        <p>Formatting, layout and identity props that the other examples do not use, together with the remaining controller methods:</p>
+        <Snippet files={more} label="Formatting, layout and identity" />
         <Note>
           <strong>Controlled or uncontrolled.</strong> Three pieces of state come in pairs: <code>value</code> / <code>defaultValue</code>,{' '}
           <code>activeEndpoint</code> / <code>defaultActiveEndpoint</code> and <code>visibleMonth</code> / <code>defaultVisibleMonth</code>. Passing the
