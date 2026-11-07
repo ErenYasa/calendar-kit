@@ -220,7 +220,7 @@ export function RulesReference() {
             {
               name: 'getDataStatus',
               type: "(month: CalendarMonth) => 'unknown' | 'loading' | 'loaded' | 'error'",
-              default: "every month 'loaded'",
+              default: <>every month <code>'loaded'</code></>,
               description: (
                 <>
                   Load state of your availability data per month. When both the rules and the calendar prop define it, the worse status wins (see{' '}
@@ -271,7 +271,7 @@ export function RulesReference() {
             {
               name: 'requireReachableEnd',
               type: 'boolean',
-              default: 'false (true in both adapters)',
+              default: <><code>false</code> (both adapters: <code>true</code>)</>,
               description: (
                 <>
                   Range mode only: a start is rejected when no valid end can follow it, for example when the next night is booked under a 2-night minimum. See
@@ -512,12 +512,12 @@ export function RulesReference() {
             },
             {
               name: 'minDate, maxDate, disablePast, disableFuture',
-              type: 'see SelectionRules',
+              type: <>see <code>SelectionRules</code></>,
               description: 'Passed through unchanged.',
             },
             {
               name: 'getDataStatus, unknownDataPolicy, validateSelection',
-              type: 'see SelectionRules',
+              type: <>see <code>SelectionRules</code></>,
               description: (
                 <>
                   Passed through unchanged. Other <code>SelectionRules</code> fields (<code>getDayAvailability</code>, <code>maxSelections</code>, …) are not
@@ -619,7 +619,7 @@ export function RulesReference() {
             },
             {
               name: 'minDate, maxDate, disablePast, disableFuture, getDataStatus, unknownDataPolicy, validateSelection',
-              type: 'see SelectionRules',
+              type: <>see <code>SelectionRules</code></>,
               description: 'Passed through unchanged.',
             },
           ]}

@@ -1,0 +1,31 @@
+/* 1. Tema: kökte değişkenler. Özgüllük .cal-root ile aynı, bu yüzden
+      bu dosya calendar-kit/styles.css’ten sonra yüklenmelidir. */
+.booking {
+  --cal-accent: #0b7285;
+  --cal-range: #c5f6fa;
+  --cal-radius: 8px;
+}
+
+/* 2. Durum: sizin sınıfınız + bir data-* niteliği. Bir durumu, değişkenini
+      hücrede ayarlayarak yeniden renklendirin; düğme ve aralık bandı onu miras alır. */
+.booking-cell[data-range-end] {
+  --cal-accent: #e8590c;
+}
+
+/* 3. Kendi özellikleriniz. Varsayılan :where() durumlarının (bugün, hover,
+      iskelet) özgüllüğü düşüktür; sınıf + nitelik onları yener. */
+.booking-day[data-mod-weekend] {
+  color: #1971c2;
+}
+
+/* 4. Varsayılan devre dışı / müsait değil / seçili renkleri
+      `.cal-day[data-…] .cal-day-button` kullanır (üç sınıf). Bu özellikleri
+      değiştirmek için ya değişkeni ayarlayın (--cal-muted, --cal-accent-contrast)
+      ya da bir üst seçiciyle aynı özgüllüğü yakalayın: */
+.booking .booking-cell[data-unavailable] .booking-day {
+  color: #adb5bd;
+}
+
+.booking-closed {
+  text-decoration: line-through;
+}

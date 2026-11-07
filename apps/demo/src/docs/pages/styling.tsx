@@ -14,12 +14,12 @@ export function Styling() {
       <PropsTable
         caption="Which approach?"
         rows={[
-          { name: 'CSS variables', type: 'colours, radius, sizes', description: 'Theming (brand colours, dark mode). Cheapest; no selectors into the markup.' },
-          { name: 'classNames', type: 'parts', description: 'Adding your design system classes to specific parts.' },
-          { name: 'data-* attributes', type: 'state', description: 'Styling states (selected, in range, disabled, your modifiers) from your own CSS.' },
-          { name: 'renderDayContent', type: 'inside the day', description: 'Different content in the default, accessible day button.' },
-          { name: 'renderDay + getDayProps', type: 'whole day', description: 'Your own day element, keeping keyboard, focus, ARIA and selection.' },
-          { name: 'unstyled', type: 'everything', description: 'No default classes at all; you style every part.' },
+          { name: <>CSS variables</>, type: <>colours, radius, sizes</>, description: 'Theming (brand colours, dark mode). Cheapest; no selectors into the markup.' },
+          { name: 'classNames', type: <>parts</>, description: 'Adding your design system classes to specific parts.' },
+          { name: <><code>data-*</code> attributes</>, type: <>state</>, description: 'Styling states (selected, in range, disabled, your modifiers) from your own CSS.' },
+          { name: 'renderDayContent', type: <>inside the day</>, description: 'Different content in the default, accessible day button.' },
+          { name: 'renderDay + getDayProps', type: <>whole day</>, description: 'Your own day element, keeping keyboard, focus, ARIA and selection.' },
+          { name: 'unstyled', type: <>everything</>, description: 'No default classes at all; you style every part.' },
         ]}
       />
       <Section title="Default theme">

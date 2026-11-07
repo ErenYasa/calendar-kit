@@ -28,7 +28,7 @@ export function SelectionModes() {
         <PropsTable
           rows={[
             { name: 'value', type: 'CalendarDate | null · DateRange · readonly CalendarDate[]', description: 'Controlled value for the mode.' },
-            { name: 'defaultValue', type: 'same as value', description: 'Uncontrolled initial value, read once on mount.' },
+            { name: 'defaultValue', type: <>same as <code>value</code></>, description: 'Uncontrolled initial value, read once on mount.' },
             { name: 'onChange', type: '(value, event) => void', description: 'Called for user and controller changes, never for prop changes.' },
             { name: 'activeEndpoint / defaultActiveEndpoint', type: "'start' | 'end'", description: 'Range only: which end the next click sets.' },
           ]}
@@ -477,8 +477,8 @@ export function I18n() {
         rows={[
           { name: 'locale', type: 'string', default: "'en-US'", description: 'BCP 47 locale for Intl formatting.' },
           { name: 'messages', type: 'Partial<CalendarMessages>', default: 'messagesEn', description: 'Ready packs: messagesEn, messagesTr, messagesDe, messagesFr, messagesEs, messagesIt, messagesNl, messagesAr. Partial overrides are merged.' },
-          { name: 'direction', type: "'ltr' | 'rtl'", default: 'from locale', description: 'Layout direction.' },
-          { name: 'firstDayOfWeek', type: '0–6', default: 'from locale', description: '0 = Sunday.' },
+          { name: 'direction', type: "'ltr' | 'rtl'", default: <>from locale</>, description: 'Layout direction.' },
+          { name: 'firstDayOfWeek', type: '0–6', default: <>from locale</>, description: '0 = Sunday.' },
           { name: 'weekdayFormat', type: "'narrow' | 'short' | 'long'", default: "'short'", description: 'Weekday header names.' },
           { name: 'monthTitleFormat', type: 'Intl.DateTimeFormatOptions', description: 'Month title format.' },
           { name: 'formatMonthTitle / formatWeekday / formatDayLabel', type: 'functions', description: 'Full control over these texts.' },
@@ -600,11 +600,11 @@ export function Synced() {
       <PropsTable
         caption="What is shared"
         rows={[
-          { name: 'Selection', type: 'value', description: 'Shared when you pass the same value.' },
-          { name: 'Rules and availability', type: 'rules', description: 'Shared when built from the same source.' },
-          { name: 'Visible month', type: 'visibleMonth', description: 'Per calendar unless you control it.' },
-          { name: 'Active endpoint', type: 'activeEndpoint', description: 'Shared when controlled; otherwise derived from the value (still consistent).' },
-          { name: 'Focus, hover, tooltip, rendered months', type: '—', description: 'Always per calendar.' },
+          { name: <>Selection</>, type: 'value', description: 'Shared when you pass the same value.' },
+          { name: <>Rules and availability</>, type: 'rules', description: 'Shared when built from the same source.' },
+          { name: <>Visible month</>, type: 'visibleMonth', description: 'Per calendar unless you control it.' },
+          { name: <>Active endpoint</>, type: 'activeEndpoint', description: 'Shared when controlled; otherwise derived from the value (still consistent).' },
+          { name: <>Focus, hover, tooltip, rendered months</>, type: '—', description: 'Always per calendar.' },
         ]}
       />
       <p>A calendar mounted later shows the current value; unmounting one does not reset the others. See also the <a href="#/recipe-three-calendars">three calendars recipe</a>.</p>

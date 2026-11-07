@@ -8,13 +8,13 @@ export function Testing() {
       <Section title="Commands">
         <PropsTable
           rows={[
-            { name: 'npm run check', type: 'all', description: 'Typecheck, package build, package + demo tests, SSR smoke test of the built package.' },
-            { name: 'npm run typecheck', type: 'types', description: 'Library source without ambient types, package tests/config with Node types, demo (including every docs example) and its Vite config.' },
-            { name: 'npm test', type: 'unit', description: 'Vitest + jsdom for the package and the demo.' },
+            { name: 'npm run check', type: <>all</>, description: 'Typecheck, package build, package + demo tests, SSR smoke test of the built package.' },
+            { name: 'npm run typecheck', type: <>types</>, description: 'Library source without ambient types, package tests/config with Node types, demo (including every docs example) and its Vite config.' },
+            { name: 'npm test', type: <>unit</>, description: 'Vitest + jsdom for the package and the demo.' },
             { name: 'npm run test:browser', type: 'Chrome', description: 'Real-browser regression checks on the docs site (cascade, layout, tooltip position, loading).' },
             { name: 'npm run smoke:ssr -w calendar-kit', type: 'SSR', description: 'Imports dist through the package exports and renders on the server.' },
-            { name: 'npm run size', type: 'bundle', description: 'Minified + gzip/brotli sizes.' },
-            { name: 'npm run perf', type: 'timing', description: 'Interaction timings in Chrome with CPU throttling.' },
+            { name: 'npm run size', type: <>bundle</>, description: 'Minified + gzip/brotli sizes.' },
+            { name: 'npm run perf', type: <>timing</>, description: 'Interaction timings in Chrome with CPU throttling.' },
           ]}
         />
       </Section>
@@ -112,11 +112,11 @@ export function Migration() {
       <Section title="From react-dates">
         <PropsTable
           rows={[
-            { name: 'startDate / endDate (moment)', type: "value={{ start, end }}", description: "'YYYY-MM-DD' strings." },
+            { name: <><code>startDate</code> / <code>endDate</code> (moment)</>, type: "value={{ start, end }}", description: "'YYYY-MM-DD' strings." },
             { name: 'onDatesChange', type: 'onChange(value, e)', description: 'e.reason, e.phase, e.validation.' },
             { name: 'focusedInput / onFocusChange', type: 'activeEndpoint / onActiveEndpointChange', description: 'No “closed” (null) state: opening and closing belong to your app.' },
             { name: 'initialVisibleMonth', type: 'defaultVisibleMonth', description: 'Controlled: visibleMonth + onVisibleMonthChange.' },
-            { name: 'numberOfMonths (with mobile checks)', type: 'numberOfMonths + overflow', description: 'Layout follows the container; no window-width logic needed.' },
+            { name: <><code>numberOfMonths</code> (with mobile checks)</>, type: 'numberOfMonths + overflow', description: 'Layout follows the container; no window-width logic needed.' },
             { name: 'daySize', type: 'minDaySize / maxDaySize', description: 'Cells scale with the container.' },
             { name: 'isDayBlocked / isOutsideRange', type: 'rules', description: 'getDayAvailability, closedDates, stayRules({ getDayStatus }), minDate/maxDate, disablePast.' },
             { name: 'minimumNights', type: 'stayRules({ minNights })', description: 'minimumNights={0} → allowSameDay: true.' },
@@ -137,16 +137,16 @@ export function Migration() {
       <Section title="Troubleshooting">
         <PropsTable
           rows={[
-            { name: 'The calendar has no styles', type: 'CSS', description: "Import 'calendar-kit/styles.css' once (JavaScript never imports CSS). In Next.js, in app/layout.tsx." },
-            { name: 'My CSS does not override the theme', type: 'CSS', description: 'Set CSS variables on the calendar (className/style) and import your CSS after the theme; prefer classNames and data-* attributes over internal class names.' },
-            { name: 'Hydration mismatch', type: 'SSR', description: 'Pass today (and a fixed defaultVisibleMonth if needed); the server cannot know the user’s date.' },
+            { name: <>The calendar has no styles</>, type: 'CSS', description: "Import 'calendar-kit/styles.css' once (JavaScript never imports CSS). In Next.js, in app/layout.tsx." },
+            { name: <>My CSS does not override the theme</>, type: 'CSS', description: 'Set CSS variables on the calendar (className/style) and import your CSS after the theme; prefer classNames and data-* attributes over internal class names.' },
+            { name: <>Hydration mismatch</>, type: 'SSR', description: 'Pass today (and a fixed defaultVisibleMonth if needed); the server cannot know the user’s date.' },
             { name: 'useSyncExternalStore is not a function (Next.js)', type: 'RSC', description: "Calendar from 'calendar-kit' was rendered in a Server Component: import it from 'calendar-kit/client' or wrap it in a 'use client' component." },
-            { name: 'Functions cannot be passed to Client Components', type: 'RSC', description: 'Rules, callbacks and render props need your own client component.' },
-            { name: 'Tooltip hidden behind a modal', type: 'portal', description: 'Point tooltip.container into the dialog (modal dialogs are in the top layer).' },
-            { name: 'Tooltip offset inside a transformed container', type: 'portal', description: 'Handled: the position is corrected for transformed portal containers.' },
-            { name: 'Months overflow / page scrolls sideways', type: 'layout', description: 'The calendar never widens the page; check that its parent has a width (min-width: 0 in flex/grid parents).' },
-            { name: 'Selection does not change when I set defaultValue', type: 'state', description: 'defaultValue is read once; use value (controlled) or ref.reset().' },
-            { name: 'A day cannot be selected and shows no tooltip', type: 'data', description: 'Its month data is unknown or loading (unknownDataPolicy: block); the reason is in its aria-label.' },
+            { name: <>Functions cannot be passed to Client Components</>, type: 'RSC', description: 'Rules, callbacks and render props need your own client component.' },
+            { name: <>Tooltip hidden behind a modal</>, type: <>portal</>, description: 'Point tooltip.container into the dialog (modal dialogs are in the top layer).' },
+            { name: <>Tooltip offset inside a transformed container</>, type: <>portal</>, description: 'Handled: the position is corrected for transformed portal containers.' },
+            { name: <>Months overflow / page scrolls sideways</>, type: <>layout</>, description: 'The calendar never widens the page; check that its parent has a width (min-width: 0 in flex/grid parents).' },
+            { name: <>Selection does not change when I set defaultValue</>, type: <>state</>, description: 'defaultValue is read once; use value (controlled) or ref.reset().' },
+            { name: <>A day cannot be selected and shows no tooltip</>, type: <>data</>, description: 'Its month data is unknown or loading (unknownDataPolicy: block); the reason is in its aria-label.' },
           ]}
         />
       </Section>

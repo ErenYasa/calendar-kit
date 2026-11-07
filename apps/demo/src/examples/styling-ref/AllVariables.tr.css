@@ -1,0 +1,26 @@
+/* Herkese açık her değişken, gözden kaçmayacak bir değerle.
+   Takvim kökünde ayarlanır (burada `className` üzerinden); bu dosya
+   calendar-kit/styles.css’ten sonra yüklenir, bu yüzden özgüllük eşitken bu değerler kazanır. */
+.sr-loud {
+  --cal-font: 'Courier New', monospace; /* tüm metin; araç ipucuna da kopyalanır */
+  --cal-color: #3b1f5c; /* gün sayıları, başlıklar */
+  --cal-muted: #e599f7; /* hafta günü adları, geçmiş/müsait olmayan günler */
+  --cal-bg: #fff9db; /* takvim arka planı, odak halkasının içindeki boşluk */
+  --cal-accent: #0b7285; /* seçim daireleri, önizleme bitişinin dış çizgisi, rozetler */
+  --cal-accent-contrast: #fff3bf; /* seçim dairesindeki sayı */
+  --cal-range: #99e9f2; /* aralık bandı, gezinme düğmesi hover’ı, footer çizgisi */
+  --cal-preview: #ffd8a8; /* bitiş seçilirken önizleme bandı */
+  --cal-hover: #f03e3e; /* üzerine gelinen günün dış çizgisi */
+  --cal-focus: #2f9e44; /* klavye odak halkası */
+  --cal-today: #f76707; /* bugünün dış çizgisi */
+  --cal-ring: #845ef7; /* aralık başlangıç/bitişinin dışındaki yarım halka */
+  --cal-danger: #c2255c; /* ay hata mesajı */
+  --cal-radius: 2px; /* hafta/ay kenarlarında aralık bandının köşeleri */
+  --cal-circle: 0.7; /* daire boyutu: hücrenin kısa kenarının %70’i */
+  --cal-tooltip-bg: #212529;
+  --cal-tooltip-color: #ffe066;
+  --cal-tooltip-shadow: 0 0 0 3px #ffe066;
+  --cal-tooltip-max-width: 160px;
+  padding: 8px;
+  border-radius: 12px;
+}

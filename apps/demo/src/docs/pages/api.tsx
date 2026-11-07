@@ -79,7 +79,7 @@ export function PropsReference() {
             },
             {
               name: 'defaultValue',
-              type: 'same as value',
+              type: <>same as <code>value</code></>,
               description: (
                 <>
                   <strong>Uncontrolled</strong> initial selection (pair: {c('value')}), read once on mount; later changes are ignored. {c('ref.reset()')}{' '}
@@ -114,7 +114,7 @@ export function PropsReference() {
             {
               name: 'defaultActiveEndpoint',
               type: "'start' | 'end'",
-              default: 'derived from the value',
+              default: <>derived from the value</>,
               description: (
                 <>
                   Range only. <strong>Uncontrolled</strong> initial endpoint, e.g. {c("'end'")} to let the user change only the end of a pre-filled range. It
@@ -197,7 +197,7 @@ export function PropsReference() {
             {
               name: 'today',
               type: 'CalendarDate',
-              default: 'computed on the client',
+              default: <>computed on the client</>,
               description: (
                 <>
                   Fixes “today” for {c('disablePast')}/{c('disableFuture')}, the today marker, {c('day.past')}/{c('day.future')} and the default month. Pass
@@ -210,7 +210,7 @@ export function PropsReference() {
             {
               name: 'timeZone',
               type: 'string (IANA)',
-              default: "the browser's zone",
+              default: <>the browser’s zone</>,
               description: (
                 <>
                   Zone used to compute today when {c('today')} is not given, e.g. {c("'Europe/Istanbul'")} for a venue&apos;s local date. The computed
@@ -256,7 +256,7 @@ export function PropsReference() {
             {
               name: 'getDataStatus',
               type: '(month: CalendarMonth) => DataStatus',
-              default: "every month 'loaded'",
+              default: <>every month <code>'loaded'</code></>,
               description: (
                 <>
                   Status of each month&apos;s data. {c("'loading'")} and {c("'unknown'")} months draw day skeletons without tooltips;{' '}
@@ -457,7 +457,7 @@ export function PropsReference() {
             {
               name: 'defaultVisibleMonth',
               type: 'CalendarMonth ("YYYY-MM")',
-              default: "selection's month, else today's",
+              default: <>the selection’s month, else today’s</>,
               description: (
                 <>
                   <strong>Uncontrolled</strong> initial reference month, read once on mount. Also makes server HTML complete without {c('today')}.
@@ -586,7 +586,7 @@ export function PropsReference() {
             {
               name: 'direction',
               type: "'ltr' | 'rtl'",
-              default: 'from locale',
+              default: <>from locale</>,
               description: (
                 <>
                   Layout direction ({c('dir')} on the root); the default is {c('rtl')} for Arabic, Hebrew, Persian, Urdu and other right-to-left
@@ -597,7 +597,7 @@ export function PropsReference() {
             {
               name: 'firstDayOfWeek',
               type: 'Weekday (0–6, 0 = Sunday)',
-              default: "from locale's region",
+              default: <>from the locale’s region</>,
               description: (
                 <>
                   First column of every week, e.g. {c('1')} for a Monday start in {c('en-US')}. The default comes from a static region table (Sunday for US,
@@ -839,7 +839,7 @@ export function PropsReference() {
             {
               name: 'id',
               type: 'string',
-              default: 'generated (useId)',
+              default: <>generated (<code>useId</code>)</>,
               description: (
                 <>
                   Root element id and the {c('instanceId')} in events, the controller and {c('ctx')}. Inner ids derive from it:{' '}
@@ -851,7 +851,7 @@ export function PropsReference() {
             {
               name: 'aria-label',
               type: 'string',
-              default: 'messages.calendar ("Calendar")',
+              default: <><code>messages.calendar</code> (“Calendar”)</>,
               description: (
                 <>
                   Accessible name of the calendar group. Give each calendar on a page a distinct one (“Check-in”, “Return date”).{' '}
