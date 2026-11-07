@@ -198,7 +198,7 @@ These are documented (see their status) but no file under `examples/` or `snippe
 | `SelectionProps` | Type | `#/api-props`, `#/api-types` | — | complete |  |
 | `DayState` | Type | `#/styling-reference`, `#/api-types` | `examples/styling/DataAttributes.tsx`, `examples/styling-ref/StateAttributes.tsx` | complete |  |
 | `DayRenderContext` | Type | `#/styling-reference`, `#/api-types` | — | complete |  |
-| `DayPropsInput` | Type | `#/styling-reference`, `#/api-types` | — | complete |  |
+| `DayPropsInput` | Type | `#/styling-reference`, `#/styling`, `#/api-types` | `examples/styling/RenderDayDiv.tsx`, `snippets/styling/getDayProps.tsx` | complete |  |
 | `DayProps` | Type | `#/styling-reference`, `#/api-types` | — | complete |  |
 | `DayRenderProps` | Type | `#/styling-reference`, `#/api-types` | — | complete |  |
 | `DefaultDayData` | Type | `#/day-content`, `#/api-types` | `examples/features/DayContent.tsx`, `snippets/events/data-layout.tsx` | complete |  |

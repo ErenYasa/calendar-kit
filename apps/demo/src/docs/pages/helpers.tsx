@@ -60,9 +60,9 @@ export function DateHelpers() {
         <Note>
           <p>
             Functions that take a <code>CalendarDate</code> trust it and do not re-validate. Values cast with <code>as CalendarDate</code> instead of parsed
-            give meaningless results. Arithmetic that crosses the year limits is not checked either: <code>addDays</code> past 9999-12-31 returns a string such
-            as <code>"10000-01-01"</code> that no parser would accept; the result outside 0001–9999 is undefined. Stay inside the supported years.
-            (<code>addMonths</code> and <code>addMonthsToMonth</code> clamp instead, see below.)
+            give meaningless results. Arithmetic never leaves the supported years: <code>addDays</code>, <code>addMonths</code> and{' '}
+            <code>addMonthsToMonth</code> clamp a result past either end to the first or last supported day or month (<code>addDays(&quot;9999-12-30&quot;, 5)</code>{' '}
+            is <code>&quot;9999-12-31&quot;</code>), and a <code>NaN</code> amount throws a <code>RangeError</code> because there is no nearest bound.
           </p>
         </Note>
       </Section>
@@ -132,6 +132,10 @@ export function DateHelpers() {
           <p>
             Returns the day <code>amount</code> days after <code>date</code> (before it when negative). Month and year boundaries are handled; DST cannot
             make a day go missing or repeat. A fractional <code>amount</code> is truncated toward zero (<code>1.5</code> → 1, <code>-1.5</code> → −1).
+            Like <code>addMonths</code>, the result never leaves 0001-01-01 to 9999-12-31: a move past either end stops at that day (
+            <code>addDays(&quot;9999-12-30&quot;, 5)</code> → <code>&quot;9999-12-31&quot;</code>, <code>addDays(&quot;0001-01-02&quot;, -5)</code> →{' '}
+            <code>&quot;0001-01-01&quot;</code>, <code>Infinity</code> → <code>&quot;9999-12-31&quot;</code>). A <code>NaN</code> amount throws{' '}
+            <code>RangeError(&apos;Invalid amount&apos;)</code>.
           </p>
         </Fn>
         <Fn name="addMonths" sig="function addMonths(date: CalendarDate, amount: number): CalendarDate">
@@ -139,14 +143,14 @@ export function DateHelpers() {
             Moves a date by whole months (a fractional <code>amount</code> is truncated toward zero) and keeps the day of month when it exists. When it does not, the day is clamped to the last day of the target month:
             31 January + 1 month is 28 February (29 in a leap year). Clamping is not undone later, so adding one month twice to 31 January gives 28 March,
             not 31 March; add the total in one call when that matters. Results never leave 0001–9999: a move past either end stops at the first or last
-            month.
+            month. A <code>NaN</code> amount throws a <code>RangeError</code>.
           </p>
         </Fn>
         <Fn name="addMonthsToMonth" sig="function addMonthsToMonth(month: CalendarMonth, amount: number): CalendarMonth">
           <p>
             The month equivalent of <code>addMonths</code>, for navigation and month lists where there is no day to clamp. Fractional amounts are
             truncated toward zero. Results are kept within
-            0001-01 to 9999-12 (for example <code>9999-12</code> + 1 stays <code>9999-12</code>).
+            0001-01 to 9999-12 (for example <code>9999-12</code> + 1 stays <code>9999-12</code>). A <code>NaN</code> amount throws a <code>RangeError</code>.
           </p>
         </Fn>
         <Fn name="diffDays" sig="function diffDays(a: CalendarDate, b: CalendarDate): number">

@@ -254,6 +254,20 @@ export function LoadMore() {
           (load your data there); it does not change the reference month, so <code>onVisibleMonthChange</code> is not called. Paged navigation (the default)
           instead replaces the window with previous/next arrows — see <a href="#/orientation">Orientation &amp; months</a>.
         </p>
+        <p>
+          <code>loadDirections</code> only decides which built-in UI exists: the load-more buttons (or <code>renderLoadMore</code> controls) and the{' '}
+          <code>loadMore=&quot;auto&quot;</code> sentinels, at the ends it names. It does not restrict the controller: <code>ref.loadMore(direction)</code>{' '}
+          (or <code>ctx.actions.loadMore</code>) adds months in either direction whatever <code>loadDirections</code> says, still only in continuous
+          mode and still stopping at <code>minDate</code>/<code>maxDate</code>. Moving keyboard focus past either end of the list extends it too.
+        </p>
+        <p>
+          A controlled <code>visibleMonth</code> works here too: changing the prop behaves like <code>goToMonth()</code>. An already rendered month is
+          scrolled to and the loaded months stay; an unrendered month rebuilds the list around it (within <code>maxRenderedMonths</code>, reported by{' '}
+          <code>onRenderedMonthsChange</code> so data loading follows) and is scrolled to once rendered. The jump is instant, focus does not move and no{' '}
+          <code>onVisibleMonthChange</code> is called for your own prop change. Update the prop from <code>onVisibleMonthChange</code>, not from{' '}
+          <code>onVisibleMonthsChange</code>: the visible months follow the user&apos;s scrolling, and writing them back would make the calendar chase the
+          scroll. Details in <a href="#/api-events">Callbacks &amp; events → onVisibleMonthChange</a>.
+        </p>
       </Section>
       <Section title="Default controls">
         <p>Use the defaults when the localised “Show earlier dates” / “Show more dates” buttons fit your UI. Both directions are enabled here.</p>
@@ -270,10 +284,13 @@ export function LoadMore() {
       <Section title="A different control: renderLoadMore">
         <p>
           <code>renderLoadMore(&#123; direction, canLoad, loading, loadMore, label &#125;, ctx)</code> renders your own control in place of each button. Use it
-          when the control must look or behave differently (for example a link). It is only called while more months can load in that direction: at{' '}
-          <code>minDate</code>/<code>maxDate</code> (or outside <code>loadDirections</code>) no control is rendered, so it cannot show a text at the limit,
-          and <code>canLoad</code> is <code>true</code> in practice. You are responsible for its accessibility; if the control disappears at a limit while
-          focused, the calendar moves focus to the first newly added day.
+          when the control must look or behave differently (for example a link). It is called for every direction enabled by{' '}
+          <code>loadDirections</code> (outside them there is no control at all), including at <code>minDate</code>/<code>maxDate</code>: there{' '}
+          <code>canLoad</code> is <code>false</code>, the default button would have been removed, and <code>loadMore()</code> does nothing, so your
+          renderer can show a disabled control or a text such as “No more dates” (or return <code>null</code>). You are responsible for its
+          accessibility; if keyboard focus is inside the control at the moment the boundary is reached, the calendar moves focus to the first newly added
+          day, so the user is not left on a control that no longer loads. The example stops at a <code>maxDate</code> two months ahead so the end state is
+          easy to reach.
         </p>
         <Example src="features/LoadMoreRender" title="renderLoadMore" />
       </Section>
@@ -289,7 +306,7 @@ export function LoadMore() {
         rows={[
           { name: 'navigation', type: "'paged' | 'continuous'", default: "'paged'", description: 'Pages of N months with arrows, or a growing list.' },
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons in the list, automatic near the list end (IntersectionObserver), or only through the controller.' },
-          { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Ends of the list that can grow.' },
+          { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Ends of the list that get built-in controls / auto-load sentinels. ref.loadMore(direction) works in either direction regardless.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Months added per load.' },
           { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'DOM bound (never below numberOfMonths); far-end months are dropped.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Content of the default buttons.' },
@@ -524,7 +541,8 @@ export function Placement() {
         </p>
         <p>
           Closing is also the app&apos;s job: Escape (the calendar consumes Escape only while one of its tooltips is open), an outside click reported by{' '}
-          <code>onOutsideClick</code> (the calendar&apos;s own portals count as inside), a selection in <code>onChange</code>, or unmounting with the page. Focus
+          <code>onOutsideClick</code> (the calendar&apos;s own portals count as inside), a pick in <code>onSelectionComplete</code> (not <code>onChange</code>: re-picking the date that is already selected emits no change, but it still
+          completes the selection), or unmounting with the page. Focus
           moves into the grid with <code>ref.focusDate()</code> on <code>onReady</code> and returns to the trigger on close with{' '}
           <code>focus(&#123; preventScroll: true &#125;)</code>. The calendar itself never scrolls the page to focus a day inside a fixed popover.
         </p>

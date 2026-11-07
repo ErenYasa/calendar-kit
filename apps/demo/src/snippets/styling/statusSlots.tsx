@@ -21,10 +21,11 @@ export function ScrollingCalendar({ status, retry }: { status: (m: CalendarMonth
           {messages.error} ({months[0]}) <button type="button" onClick={retry}>{messages.retry}</button>
         </div>
       )}
-      // loadMore="button" (default): replaces each load-more button.
-      renderLoadMore={({ direction, loading, loadMore, label }) => (
-        <button type="button" className="my-load-more" data-direction={direction} disabled={loading} onClick={loadMore}>
-          {label}
+      // loadMore="button" (default): replaces each load-more button. Also called
+      // at minDate/maxDate with canLoad: false (loadMore() does nothing there).
+      renderLoadMore={({ direction, canLoad, loading, loadMore, label }) => (
+        <button type="button" className="my-load-more" data-direction={direction} disabled={!canLoad || loading} onClick={loadMore}>
+          {canLoad ? label : 'No more dates'}
         </button>
       )}
     />

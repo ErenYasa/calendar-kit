@@ -11,8 +11,10 @@ const MARGIN = 8;
 // tooltip). Here the position follows the trigger on scroll (any scroll
 // container) and resize, flips above when there is more room there, stays
 // inside the viewport horizontally, and the popover closes when the trigger
-// scrolls out of view. Escape, an outside click and a selection close it;
-// focus then returns to the trigger.
+// scrolls out of view. Escape, an outside click and a pick close it; focus
+// then returns to the trigger. Closing is done in onSelectionComplete, not
+// onChange: re-picking the date that is already selected changes nothing (no
+// onChange) but still completes the selection, so it closes the popover too.
 export default function Popover() {
   const trigger = useRef<HTMLButtonElement>(null);
   const popover = useRef<HTMLDivElement>(null);
@@ -78,7 +80,8 @@ export default function Popover() {
               ref={calendar}
               mode="single"
               value={date}
-              onChange={(d) => (setDate(d), close())}
+              onChange={setDate}
+              onSelectionComplete={close}
               onOutsideClick={(e) => !trigger.current?.contains(e.nativeEvent.target as Node) && close()}
               onReady={() => calendar.current?.focusDate(date ?? getToday())}
             />

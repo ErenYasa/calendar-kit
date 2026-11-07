@@ -871,8 +871,8 @@ export function RulesReference() {
           caption="ActivationPlan kinds"
           head={['Kind', 'When']}
           rows={[
-            [<code key="k">select</code>, 'Single mode: a new date.'],
-            [<code key="k">none</code>, 'Read-only mode, or the already selected single date.'],
+            [<code key="k">select</code>, 'Single mode: any selectable date, also the one already selected (same value: no change, but selectionComplete).'],
+            [<code key="k">none</code>, 'Read-only mode.'],
             [<code key="k">start</code>, 'Range: a new start (also a click before the current start).'],
             [<code key="k">complete</code>, 'Range: the end was chosen, or a fixed-length range / singleDayFirst day was created in one click.'],
             [<code key="k">clear</code>, 'Range: the lone start clicked again when same-day ranges are not allowed, or the lone singleDayFirst day.'],

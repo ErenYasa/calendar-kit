@@ -15,7 +15,14 @@ export const notRestored = addMonths(addMonths(jan31, 1), 1); // → "2026-03-28
 
 // Months on a month: no day to clamp.
 export const nextYear = addMonthsToMonth(toCalendarMonth('2026-12'), 1); // → "2027-01"
+export const lastMonth = addMonthsToMonth(toCalendarMonth('9999-12'), 1); // → "9999-12"
 export const monthsBetween = diffMonths(toCalendarMonth('2026-11'), toCalendarMonth('2027-02')); // → 3
+
+// The supported years are 0001–9999: results past either end are clamped to it.
+export const lastDay = addDays(toCalendarDate('9999-12-30'), 5); // → "9999-12-31"
+export const firstDay = addDays(toCalendarDate('0001-01-02'), -5); // → "0001-01-01"
+export const lastDate = addMonths(toCalendarDate('9999-11-30'), 3); // → "9999-12-30"
+// A NaN amount has no nearest bound: addDays(jan31, NaN) throws RangeError('Invalid amount').
 
 // Lists: both ends of eachDay are included; eachMonth takes a count.
 export const days = eachDay(toCalendarDate('2026-11-13'), toCalendarDate('2026-11-15')); // → ["2026-11-13","2026-11-14","2026-11-15"]

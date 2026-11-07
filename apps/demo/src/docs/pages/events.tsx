@@ -86,11 +86,19 @@ export function EventsReference() {
               <>
                 Enter or Space on a day; arrow, Home/End and Page keys; focus that arrives with Tab.
               </>,
-              'The same as pointer, plus visibleMonthChange (moving focus into a month that is not shown)',
+              'The same as pointer, plus visibleMonthChange (moving focus into a month that is not shown) and loadMore (trigger keyboard: moving focus past the end of a continuous list)',
             ],
             [c('navigation'), 'The default previous/next buttons, or previous()/next() from renderNavigation.', 'visibleMonthChange'],
-            [c('programmatic'), 'A controller method (ref or ctx.actions).', 'change, selectionComplete, selectionClear, invalidSelection, activeEndpointChange, visibleMonthChange, dayFocusChange'],
-            [c('load-more'), 'Adding months in continuous mode; focus moved into the grid when the load-more control disappears.', 'loadMore, dayFocusChange'],
+            [
+              c('programmatic'),
+              'A controller method (ref or ctx.actions).',
+              'change, selectionComplete, selectionClear, invalidSelection, activeEndpointChange, visibleMonthChange, dayFocusChange, loadMore (trigger keyboard: focusDate() past the end of a continuous list; ref.loadMore() itself reports load-more)',
+            ],
+            [
+              c('load-more'),
+              'Adding months in continuous mode (default button, renderLoadMore’s loadMore(), the auto sentinel, ref.loadMore()); focus moved into the grid when the load-more boundary is reached.',
+              'loadMore, dayFocusChange',
+            ],
             [
               c('prop'),
               <>
@@ -98,8 +106,8 @@ export function EventsReference() {
               </>,
               'activeEndpointChange (uncontrolled endpoint only)',
             ],
-            [c('resize'), 'Declared in the type, not emitted by the current version.', '—'],
-            [c('scroll'), 'Declared in the type, not emitted by the current version.', '—'],
+            [c('resize'), <>Reserved: declared in the <code>EventSource</code> union but never emitted by the current version (the <code>resize</code> event itself has no source).</>, '—'],
+            [c('scroll'), <>Reserved: declared in the <code>EventSource</code> union but never emitted by the current version (the <code>scroll</code> event itself has no source).</>, '—'],
           ]}
         />
       </Section>
@@ -123,11 +131,12 @@ export function EventsReference() {
               'dateClick → (dayFocusChange) → change → activeEndpointChange (the request) → selectionComplete',
             ],
             ['Rejected click', 'dateClick → (dayFocusChange) → invalidSelection; no change'],
-            ['Click that changes nothing (read-only mode, the already selected single date)', 'dateClick (accepted: false, kind: none) → (dayFocusChange)'],
-            ['ref.select(valid value)', 'change (reason set) → (selectionComplete) → (selectionClear) → (activeEndpointChange) → (validationChange)'],
+            ['Click in read-only mode', 'dateClick (accepted: false, kind: none) → (dayFocusChange)'],
+            ['Click on the already selected single date', 'dateClick (accepted: true, kind: select) → (dayFocusChange) → selectionComplete; no change'],
+            ['ref.select(valid value)', 'change (reason set) → (selectionComplete) → (selectionClear) → (activeEndpointChange) → (validationChange); nothing when the value equals the current one'],
             ['ref.select(invalid value)', 'invalidSelection; nothing else'],
-            ['ref.clear()', 'change (reason clear) → selectionClear → (activeEndpointChange)'],
-            ['Page or jump', 'visibleMonthChange → visibleMonthsChange → renderedMonthsChange → (loadingChange)'],
+            ['ref.clear()', 'change (reason clear) → selectionClear → (activeEndpointChange); nothing when the selection is already empty'],
+            ['Page or jump', 'visibleMonthChange → visibleMonthsChange → renderedMonthsChange → (loadingChange); nothing when the month stays the same'],
             ['Load more', 'loadMore → (visibleMonthsChange) → renderedMonthsChange → (loadingChange)'],
           ]}
         />
@@ -142,7 +151,8 @@ export function EventsReference() {
 
       <Section title="onDateClick">
         <p>
-          Fires for every activation of a day with a pointer or with Enter/Space, before anything else happens: accepted, rejected and no-op activations alike.
+          Fires for every activation of a day with a pointer or with Enter/Space, before anything else happens: accepted and rejected activations, a re-pick of
+          the already selected date and clicks in read-only mode alike. It is never suppressed, even when the value does not change.
           Use it for analytics or custom feedback; use <code>onChange</code> for the value.
         </p>
         <p>
@@ -154,14 +164,14 @@ export function EventsReference() {
           rows={[
             ['date', 'CalendarDate', 'The activated day.'],
             ['source', "'pointer' | 'keyboard'", 'Keyboard when the click came from Enter/Space (a click with detail 0) or a custom element’s key handler.'],
-            ['accepted', 'boolean', <>Whether the activation changes the selection: false when <code>kind</code> is rejected or none.</>],
+            ['accepted', 'boolean', <>Whether the activation was accepted: false when <code>kind</code> is rejected or none (read-only mode). Re-picking the selected single date is accepted although the value stays the same.</>],
             [
               'kind',
               'ActivationKind',
               <>
-                What the activation does: <code>select</code> (single), <code>start</code>, <code>complete</code>, <code>clear</code> (range),{' '}
-                <code>toggle-on</code>, <code>toggle-off</code> (multiple), <code>none</code> (read-only mode, or the single date that is already selected) or{' '}
-                <code>rejected</code>.
+                What the activation does: <code>select</code> (single, also for the date that is already selected), <code>start</code>,{' '}
+                <code>complete</code>, <code>clear</code> (range), <code>toggle-on</code>, <code>toggle-off</code> (multiple), <code>none</code> (read-only
+                mode) or <code>rejected</code>.
               </>,
             ],
             ['issue', 'ValidationIssue | null', <>Why it was rejected (see <code>onInvalidSelection</code>); null otherwise.</>],
@@ -181,14 +191,19 @@ export function EventsReference() {
           <li>
             when a prop changes: <code>value</code>, <code>mode</code>, rules, or a later <code>defaultValue</code> (which is ignored);
           </li>
-          <li>for rejected activations (see onInvalidSelection) or activations that change nothing (kind none);</li>
+          <li>for rejected activations (see onInvalidSelection);</li>
           <li>
-            for <code>ref.select()</code> with an invalid value, <code>ref.clear()</code> when the selection is already empty, or any action in{' '}
-            <code>readonly</code> mode.
+            when the value stays the same: re-picking the selected single date (it still emits <code>dateClick</code> and{' '}
+            <code>selectionComplete</code>), <code>ref.select()</code> or <code>ref.reset()</code> with a value equal to the current one (nothing is
+            emitted at all), <code>ref.clear()</code> when the selection is already empty;
+          </li>
+          <li>
+            for <code>ref.select()</code> with an invalid value, or any action in <code>readonly</code> mode.
           </li>
         </ul>
         <p>
-          <code>ref.select()</code> and <code>ref.reset()</code> emit a change even when the new value equals the current one.
+          Rejected attempts are never suppressed: <code>invalidSelection</code> (and <code>dateClick</code> for a click) is emitted every time, even for
+          the same rejected value twice.
         </p>
         <p>
           <strong>Controlled</strong> (<code>value</code> given): the event is a request. The calendar keeps showing <code>value</code> until you pass the new
@@ -221,7 +236,9 @@ export function EventsReference() {
       <Section title="onSelectionComplete">
         <p>Fires right after a change that completes the selection, when the new value is valid:</p>
         <ul>
-          <li>single: a date was selected (click or <code>ref.select(date)</code>);</li>
+          <li>
+            single: a date was selected (click or <code>ref.select(date)</code>), including a click on the date that is already selected;
+          </li>
           <li>
             range: the end was chosen, a fixed-length range was created in one click, a single day was selected with <code>singleDayFirst</code>, or{' '}
             <code>ref.select()</code> set a range with both ends;
@@ -231,7 +248,10 @@ export function EventsReference() {
           </li>
         </ul>
         <p>
-          Does not fire for <code>ref.reset()</code> (even when the default value is complete), for prop changes, or again on later renders. With a
+          A user who completes the same value again (re-picking the selected single date, or choosing the same range again) gets{' '}
+          <code>selectionComplete</code> again, without <code>change</code> when the value is unchanged; that makes it the right place to close a
+          popover. A programmatic <code>ref.select()</code> of the value already selected emits nothing. Does not fire for <code>ref.reset()</code>{' '}
+          (even when the default value is complete), for prop changes, or again on later renders. With a
           controlled <code>activeEndpoint</code> it comes after the endpoint request; otherwise right after <code>change</code>. A typical use is closing a
           popover or moving focus to the next form field.
         </p>
@@ -269,8 +289,9 @@ export function EventsReference() {
           screen readers and is part of the day&apos;s accessible label.
         </p>
         <p>
-          Not emitted for <code>clear()</code> and <code>reset()</code> (they are not validated), for activations that change nothing, or for{' '}
-          <code>ref.select()</code> in read-only mode, which only returns an issue.
+          Not emitted for <code>clear()</code> and <code>reset()</code> (they are not validated), for clicks in read-only mode, or for{' '}
+          <code>ref.select()</code> in read-only mode, which only returns an issue. It is never suppressed as a repeat: the same rejected attempt twice
+          emits it twice.
         </p>
         <Signature>{'onInvalidSelection?: (e: InvalidSelectionEvent) => void'}</Signature>
         <Payload
@@ -278,10 +299,11 @@ export function EventsReference() {
           rows={[
             [
               'date',
-              'CalendarDate',
+              'CalendarDate | null',
               <>
-                The activated day. For <code>ref.select()</code> it is <code>issue.date</code>, or an empty string when the issue has no date (for example{' '}
-                an invalid date or a custom validator without a date).
+                The day concerned. A rejected click or Enter/Space always carries the activated day. For <code>ref.select()</code> it is{' '}
+                <code>issue.date</code>, or <code>null</code> when the issue has no day (for example too many dates for <code>maxSelections</code>, an
+                invalid value, or a custom validator without a date). Check for <code>null</code> before using it as a date.
               </>,
             ],
             ['issue', 'ValidationIssue', 'The reason, see below.'],
@@ -404,13 +426,29 @@ export function EventsReference() {
             <code>onRenderedMonthsChange</code>);
           </li>
           <li>
-            for a jump to the current reference month. A request outside <code>minDate</code>/<code>maxDate</code> is clamped and fires with{' '}
-            <code>clamped: true</code>, even when the clamped month is the current one (for example <code>ref.next()</code> at the last month).
+            when the month stays the same: a jump to the current reference month, or a request outside <code>minDate</code>/<code>maxDate</code> that is
+            clamped back to the current month (for example <code>ref.next()</code> or <code>ref.previous()</code> at the last or first allowed month).
+            A request clamped to a <em>different</em> month fires with <code>clamped: true</code>; <code>goToMonth()</code> returns{' '}
+            <code>clamped: true</code> in both cases.
           </li>
         </ul>
         <p>
           <strong>Controlled</strong> (<code>visibleMonth</code> given): the event is a request; store <code>month</code> to move. Ignoring it keeps the
           calendar where it is. <strong>Uncontrolled</strong>: the calendar has already moved.
+        </p>
+        <p>
+          <strong>Controlled in continuous mode.</strong> Changing the <code>visibleMonth</code> prop takes the same path as <code>goToMonth()</code>: a
+          month that is already rendered is scrolled to and the loaded list is kept; a month that is not rendered rebuilds the list around it (bounded by{' '}
+          <code>maxRenderedMonths</code>, reported through <code>renderedMonthsChange</code> / <code>onRenderedMonthsChange</code> so your data loading
+          follows) and is scrolled to once it has rendered. The value is clamped to <code>minDate</code>/<code>maxDate</code>. The scroll uses{' '}
+          <code>behavior: &apos;auto&apos;</code> (no smooth animation), keyboard focus is not moved, and the prop change emits no{' '}
+          <code>visibleMonthChange</code>. When the prop only echoes a navigation the calendar started itself (you stored the month from{' '}
+          <code>onVisibleMonthChange</code> after <code>goToMonth()</code> or an arrow key), it does not scroll a second time.
+        </p>
+        <p>
+          Drive the prop from <code>onVisibleMonthChange</code>. Do not feed it from <code>onVisibleMonthsChange</code> or the scroll position: in continuous
+          mode those follow the user&apos;s scrolling, so writing them back into <code>visibleMonth</code> would scroll the calendar again and make it chase
+          the user.
         </p>
         <Signature>{'onVisibleMonthChange?: (month: CalendarMonth, e: VisibleMonthChangeEvent) => void'}</Signature>
         <Payload
@@ -765,8 +803,9 @@ export function ControllerReference() {
             <code>clamped: true</code>. <code>disablePast</code>/<code>disableFuture</code> do not limit navigation.
           </li>
           <li>
-            Emits <code>visibleMonthChange</code> (<code>source: &apos;programmatic&apos;</code>, <code>reason: &apos;jump&apos;</code>) unless the target is
-            already the reference month and was not clamped. Derived events (<code>visibleMonthsChange</code>, <code>renderedMonthsChange</code>) follow.
+            Emits <code>visibleMonthChange</code> (<code>source: &apos;programmatic&apos;</code>, <code>reason: &apos;jump&apos;</code>) unless the target,
+            after clamping, is already the reference month; then nothing is emitted, although the result still says <code>clamped: true</code> when the
+            request was outside the limits. Derived events (<code>visibleMonthsChange</code>, <code>renderedMonthsChange</code>) follow.
           </li>
           <li>
             Paged mode: the window is rebuilt around the target according to <code>monthPosition</code>. Continuous mode: a rendered month is scrolled into
@@ -774,8 +813,9 @@ export function ControllerReference() {
             between.
           </li>
           <li>
-            Controlled <code>visibleMonth</code>: the call only emits the request. The result still describes the requested month, but nothing moves until you
-            update the prop.
+            Controlled <code>visibleMonth</code>: the call only emits the request. The result still describes the requested month, but the reference month
+            does not change until you update the prop (in continuous mode a month that is already rendered is scrolled to right away; storing the
+            month in the prop afterwards does not scroll a second time).
           </li>
         </ul>
         <Payload
@@ -815,8 +855,8 @@ export function ControllerReference() {
           mode the calendar scrolls to the new reference month; no months are loaded and no <code>loadMore</code> is emitted.
         </p>
         <p>
-          Unlike the default buttons they are never disabled: at <code>minDate</code>/<code>maxDate</code> the request is clamped and{' '}
-          <code>visibleMonthChange</code> fires with <code>clamped: true</code> and the same month. Use <code>canPrevious</code>/<code>canNext</code> from{' '}
+          Unlike the default buttons they are never disabled: at <code>minDate</code>/<code>maxDate</code> the request is clamped back to the current
+          month, so nothing moves and no <code>visibleMonthChange</code> is emitted. Use <code>canPrevious</code>/<code>canNext</code> from{' '}
           <code>renderNavigation</code> to disable your own buttons. They do nothing before the reference month is known (server render without{' '}
           <code>today</code>).
         </p>
@@ -830,8 +870,10 @@ export function ControllerReference() {
           before.
         </p>
         <p>
-          It works with every <code>loadMore</code> mode and ignores <code>loadDirections</code>; <code>loadMore=&quot;manual&quot;</code> hides the built-in
-          control so your own button (for example in <code>renderFooter</code>) is the only one. Emits <code>loadMore</code> with{' '}
+          It works with every <code>loadMore</code> mode and in either direction, whatever <code>loadDirections</code> says:{' '}
+          <code>loadDirections</code> only decides which built-in controls and auto-load sentinels exist, not where the controller may load.{' '}
+          <code>loadMore=&quot;manual&quot;</code> hides the built-in control so your own button (for example in <code>renderFooter</code>) is the only
+          one. Emits <code>loadMore</code> with{' '}
           <code>trigger: &apos;manual&apos;</code>, then <code>renderedMonthsChange</code>. At the boundary nothing happens and nothing is emitted.
         </p>
       </Section>
@@ -848,8 +890,8 @@ export function ControllerReference() {
       <Section title="reset()">
         <p>
           <code>reset(): void</code>. Restores <code>defaultValue</code> as it was on mount (later changes to that prop are ignored), or the empty value when
-          there is none or the mode has changed since. Emits <code>change</code> with <code>reason: &apos;reset&apos;</code> every time, even when the value
-          is already the default; <code>selectionClear</code> when the result is empty and the selection was not; never <code>selectionComplete</code>. The
+          there is none or the mode has changed since. Emits <code>change</code> with <code>reason: &apos;reset&apos;</code>, or nothing at all when the
+          value already equals the default; <code>selectionClear</code> when the result is empty and the selection was not; never <code>selectionComplete</code>. The
           default value is not validated again (watch <code>onValidationChange</code> if it may have become invalid). Does nothing in read-only mode.
         </p>
         <p>
@@ -870,7 +912,7 @@ export function ControllerReference() {
             <strong>Valid</strong>: the value is applied with <code>reason: &apos;set&apos;</code> and <code>date: null</code>. Emits <code>change</code>,
             then <code>selectionComplete</code> when the value is complete (single date, range with both ends, non-empty list) or{' '}
             <code>selectionClear</code> when it empties the selection. The range endpoint follows the value (a lone start makes the next click set the end).
-            Applied even when the value equals the current one.
+            When the value equals the current one nothing is emitted (no <code>change</code>, no <code>selectionComplete</code>).
           </li>
           <li>
             <strong>Invalid</strong>: nothing changes. Emits only <code>invalidSelection</code> (<code>source: &apos;programmatic&apos;</code>) and returns{' '}

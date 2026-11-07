@@ -92,8 +92,9 @@ export function PropsReference() {
               type: '(value, e: ChangeEvent) => void',
               description: (
                 <>
-                  Called with the new value after every accepted user or controller change (a range calls it on the first click with{' '}
-                  {c('{ start, end: null }')}, then with both ends). Never called for prop changes or rejected clicks. {c('e')} carries{' '}
+                  Called with the new value after every accepted user or controller action that changes the value (a range calls it on the first click
+                  with {c('{ start, end: null }')}, then with both ends). Never called for prop changes, rejected clicks, or when the value stays the
+                  same (re-picking the selected date, {c('select()')}/{c('reset()')} of the current value, {c('clear()')} on an empty selection). {c('e')} carries{' '}
                   {c('reason')}, {c('source')}, {c('phase')} and {c('validation')}. {to('api-events', 'onChange')}.
                 </>
               ),
@@ -446,7 +447,10 @@ export function PropsReference() {
                 <>
                   <strong>Controlled</strong> reference month (pair: {c('defaultVisibleMonth')}); pair it with {c('onVisibleMonthChange')}. Arrows,
                   keyboard paging, {c('ref.next()')} and {c('goToMonth()')} then only request a month; store it to move. Use it to keep the month in the URL
-                  or to sync calendars. An unparsable value is ignored. {to('api-events', 'onVisibleMonthChange (live example)')}.
+                  or to sync calendars. An unparsable value is ignored. In continuous mode a prop change works like {c('goToMonth()')}: scrolls to a
+                  rendered month (list kept) or rebuilds the list around an unrendered one, without smooth scrolling, focus moves or a{' '}
+                  {c('visibleMonthChange')}; feed it from {c('onVisibleMonthChange')}, not from {c('onVisibleMonthsChange')}.{' '}
+                  {to('api-events', 'onVisibleMonthChange (live example)')}.
                 </>
               ),
             },
@@ -503,8 +507,9 @@ export function PropsReference() {
               default: "'next'",
               description: (
                 <>
-                  Continuous only: where the default controls and auto-loading add months. Loading stops at the months of {c('minDate')}/
-                  {c('maxDate')}. {c('ref.loadMore(direction)')} is not limited by this prop. {to('load-more', 'Progressive months')}.
+                  Continuous only: which ends of the list get the built-in UI (load-more buttons or {c('renderLoadMore')} controls, and the{' '}
+                  {c("loadMore='auto'")} sentinels). Loading stops at the months of {c('minDate')}/{c('maxDate')}. The controller is not limited by
+                  this prop: {c('ref.loadMore(direction)')} adds months in either direction (continuous only, still stopping at the limits). {to('load-more', 'Progressive months')}.
                 </>
               ),
             },
@@ -784,8 +789,9 @@ export function PropsReference() {
               type: '(props: LoadMoreRenderProps, ctx: SlotContext) => ReactNode',
               description: (
                 <>
-                  Continuous with {c("loadMore='button'")}: a different control in place of each default load-more button. Only called while that
-                  direction can still load (removed at {c('minDate')}/{c('maxDate')}). {to('load-more', 'Progressive months → renderLoadMore')}.
+                  Continuous with {c("loadMore='button'")}: a different control in place of each default load-more button, for each direction in{' '}
+                  {c('loadDirections')}. Also called at {c('minDate')}/{c('maxDate')} with {c('canLoad: false')} (where the default button is removed
+                  and {c('loadMore()')} does nothing) so it can show a disabled control or a message. {to('load-more', 'Progressive months → renderLoadMore')}.
                 </>
               ),
             },
@@ -878,12 +884,12 @@ export function PropsReference() {
           rows={[
             ev('onReady', '(e: ReadyEvent) => void', 'Once per mount, after the first measurement, with the layout.'),
             ev('onDateClick', '(e: DateClickEvent) => void', 'Every day activation (pointer or keyboard), accepted or rejected, with the day state and issue.'),
-            ev('onSelectionComplete', '(e: SelectionCompleteEvent) => void', 'A valid selection became complete: a single pick, both range ends, multiple reaching maxSelections, or a valid select().'),
+            ev('onSelectionComplete', '(e: SelectionCompleteEvent) => void', 'A valid selection became complete: a single pick (also re-picking the selected date), both range ends, multiple reaching maxSelections, or a valid select() of a new value.'),
             ev('onSelectionClear', '(e: SelectionClearEvent) => void', 'The selection became empty (clear(), reset() to empty, toggling the last date off, …).'),
-            ev('onInvalidSelection', '(e: InvalidSelectionEvent) => void', 'A click or select() was rejected; carries the issue and its localised message.'),
+            ev('onInvalidSelection', '(e: InvalidSelectionEvent) => void', 'A click or select() was rejected (every time, never deduplicated); carries the issue and its localised message. e.date is CalendarDate | null: null when a rejected select() has no day.'),
             ev('onValidationChange', '(e: ValidationChangeEvent) => void', 'The validity of the current selection changed; also on mount and when rules, data or today change.'),
             ev('onActiveEndpointChange', '(endpoint: RangeEndpoint, e: ActiveEndpointChangeEvent) => void', 'Range: the endpoint for the next click changed (a request when activeEndpoint is controlled).'),
-            ev('onVisibleMonthChange', '(month: CalendarMonth, e: VisibleMonthChangeEvent) => void', 'The reference month was asked to change (arrows, keyboard, goToMonth()); never for prop changes.'),
+            ev('onVisibleMonthChange', '(month: CalendarMonth, e: VisibleMonthChangeEvent) => void', 'The reference month was asked to change (arrows, keyboard, goToMonth()); never for prop changes or when the month stays the same (e.g. next() at maxDate).'),
             ev('onVisibleMonthsChange', '(e: VisibleMonthsChangeEvent) => void', 'The months on screen changed, including by scrolling in continuous mode.'),
             ev('onRenderedMonthsChange', '(e: RenderedMonthsChangeEvent) => void', 'Months were added to or removed from the DOM, also on mount: start data requests here.'),
             ev('onLoadMore', '(e: LoadMoreEvent) => void', 'Continuous: months were added by a button, auto-loading or ref.loadMore().'),
@@ -1015,12 +1021,12 @@ type ReasonCode =
   | 'data-unknown' | 'data-loading' | 'data-error' | 'custom'
 
 type ActivationKind =      // what activating a day would do now (day.action)
-  | 'select'      // single
+  | 'select'      // single (also the date that is already selected)
   | 'start'       // range: new start
   | 'complete'    // range: end chosen, or a fixed-length range
   | 'toggle-on' | 'toggle-off'   // multiple
   | 'clear'       // range: click on the lone start without same-day support
-  | 'none'        // no change (read-only, re-selecting the single value)
+  | 'none'        // read-only mode
   | 'rejected'`}</pre>
         <p>
           Issues reach you as <code>day.reason</code>, in <code>onInvalidSelection</code>, <code>onValidationChange</code> and{' '}
@@ -1064,6 +1070,9 @@ interface DayRenderProps<TDayData> extends DayRenderContext<TDayData> {
 // What you may pass to getDayProps: your attributes and handlers
 type DayPropsInput = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
   ref?: Ref<HTMLElement>
+  // omit for a <button> (type="button" is written); null for another element:
+  // no type attribute, role="button" unless you pass a role, Enter/Space select
+  type?: 'button' | null
   [dataAttr: \`data-\${string}\`]: string | number | boolean | undefined
 }
 
@@ -1080,7 +1089,8 @@ type DayProps = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
           <code>renderDayContent</code> and <code>getDayTooltip</code>; <code>DayRenderProps</code> of <code>renderDay</code>. In{' '}
           <code>getDayProps</code> your handlers run first; <code>event.preventDefault()</code> in <code>onClick</code>, <code>onKeyDown</code>,{' '}
           <code>onPointerEnter</code> or <code>onFocus</code> skips the calendar&apos;s handling of that event; your <code>ref</code>,{' '}
-          <code>className</code> and <code>aria-describedby</code> are merged ({to('styling', 'Styling → renderDay and getDayProps')}).
+          <code>className</code> and <code>aria-describedby</code> are merged. Pass <code>type: null</code> when spreading onto an element that is not a{' '}
+          <code>&lt;button&gt;</code> ({to('styling', 'Styling → renderDay and getDayProps')}).
         </p>
       </Section>
 

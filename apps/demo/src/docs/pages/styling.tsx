@@ -64,9 +64,17 @@ export function Styling() {
       <Section title="renderDay and getDayProps">
         <p>
           <code>getDayProps</code> merges the ref (tooltip anchor, roving focus), <code>tabIndex</code>, ARIA attributes, <code>data-*</code> state and event
-          handlers with yours. With a non-button element, the calendar handles Enter and Space.
+          handlers with yours. On a <code>&lt;button&gt;</code> call it as <code>getDayProps(yourProps)</code>: it writes <code>type=&quot;button&quot;</code>.
         </p>
         <Example src="styling/RenderDay" title="Custom day element" />
+        <p>
+          For an element that is not a button (a <code>&lt;div&gt;</code>, a <code>&lt;span&gt;</code>), pass <code>type: null</code>:{' '}
+          <code>getDayProps(&#123; type: null &#125;)</code> writes no <code>type</code> attribute and adds <code>role=&quot;button&quot;</code> unless you
+          pass your own <code>role</code>. Focus works exactly as with a button: one day is in the tab order (roving <code>tabIndex</code>) and the arrow,
+          Page and Home/End keys move between days. Enter and Space select the focused day; on a non-button element the calendar handles those keys
+          itself, while a native button turns them into a click.
+        </p>
+        <Example src="styling/RenderDayDiv" title="A div as the day element" />
       </Section>
       <Section title="unstyled">
         <p>
@@ -362,7 +370,7 @@ export function StylingReference() {
             { name: 'renderMonthHeader', type: '(MonthHeaderRenderProps, ctx) => ReactNode', description: <>Replaces the whole {c('cal-month-header')} row, without a wrapper. Props: {c('month')}, {c('title')}, {c('index')}, {c('status')} and {c('navigation')}: the default arrows that belong to this header, or {c('null')} (always null with {c('renderNavigation')} or continuous navigation). The month is then labelled with {c('aria-label')}.</> },
             { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>No wrapper. {c('scope')} {c('initial')}: after the viewport during the initial load; {c('month')}: inside a loading month after its grid (the skeleton stays); {c('load-more')}: in the load-more area while added months load (no default for this one).</> },
             { name: 'renderError', type: '(ErrorRenderProps, ctx) => ReactNode', description: <>Replaces {c('div.cal-error')} in each month with status {c('error')}. {c('retry()')} calls {c('onRetry([month])')}.</> },
-            { name: 'renderLoadMore', type: '(LoadMoreRenderProps, ctx) => ReactNode', description: <>Replaces the default load-more button inside its area (continuous, {c('loadMore="button"')}, while more can load). Props: {c('direction')}, {c('canLoad')}, {c('loading')}, {c('loadMore()')}, {c('label')}.</> },
+            { name: 'renderLoadMore', type: '(LoadMoreRenderProps, ctx) => ReactNode', description: <>Replaces the default load-more button inside its area (continuous, {c('loadMore="button"')}, directions in {c('loadDirections')}); also called at {c('minDate')}/{c('maxDate')} with {c('canLoad: false')}, where {c('loadMore()')} does nothing. Props: {c('direction')}, {c('canLoad')}, {c('loading')}, {c('loadMore()')}, {c('label')}.</> },
             { name: 'renderDayTooltip', type: '(DayTooltipRenderProps) => ReactNode', description: <>Content of the open tooltip, inside {c('div.cal-tooltip')} before the arrow. Props: {c('day')}, {c('content')} (from {c('getDayTooltip')} or the default reason text), {c('trigger')}, {c('placement')}. No ctx.</> },
             { name: 'renderDayContent', type: '({ day, data }) => ReactNode', description: <>Inside {c('span.cal-day-content')} in the default day button. Everything else (button, circle, band, ARIA) stays. No interactive elements.</> },
             { name: 'renderDay', type: '({ day, data, getDayProps, defaultContent }) => ReactNode', description: <>Replaces the button and its content span. The cell, its data-* attributes, the range band span and the hidden description stay.</> },
@@ -374,7 +382,8 @@ export function StylingReference() {
         <p>
           <code>getDayProps(yourProps)</code> returns the props for your day element. Order: the day&apos;s data-* attributes, then your props, then the
           calendar&apos;s own props, which win: the ref (merged with yours: it registers the element for roving focus and as the tooltip anchor),{' '}
-          <code>type=&quot;button&quot;</code>, <code>id</code>, <code>tabIndex</code>, <code>aria-label</code>, <code>aria-disabled</code>,{' '}
+          <code>type=&quot;button&quot;</code> (or, with <code>type: null</code> for a non-button element, no <code>type</code> and{' '}
+          <code>role=&quot;button&quot;</code> unless you pass a <code>role</code>), <code>id</code>, <code>tabIndex</code>, <code>aria-label</code>, <code>aria-disabled</code>,{' '}
           <code>aria-pressed</code>, <code>aria-current</code>, plus <code>className</code> and <code>aria-describedby</code>, which are merged with
           yours. The class list starts with <code>cal-day-button</code> and <code>classNames.dayButton</code>, so a custom element keeps the default
           circle, focus ring and disabled look unless you use <code>unstyled</code>.
