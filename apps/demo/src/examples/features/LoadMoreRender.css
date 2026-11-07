@@ -1,0 +1,14 @@
+.add-month {
+  display: block;
+  margin: 8px auto;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.add-month-end {
+  margin: 8px 0;
+  text-align: center;
+  color: #6b7280;
+}

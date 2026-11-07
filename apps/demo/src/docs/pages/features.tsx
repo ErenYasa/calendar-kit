@@ -49,6 +49,21 @@ export function DateLimits() {
         </p>
         <Example src="features/PastFuture" title="disablePast and disableFuture" />
       </Section>
+      <Section title="disableFuture with the reference month last">
+        <p>
+          For dates in the past, put the current month at the end of the window with <code>monthPosition</code>: the calendar then shows the previous month
+          and this month. <code>disableFuture</code> blocks only the days after today; it never shifts the window by itself.
+        </p>
+        <Example src="features/DisableFutureWindow" title="Past-only window" />
+      </Section>
+      <Section title="Today">
+        <p>
+          Today comes from the <code>today</code> prop, or is computed in <code>timeZone</code> (default: the browser&apos;s zone) and refreshed after
+          midnight without moving the visible month. It drives <code>disablePast</code>/<code>disableFuture</code>, the marker and the label.{' '}
+          <code>highlightToday=&#123;false&#125;</code> hides the circle and the “Today” tooltip only.
+        </p>
+        <Example src="features/TodayMarker" title="Today marker and time zone" />
+      </Section>
       <PropsTable
         rows={[
           { name: 'minDate / maxDate', type: 'CalendarDate | null', description: 'Inclusive limits; also available as rules.' },
@@ -140,6 +155,13 @@ export function Orientation() {
       <Section title="Vertical">
         <Example src="features/Vertical" title="Vertical months" />
       </Section>
+      <Section title="Paged or continuous navigation">
+        <p>
+          <code>navigation=&quot;paged&quot;</code> (default) shows a window of <code>numberOfMonths</code> months; the arrows replace it by{' '}
+          <code>stepMonths</code> months, which suits horizontal layouts. <code>navigation=&quot;continuous&quot;</code> keeps a growing list that the user
+          scrolls, which suits vertical and mobile layouts; see <a href="#/load-more">Progressive months</a> for its controls.
+        </p>
+      </Section>
       <PropsTable
         rows={[
           { name: 'numberOfMonths', type: 'number', default: '1', description: 'Months in the window, in both orientations.' },
@@ -179,6 +201,21 @@ export function Responsive() {
         </p>
         <Example src="features/Responsive" title="Container-based layout" />
       </Section>
+      <Section title="wrap">
+        <p>The default. Nothing is hidden: months that do not fit move to a new row, so the calendar gets taller. Good for pages with vertical room.</p>
+        <Example src="features/OverflowWrap" title="overflow wrap" />
+      </Section>
+      <Section title="scroll">
+        <p>Keeps the height of one row; the months area scrolls horizontally inside the calendar. Good for toolbars or fixed-height panels.</p>
+        <Example src="features/OverflowScroll" title="overflow scroll" />
+      </Section>
+      <Section title="reduce-months">
+        <p>
+          Shows fewer months than requested while they do not fit and returns to the requested number when there is room. The reference month stays visible
+          (its position is clamped). Read the effective layout from <code>onLayoutChange</code>.
+        </p>
+        <Example src="features/OverflowReduce" title="overflow reduce-months" />
+      </Section>
     </Page>
   );
 }
@@ -200,23 +237,55 @@ export function DaySize() {
 
 export function LoadMore() {
   return (
-    <Page title="Progressive months" lead="Continuous navigation renders a growing list of months; “show more dates” adds the next ones.">
-      <Section title="Show more dates">
+    <Page title="Progressive months" lead="Continuous navigation renders a growing list of months instead of pages; months are added before or after on request.">
+      <Section title="How continuous navigation works">
         <p>
-          With <code>navigation=&quot;continuous&quot;</code> only <code>numberOfMonths</code> months render at first; each load adds <code>monthsPerLoad</code>{' '}
-          before or after, stopping at min/max. Scroll position is kept when earlier months are added, and keyboard focus is never lost.
+          With <code>navigation=&quot;continuous&quot;</code> the calendar first renders <code>numberOfMonths</code> months around the reference month. Each
+          load adds <code>monthsPerLoad</code> months (default: <code>numberOfMonths</code>) at the start or the end of the list, in the directions allowed by{' '}
+          <code>loadDirections</code>, and stops at the months containing <code>minDate</code>/<code>maxDate</code>. Adding earlier months keeps the scroll
+          position, so the dates under the user&apos;s finger do not jump. At most <code>maxRenderedMonths</code> (default 24) stay in the DOM: months are
+          dropped at the far end, never the one holding keyboard focus. Every addition calls <code>onLoadMore</code> and <code>onRenderedMonthsChange</code>{' '}
+          (load your data there); it does not change the reference month, so <code>onVisibleMonthChange</code> is not called. Paged navigation (the default)
+          instead replaces the window with previous/next arrows — see <a href="#/orientation">Orientation &amp; months</a>.
         </p>
-        <Example src="features/LoadMore" title="Show more dates" />
+      </Section>
+      <Section title="Default controls">
+        <p>Use the defaults when the localised “Show earlier dates” / “Show more dates” buttons fit your UI. Both directions are enabled here.</p>
+        <Example src="features/LoadMoreDefault" title="Default load-more buttons" />
+      </Section>
+      <Section title="Custom content: loadMoreLabels">
+        <p>
+          <code>loadMoreLabels=&#123;&#123; previous, next &#125;&#125;</code> takes any <code>ReactNode</code> and changes only what is inside the default
+          buttons. Behaviour, focus handling and accessibility stay the package&apos;s; prefer this whenever only the wording or an icon differs. The example
+          starts two months after the current month so that both directions have something to load.
+        </p>
+        <Example src="features/LoadMore" title="loadMoreLabels" />
+      </Section>
+      <Section title="A different control: renderLoadMore">
+        <p>
+          <code>renderLoadMore(&#123; direction, canLoad, loading, loadMore, label &#125;, ctx)</code> renders your own control in place of each button. Use it
+          when the control must look or behave differently (a link, a text when the limit is reached). You are responsible for its accessibility; if the
+          control disappears at a limit while focused, the calendar moves focus to the first newly added day.
+        </p>
+        <Example src="features/LoadMoreRender" title="renderLoadMore" />
+      </Section>
+      <Section title="Controls outside the list: loadMore=&quot;manual&quot;">
+        <p>
+          <code>loadMore=&quot;manual&quot;</code> renders no control in the months area; months are added only when you call{' '}
+          <code>loadMore(&apos;previous&apos; | &apos;next&apos;)</code> on the controller (<code>ref</code> or <code>ctx.actions</code> in a slot). Use it to
+          put the controls in a footer, a toolbar or a sticky bar. <code>loadMore=&quot;auto&quot;</code> loads when the end of the list scrolls into view.
+        </p>
+        <Example src="features/LoadMoreManual" title="Manual loading from the footer" />
       </Section>
       <PropsTable
         rows={[
-          { name: 'navigation', type: "'paged' | 'continuous'", default: "'paged'", description: 'Pages of N months, or a growing list.' },
-          { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Load on button click, automatically near the end of the scroll area, or only through ref.loadMore().' },
-          { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Where months can be added.' },
+          { name: 'navigation', type: "'paged' | 'continuous'", default: "'paged'", description: 'Pages of N months with arrows, or a growing list.' },
+          { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons in the list, automatic near the list end (IntersectionObserver), or only through the controller.' },
+          { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Ends of the list that can grow.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Months added per load.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'DOM bound; months are dropped at the far end (never the one holding focus).' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'DOM bound (never below numberOfMonths); far-end months are dropped.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Content of the default buttons.' },
-          { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'A completely different control.' },
+          { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Your own control per direction.' },
         ]}
       />
     </Page>
@@ -250,6 +319,14 @@ export function TooltipPage() {
           focus and tap; <code>persistent</code> ones show without interaction. By default rejected days show their reason and today shows “Today”.
         </p>
         <Example src="features/Tooltip" title="Reasons and hints" />
+      </Section>
+      <Section title="Viewport boundary and placement">
+        <p>
+          With the default <code>boundary=&quot;calendar&quot;</code> a tooltip stays inside its month, below the month header and weekday row, so it never
+          hides navigation. <code>boundary=&quot;viewport&quot;</code> lets it extend beyond the calendar (useful in narrow calendars) while staying in the
+          window. The preferred <code>placement</code> is tried first, then the opposite side, then the remaining sides; the text wraps rather than being cut.
+        </p>
+        <Example src="features/TooltipViewport" title="Viewport boundary, placed right" />
       </Section>
       <PropsTable
         caption="tooltip prop"
@@ -319,6 +396,14 @@ export function Loading() {
           <code>unknownDataPolicy: &apos;allow&apos;</code> changes that). An error shows a retry button that calls <code>onRetry(months)</code>.
         </p>
         <Example src="features/MonthData" title="Async availability" />
+      </Section>
+      <Section title="A visible loading indicator">
+        <p>
+          The default loading view is only the day skeleton plus a screen-reader status. <code>renderLoading</code> adds your own visible indicator; it is
+          called with <code>scope</code> <code>&apos;month&apos;</code>, <code>&apos;load-more&apos;</code> or <code>&apos;initial&apos;</code>, the affected{' '}
+          <code>months</code> and the localised text.
+        </p>
+        <Example src="features/LoadingIndicator" title="renderLoading for months" />
       </Section>
       <PropsTable
         rows={[

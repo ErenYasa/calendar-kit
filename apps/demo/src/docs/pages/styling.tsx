@@ -24,8 +24,11 @@ export function Styling() {
       />
       <Section title="Default theme">
         <p>
-          Import <code>calendar-kit/styles.css</code> once. It does not need <code>!important</code> overrides: state selectors use <code>:where()</code> to stay
-          low-specificity, and everything visual reads CSS variables set on the calendar root.
+          Import <code>calendar-kit/styles.css</code> once, before your own CSS. Everything visual reads CSS variables declared on the calendar root, so
+          most theming needs no selectors at all. No rule uses <code>!important</code>. Today, hover and the loading skeleton are wrapped in{' '}
+          <code>:where()</code> and add no specificity; selected, disabled, unavailable and range-endpoint styles are plain selectors of up to three classes
+          — to change those, use the variables (<code>--cal-accent</code>, <code>--cal-range</code>, …) or a selector of at least the same specificity. See the{' '}
+          <a href="#/styling-reference">Styling reference</a> for every variable, class and attribute.
         </p>
       </Section>
       <Section title="CSS variables">
@@ -66,7 +69,11 @@ export function Styling() {
         <Example src="styling/RenderDay" title="Custom day element" />
       </Section>
       <Section title="unstyled">
-        <p>No default class names are added. The months grid and day sizing stay inline, so layout keeps working; everything visual is yours.</p>
+        <p>
+          No default class names are added, so none of the default theme applies — including the week-row grids and day cell sizes. Only the months grid
+          (columns), the viewport&apos;s overflow and the sizing variables stay inline; you lay out weeks and days yourself (the example uses a 7-column grid).
+          Keep your day size consistent with <code>minDaySize</code>: the calendar uses it to decide how many months fit.
+        </p>
         <Example src="styling/Unstyled" title="Unstyled calendar" />
       </Section>
       <Note>
