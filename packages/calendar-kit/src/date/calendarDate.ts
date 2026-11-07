@@ -119,8 +119,17 @@ export function fromEpochDay(epochDay: number): CalendarDate {
   return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}` as CalendarDate;
 }
 
+const MIN_EPOCH_DAY = -719162; // 0001-01-01
+const MAX_EPOCH_DAY = 2932896; // 9999-12-31
+
+/**
+ * Adds whole days; a fractional amount is truncated toward zero (1.5 → 1, -1.5 → -1).
+ * The result is clamped to the supported range 0001-01-01…9999-12-31, like `addMonths`.
+ */
 export function addDays(date: CalendarDate, amount: number): CalendarDate {
-  return fromEpochDay(toEpochDay(date) + amount);
+  const target = toEpochDay(date) + Math.trunc(amount);
+  if (Number.isNaN(target)) throw new RangeError('Invalid amount');
+  return fromEpochDay(Math.min(MAX_EPOCH_DAY, Math.max(MIN_EPOCH_DAY, target)));
 }
 
 /** Calendar-day difference `b - a` (DST independent). */
@@ -207,8 +216,10 @@ function monthFromIndex(index: number): CalendarMonth {
   return `${pad(clampedYear, 4)}-${pad(clampedYear === year ? m : clampedYear === MIN_YEAR ? 1 : 12, 2)}` as CalendarMonth;
 }
 
+/** Adds whole months (fractions truncated toward zero), clamped to 0001-01…9999-12. */
 export function addMonthsToMonth(month: CalendarMonth, amount: number): CalendarMonth {
-  return monthFromIndex(monthIndex(month) + amount);
+  if (Number.isNaN(amount)) throw new RangeError('Invalid amount');
+  return monthFromIndex(monthIndex(month) + Math.trunc(amount));
 }
 
 /** Number of months from `a` to `b` (`b - a`). */
@@ -260,6 +271,8 @@ export function eachMonth(start: CalendarMonth, count: number): CalendarMonth[] 
  */
 export function getToday(options: { timeZone?: string; now?: Date | number } = {}): CalendarDate {
   const now = options.now === undefined ? new Date() : new Date(options.now);
+  // Same error with or without a time zone (Intl throws this for invalid instants).
+  if (Number.isNaN(now.getTime())) throw new RangeError('Invalid time value');
   if (!options.timeZone) {
     return createDate(now.getFullYear(), now.getMonth() + 1, now.getDate()) as CalendarDate;
   }

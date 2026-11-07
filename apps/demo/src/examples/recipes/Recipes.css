@@ -1,0 +1,22 @@
+.recipe-footer {
+  display: grid;
+  gap: 8px;
+  padding: 12px 4px 4px;
+  border-top: 1px solid #e3e5e8;
+}
+.recipe-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.recipe-row > :first-child {
+  margin-inline-end: auto;
+}
+.recipe-row button[aria-pressed='true'] {
+  background: #1f2328;
+  color: #fff;
+}
+.recipe-warn {
+  color: #b42318;
+}

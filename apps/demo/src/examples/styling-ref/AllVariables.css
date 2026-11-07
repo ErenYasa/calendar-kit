@@ -1,0 +1,26 @@
+/* Every public variable, each with a value you cannot miss.
+   Set on the calendar root (here through `className`); this file is loaded
+   after calendar-kit/styles.css, so on equal specificity these values win. */
+.sr-loud {
+  --cal-font: 'Courier New', monospace; /* all text, also copied to the tooltip */
+  --cal-color: #3b1f5c; /* day numbers, titles */
+  --cal-muted: #e599f7; /* weekday names, past/unavailable days */
+  --cal-bg: #fff9db; /* calendar background, gap inside the focus ring */
+  --cal-accent: #0b7285; /* selected circles, preview-end outline, badges */
+  --cal-accent-contrast: #fff3bf; /* number on a selected circle */
+  --cal-range: #99e9f2; /* range band, nav button hover, footer line */
+  --cal-preview: #ffd8a8; /* preview band while choosing an end */
+  --cal-hover: #f03e3e; /* outline of a hovered day */
+  --cal-focus: #2f9e44; /* keyboard focus ring */
+  --cal-today: #f76707; /* outline of today */
+  --cal-ring: #845ef7; /* half ring outside range start/end */
+  --cal-danger: #c2255c; /* month error message */
+  --cal-radius: 2px; /* range band corners at week/month edges */
+  --cal-circle: 0.7; /* circle size: 70% of the cell's shorter side */
+  --cal-tooltip-bg: #212529;
+  --cal-tooltip-color: #ffe066;
+  --cal-tooltip-shadow: 0 0 0 3px #ffe066;
+  --cal-tooltip-max-width: 160px;
+  padding: 8px;
+  border-radius: 12px;
+}

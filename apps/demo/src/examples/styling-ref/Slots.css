@@ -1,0 +1,58 @@
+.sl-header,
+.sl-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sl-header {
+  color: #0b7285;
+}
+.sl-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.sl-button {
+  margin-inline-start: 8px;
+  padding: 4px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.sl-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.sl-month-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.sl-index {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e7f5ff;
+  font-size: 0.75rem;
+}
+.sl-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sl-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #f08c00;
+}
+.sl-tip {
+  font-style: italic;
+}

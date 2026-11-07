@@ -1,0 +1,35 @@
+.controller-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.controller-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.controller-row > strong {
+  min-width: 88px;
+}
+.controller-result {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.controller-snapshot {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 12px;
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+.controller-snapshot dt {
+  font-weight: 600;
+}
+.controller-snapshot dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}

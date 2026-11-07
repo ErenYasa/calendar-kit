@@ -340,6 +340,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const endpointSourceRef = useRef<EventSource | null>(null);
   const loadMoreAreaRefs = useRef<Partial<Record<LoadDirection, HTMLElement | null>>>({});
   const pendingScrollRef = useRef<{ month: CalendarMonth; behavior: ScrollBehavior } | null>(null);
+  // The month a navigation asked a controlled parent to show (see the visibleMonth effect).
+  const navigatedRef = useRef<CalendarMonth | null>(null);
   const preserveRef = useRef<{ month: CalendarMonth; top: number } | null>(null);
   const lastLoadRef = useRef<{ direction: LoadDirection; months: CalendarMonth[] } | null>(null);
 
@@ -585,7 +587,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setInternalEndpoint({ value: next.activeEndpoint, key: selectionKey(next.selection) });
     const nextValidation = createSelectionEngine<TContext>({ rules: engineRules, state: next, today, context: props.ruleContext as TContext }).validate(next.selection);
     const nextPhase = getSelectionPhase(next.selection);
-    emit({
+    // F51: no change event when the value stays the same. A user activation
+    // that completes the same value again still reports selectionComplete
+    // (e.g. re-picking the selected date to close a popover); a programmatic
+    // select()/reset()/clear() of the same value reports nothing.
+    const unchanged = selectionKey(prevSel) === selectionKey(next.selection);
+    const userAction = source === 'pointer' || source === 'keyboard';
+    if (!unchanged) emit({
       type: 'change',
       instanceId,
       mode,
@@ -606,10 +614,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       (reason === 'select' || reason === 'complete' || reason === 'set') && nextPhase === 'complete'
         ? true
         : reason === 'toggle-on' && next.selection.mode === 'multiple' && rules.maxSelections != null && next.selection.value.length === rules.maxSelections;
-    if (completes && nextValidation.valid) emit({ type: 'selectionComplete', instanceId, mode, value: next.selection.value, source });
+    if (completes && nextValidation.valid && (!unchanged || userAction)) emit({ type: 'selectionComplete', instanceId, mode, value: next.selection.value, source });
     if (nextPhase === 'empty' && getSelectionPhase(prevSel) !== 'empty') emit({ type: 'selectionClear', instanceId, previous: prevSel.value, source });
 
     // Announcement
+    if (unchanged && !userAction) return;
     const s = next.selection;
     if (s.mode === 'range') {
       if (s.value.start && s.value.end) announce(messages.announceRange(shortDate(s.value.start), shortDate(s.value.end)));
@@ -676,7 +685,10 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       } else pendingScrollRef.current = { month: target, behavior };
     }
     if (!anchorProp) setAnchorState(target);
-    if (target !== referenceMonth || clamped)
+    else navigatedRef.current = target;
+    // F51: staying on the same month (e.g. next() at maxDate) is no change; the
+    // returned result still says the request was clamped.
+    if (target !== referenceMonth)
       emit({ type: 'visibleMonthChange', instanceId, previous: referenceMonth, month: target, source, reason, clamped });
     return { month: target, clamped };
   }
@@ -735,8 +747,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setList({ key: listKey, first, last });
     // The default control disappears at the min/max boundary; keep focus in the grid.
     const exhausted = dir === 'next' ? !!maxMonth && last >= maxMonth : !!minMonth && first <= minMonth;
-    // The control (default or custom renderLoadMore) is removed at the boundary;
-    // if focus was inside it, keep focus in the grid.
+    // At the boundary the default control is removed and a custom one shows its
+    // canLoad: false state; if focus was inside it, keep focus in the grid.
     const active = typeof document !== 'undefined' ? document.activeElement : null;
     const focusInControl = !!active && (active === control || !!loadMoreAreaRefs.current[dir]?.contains(active));
     if (exhausted && focusInControl && added[0]) {
@@ -768,6 +780,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
           else last = addMonthsToMonth(last, -(total - maxRenderedMonths));
         }
         setList({ key: listKey, first, last });
+        // Months added by moving focus past the list end are a load like any other.
+        const added = extendNext ? eachMonth(addMonthsToMonth(lastRendered, 1), diffMonths(lastRendered, tm)) : eachMonth(tm, diffMonths(tm, firstRendered));
+        emit({ type: 'loadMore', instanceId, direction: extendNext ? 'next' : 'previous', months: added, source, trigger: 'keyboard' });
       } else navigateTo(tm, source, 'keyboard');
     }
   }
@@ -861,7 +876,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const result = createSelectionEngine<TContext>({ rules: engineRules, state: nextState, today, context: props.ruleContext as TContext }).validate(nextSel);
     if (!result.valid && result.issue) {
       const message = formatIssue(result.issue, messages, helpers);
-      emit({ type: 'invalidSelection', instanceId, date: result.issue.date ?? ('' as CalendarDate), issue: result.issue, message, source: 'programmatic' });
+      emit({ type: 'invalidSelection', instanceId, date: result.issue.date ?? null, issue: result.issue, message, source: 'programmatic' });
       return result;
     }
     commit(nextState, 'set', null, 'programmatic');
@@ -1046,6 +1061,27 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     if (vp && vp.scrollHeight > vp.clientHeight) vp.scrollTop += delta;
     else window.scrollBy(0, delta);
   }, [renderedKey]);
+
+  // Continuous mode: a controlled visibleMonth change takes the goToMonth path
+  // (scroll to the month; an unrendered month rebuilds the bounded list around
+  // it and is scrolled to once rendered). The parent echoing a navigation the
+  // calendar itself started is skipped: that scroll is already under way.
+  const prevAnchorPropRef = useRef(anchorProp);
+  useIsomorphicLayoutEffect(() => {
+    const prev = prevAnchorPropRef.current;
+    prevAnchorPropRef.current = anchorProp;
+    const echo = navigatedRef.current;
+    navigatedRef.current = null;
+    if (!anchorProp || prev === anchorProp || echo === anchorProp || navigation !== 'continuous') return;
+    let target = anchorProp;
+    if (minMonth && target < minMonth) target = minMonth;
+    if (maxMonth && target > maxMonth) target = maxMonth;
+    const el = monthRefs.current.get(target);
+    if (el) {
+      pendingScrollRef.current = null;
+      scrollToMonthElement(el, 'auto');
+    } else pendingScrollRef.current = { month: target, behavior: 'auto' };
+  }, [anchorProp]);
 
   // Continuous mode: scroll to a programmatic target once it has rendered.
   useIsomorphicLayoutEffect(() => {
@@ -1470,16 +1506,19 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const loadingNode =
       loadingAdded &&
       props.renderLoading?.({ scope: 'load-more', months: lastLoadRef.current!.months, status: 'loading', messages: { loading: messages.loading } }, slotCtx);
+    // At the min/max boundary the default button is removed; a custom
+    // renderLoadMore is still called (with canLoad: false) so it can show a
+    // message or a disabled control.
     const ctl =
-      loadMode === 'button' && enabled
-        ? props.renderLoadMore
+      loadMode !== 'button'
+        ? null
+        : props.renderLoadMore
           ? props.renderLoadMore({ direction: dir, canLoad: enabled, loading: loadingAdded, loadMore: () => loadMore(dir, 'button'), label }, slotCtx)
-          : (
+          : enabled && (
               <button type="button" className={cx(p('load-more'), cn?.loadMore)} data-direction={dir} onClick={(e) => loadMore(dir, 'button', e.currentTarget)}>
                 {label}
               </button>
-            )
-        : null;
+            );
     return (
       <div
         ref={(el) => {

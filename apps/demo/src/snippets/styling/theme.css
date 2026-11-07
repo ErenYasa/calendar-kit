@@ -1,0 +1,31 @@
+/* 1. Theme: variables on the root. Same specificity as .cal-root,
+      so this file must load after calendar-kit/styles.css. */
+.booking {
+  --cal-accent: #0b7285;
+  --cal-range: #c5f6fa;
+  --cal-radius: 8px;
+}
+
+/* 2. State: your class + a data-* attribute. Recolour a state by setting
+      its variable on the cell; the button and the range band inherit it. */
+.booking-cell[data-range-end] {
+  --cal-accent: #e8590c;
+}
+
+/* 3. Your own properties. Default :where() states (today, hover, skeleton)
+      have low specificity, so a class + attribute beats them. */
+.booking-day[data-mod-weekend] {
+  color: #1971c2;
+}
+
+/* 4. The default disabled / unavailable / selected colours use
+      `.cal-day[data-…] .cal-day-button` (three classes). To change those
+      properties, either set the variable (--cal-muted, --cal-accent-contrast)
+      or match the specificity with a parent selector: */
+.booking .booking-cell[data-unavailable] .booking-day {
+  color: #adb5bd;
+}
+
+.booking-closed {
+  text-decoration: line-through;
+}

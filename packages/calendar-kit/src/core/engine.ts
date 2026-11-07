@@ -256,18 +256,16 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
     return null;
   }
 
-  function validateRangeBuiltIn(start: CalendarDate, end: CalendarDate): ValidationIssue | null {
+  function validateRangeBuiltIn(start: CalendarDate, end: CalendarDate, checkLength = true): ValidationIssue | null {
     if (end < start) return { code: 'end-before-start', date: end, params: { start } };
     const startIssue = checkStartBasic(start);
     if (startIssue) return startIssue;
     if (start === end && !allowSameDay) return { code: 'same-day', date: end };
-    const endIssue = start === end ? null : checkEnd(end);
+    // A same-day range ends on its start day: the end rules (canEnd,
+    // endWeekdays) apply to it as well.
+    const endIssue = checkEnd(end);
     if (endIssue) return endIssue;
-    if (start === end) {
-      const a = availability(end);
-      if (!a.canEnd) return dayIssue(end, 'end-not-allowed');
-    }
-    return lengthIssue(start, end) ?? firstInteriorIssue(start, end);
+    return (checkLength ? lengthIssue(start, end) : null) ?? firstInteriorIssue(start, end);
   }
 
   function custom(selection: Selection): ValidationIssue | null {
@@ -305,9 +303,16 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
     // Bounds, past/future and data problems are reported as such. "Minimum N"
     // only when a configured minimum above the natural one is the reason.
     if (lastIssue && /^(before-min|after-max|past|future|data-)/.test(lastIssue.code)) return lastIssue;
+    // "Minimum N" only when the minimum is what blocks: a shorter end would be
+    // valid without the length rule. Otherwise the real blocker (e.g. no day
+    // after the start allows a check-out) is reported.
     const naturalMin = semantics === 'inclusive' ? 1 : allowSameDay ? 0 : 1;
-    if (rules.minLength != null && rules.minLength > naturalMin)
-      return { code: 'min-length', date: start, params: { min: rules.minLength, unit }, ...(lastIssue?.dayReason ? { dayReason: lastIssue.dayReason } : {}) };
+    if (rules.minLength != null && rules.minLength > naturalMin) {
+      const naturalFirst = semantics === 'exclusive' ? naturalMin : naturalMin - 1;
+      for (let off = naturalFirst; off < firstEndOffset; off++)
+        if (!validateRangeBuiltIn(start, addDays(start, off), false))
+          return { code: 'min-length', date: start, params: { min: rules.minLength, unit }, ...(lastIssue?.dayReason ? { dayReason: lastIssue.dayReason } : {}) };
+    }
     return lastIssue;
   }
 
@@ -396,7 +401,8 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
       case 'readonly':
         return { kind: 'none', date, issue: null, next: state };
       case 'single':
-        if (sel.value === date) return { kind: 'none', date, issue: null, next: state };
+        // Activating the selected date selects it again (same value): the
+        // calendar reports selectionComplete but no change (F51).
         return planned('select', date, { mode: 'single', value: date }, checkStartBasic(date));
       case 'multiple': {
         if (sel.value.includes(date))

@@ -114,13 +114,15 @@ function DayCellImpl<TDayData>(props: DayCellProps<TDayData>) {
   const ctx: DayRenderContext<TDayData> = { day, data };
 
   const getDayProps = (user: DayPropsInput = {}): DayProps => {
-    const { ref: userRef, className, onClick, onKeyDown, onPointerEnter, onPointerLeave, onFocus, onBlur, onPointerDown, ...rest } = user;
+    const { ref: userRef, type, className, onClick, onKeyDown, onPointerEnter, onPointerLeave, onFocus, onBlur, onPointerDown, ...rest } = user;
     const describedBy = cx(descId, props.tooltipId ?? undefined, rest['aria-describedby']);
     return {
       ...dayDataAttributes(day),
       ...rest,
       ref: mergeRefs<HTMLElement>((el) => actions.registerRef(day.date, el), userRef),
-      type: 'button',
+      // `type: null` is for a non-button element: no `type` attribute, and
+      // role="button" unless you pass your own role.
+      ...(type === null ? { role: rest.role ?? 'button' } : { type: 'button' }),
       id: `${instanceId}-day-${day.date}`,
       tabIndex: props.tabbable ? 0 : -1,
       className: cx(p('day-button'), resolve(classNames?.dayButton, day), className),

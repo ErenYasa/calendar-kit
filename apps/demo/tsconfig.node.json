@@ -1,13 +1,9 @@
-// Vite config: runs in Node.
+// Runs in Node: Vite config, the docs code plugin and the tests (which also
+// import the examples, hence vite/client and the package paths).
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node", "vite/client"]
   },
-  "include": [
-    "vite.config.ts"
-  ]
+  "include": ["vite.config.ts", "code-plugin.ts", "test"]
 }

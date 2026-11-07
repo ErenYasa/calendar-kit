@@ -1,0 +1,14 @@
+.synced-dialog {
+  width: min(720px, calc(100vw - 32px));
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+}
+.synced-dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+.synced-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

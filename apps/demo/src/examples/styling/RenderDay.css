@@ -1,0 +1,13 @@
+/* Only layout and an extra tag: colours for selected, hover, focus and
+   disabled days come from the default theme. */
+.rd-day {
+  flex-direction: column;
+  gap: 1px;
+  font-weight: 600;
+  line-height: 1;
+}
+.rd-tag {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.75;
+}

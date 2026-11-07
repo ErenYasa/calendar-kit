@@ -1,6 +1,7 @@
 // Default theme. Import once: `import 'calendar-kit/styles.css'`.
-// Everything is driven by CSS custom properties on `.cal-root`; override them
-// on the root (or any ancestor) instead of fighting selectors.
+// Everything is driven by CSS custom properties declared on `.cal-root`;
+// override them on the root element itself (className/style), not on an
+// ancestor: the root's own declarations would win over inherited values.
 // Sizing variables (--cal-day-min-*, --cal-day-max, --cal-month-*) are set
 // inline by the component from its props.
 
@@ -177,9 +178,13 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
   cursor: pointer;
   touch-action: manipulation;
 
+  // The circle sits behind whatever the button contains (the button is a
+  // stacking context via position + z-index), so content rendered through
+  // renderDay/getDayProps without its own positioning stays visible.
   &::before {
     content: '';
     position: absolute;
+    z-index: -1;
     top: 50%;
     left: 50%;
     width: calc(var(--cal-circle) * 100cqmin);
@@ -233,7 +238,12 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
   color: var(--cal-accent-contrast);
 }
 
+// Out of the flow (top start corner, mirroring the badge) so an icon does not
+// push the number and label down and out of the circle at small cell sizes.
 .#{$p}-day-icon {
+  position: absolute;
+  top: calc(-14cqmin);
+  inset-inline-start: calc(-14cqmin);
   display: flex;
   font-size: clamp(9px, 20cqmin, 13px);
   line-height: 1;

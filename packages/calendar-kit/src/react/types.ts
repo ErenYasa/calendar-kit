@@ -62,7 +62,12 @@ export interface SelectionClearEvent<V = unknown> extends BaseEvent {
 }
 export interface InvalidSelectionEvent extends BaseEvent {
   type: 'invalidSelection';
-  date: CalendarDate;
+  /**
+   * The day the issue is about (`issue.date`). `null` when the issue has no
+   * day, e.g. `select()` rejected for `max-selections` or an invalid value.
+   * A rejected click always carries the clicked day.
+   */
+  date: CalendarDate | null;
   issue: ValidationIssue;
   message: string;
   source: EventSource;
@@ -287,6 +292,13 @@ export interface DayRenderContext<TDayData = unknown> {
 
 export type DayPropsInput = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
   ref?: Ref<HTMLElement>;
+  /**
+   * Omit (default) for a `<button>`: `type="button"` is set. Pass `null` when
+   * spreading onto another element (e.g. a `<div>`): no `type` attribute is
+   * written and `role="button"` is added unless you pass a `role`. Enter and
+   * Space then select the day (a native button does that itself).
+   */
+  type?: 'button' | null;
   [dataAttr: `data-${string}`]: string | number | boolean | undefined;
 };
 
@@ -407,6 +419,11 @@ export interface ErrorRenderProps {
 
 export interface LoadMoreRenderProps {
   direction: LoadDirection;
+  /**
+   * `false` at the minDate/maxDate boundary. The renderer is still called there
+   * (the default button is removed) so it can show a message or a disabled
+   * control; `loadMore()` does nothing while `canLoad` is false.
+   */
   canLoad: boolean;
   loading: boolean;
   loadMore: () => void;
@@ -437,7 +454,7 @@ export interface MonthHeaderRenderProps {
 export interface GoToMonthOptions {
   /** Move keyboard focus to the first day of the month. */
   focus?: boolean;
-  /** Scroll behaviour; `auto` respects `prefers-reduced-motion`. */
+  /** Scroll behaviour. `smooth` falls back to an instant jump under `prefers-reduced-motion`; `auto`/`instant` (and omitting it) jump. */
   behavior?: 'auto' | 'smooth' | 'instant';
 }
 

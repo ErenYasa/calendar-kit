@@ -9,16 +9,17 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız, 37 bulgu + 4 şüphe)
+## Sayım (çakışmasız: 51 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 54 madde; + 8 şüphe/gözlem)
 
 Her madde tam olarak bir grupta sayılır.
 
 | Grup | Sayı | Maddeler |
 |---|---|---|
-| Düzeltildi | 34 | F01–F26, F28, F30, F32–F37 |
-| Yalnızca belgelendi (davranış bilinçli olarak aynı) | 3 | F27, F29, F31 |
+| Düzeltildi | 49 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51 |
+| Yalnızca belgelendi (davranış bilinçli olarak aynı) | 5 | F27, F29, F31, F47, F50b |
 | Bekleyen (karar gerekli) | 0 | — |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
+| Gözlem (hata olarak kanıtlanmadı) | 4 | S05, S06, S07, S08 |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
 Bulgu listesi dışında, hiç yapılmamış ve **doğrulanmamış** ortam kontrolleri:
@@ -66,6 +67,7 @@ Ek (bulgu değil, kullanıcı isteği): `calendar-kit/client` (`'use client'`) v
 | F35 | 7 | `transform` içeren portal kabında tooltip kabın konumu kadar kayıyor; dar kapta genişliği kaba göre daralıyor (S01'den) | kanıtlandı (Chrome: +300 px kayma; demo: −332 px boşluk) | düzeltildi |
 | F36 | düşük | `calendar-kit/styles.css` export'unun tip bildirimi yok: TypeScript 6+ (`noUncheckedSideEffectImports` varsayılan açık) ortamı `*.css` bildirmiyorsa `import 'calendar-kit/styles.css'` TS2882 verir. Vite (`vite/client`) ve Next'te sorun yok | kanıtlandı (temiz tüketici, TS 7.0.2) | düzeltildi: `exports["./styles.css"].types` → `dist/styles.css.d.ts` (kullanıcı onayıyla) |
 | F37 | 6 | `loading` ile ilk yüklemede fareyle seçim (CSS katmanı) engelleniyor ama klavyeyle ve `ref.select()` ile veri bilinmeden seçim yapılabiliyordu | kanıtlandı (test; Chrome) | düzeltildi: tüm yollar aynı `data-loading` doğrulamasından geçer, odak/gezinti ayrı |
+| F38 | düşük | `DefaultDayData.icon` + `label` birlikteyken ikon sayının üstünde akışta durduğu için etiket aşağı itiliyor; minimum hücre boyutunda (40 px) etiket bugün/seçim halkasını aşıyor. Yalnızca etiket veya etiket + rozet sorunsuz | kanıtlandı (Chrome, docs "Day content" örneği: 2026-11-01 "★" + "$158", etiketin 2 köşesi halkanın dışında) | açık (dokümantasyon işinde paket davranışı değiştirilmedi) |
 | S01 | şüphe | `transform` içeren portal container'da tooltip kayması | yeniden üretildi → F35 | F35'e taşındı |
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | bu makinede yeniden üretilemedi (macOS overlay scrollbar, genişlik 0) | doğrulanamadı |
@@ -121,6 +123,12 @@ Next.js sayfaları (her biri `start` ve `dev` ile):
 
 ## Tarayıcı regresyon kontrolleri
 
+Not (2026-11-07, `feature/demo-documentation`): demo dokümantasyon sitesine dönüştü. Kontroller
+aynı doğrulamalarla yeni örneklere taşındı (ör. F30 → "Day content", F34 → "Progressive
+months", F35 → "Inline, modal & portal" içindeki `<dialog>`; F30 ikonlu günleri kapsamaz,
+bkz. F38). Siteye ait D01–D04 kontrolleri eklendi: tüm sayfalar/örnekler hatasız yüklenir,
+menü ve başlık odağı, mobil menü + 375 px'te yatay taşma yok, View code sekmeleri + kopyalama.
+
 `npm run test:browser` (playwright-core + sistem Chrome, demo üzerinde) jsdom'un
 doğrulayamadığı davranışları gerçek tarayıcıda kontrol eder: F06, F10, F15, F16, F17,
 F21, F30, F34, F35 (F34 ve F35 düzeltme öncesi/sonrası ayrıca çalıştırıldı: başarısız → geçti). Aynı betik `checkpoint/verification-start` koduna karşı çalıştırıldığında
@@ -150,3 +158,53 @@ altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da 
   parıltıyı durdurur. Sonraki `loading` arka plan yenilemesidir: görünüm, seçim
   ve odak korunur (`LoadingSnapshot.refreshing`). Testler: `regressions.test.tsx`
   (F16), `styles.test.ts` (F16 reduced motion), tarayıcı kontrolü F16.
+
+## F38–F51: değerlendirme (2026-11-08)
+
+Her madde önce yeniden üretildi (vitest; görsel olanlar gerçek Chrome). Durumlar:
+**düzeltildi** (kanıtlanmış hata, mevcut sözleşme korunarak, regresyon testiyle),
+**bug değil**, **karar gerekiyor** (davranış sözleşmesi değişikliği; seçenekler aşağıda).
+
+| ID | Tetikleme senaryosu | Beklenen | Gerçek (düzeltme öncesi) | Etki | Test | Durum |
+|---|---|---|---|---|---|---|
+| F38 | `getDayData` → `{ icon, label }`, 40 px hücre | etiket daire içinde | ikon akışta, etiket 2 köşesiyle halkanın dışında | görsel çakışma | `styles.test.ts` F38, tarayıcı F30 (ikonlu günler dahil, ikon hücre içinde) | düzeltildi |
+| F39a | `addDays(d, 1.5)`, `addMonths(d, 1.5)` | geçerli tarih | `"2026-01-2.5"`, `"2026-2.5-28"` | geçersiz `CalendarDate` | `date-arithmetic.test.tsx` | düzeltildi (sıfıra doğru kırpma) |
+| F39b | `addDays('9999-12-31', 1)` | en yakın sınır (`addMonths` gibi) | `"10000-01-01"`; `addMonths` ise 9999-12'de sıkıştırır | geçersiz `CalendarDate` | `date-arithmetic.test.tsx` | düzeltildi (karar: 0001-01-01…9999-12-31'e sıkıştır; `NaN` → `RangeError`) |
+| F40 | `getToday({ now: NaN })`, `fromJSDate(new Date('x'))` | tek tip hata | `timeZone` yokken `null` (tip `CalendarDate`), varken `RangeError` | null sızıntısı | `date-arithmetic.test.tsx` | düzeltildi (her iki yolda `RangeError`) |
+| F41 | `mergeMessages(en, { today: undefined })` | temel metin kalır | metin `undefined` olur | boş UI metni | `messages-merge.test.tsx` | düzeltildi |
+| F42 | de/fr/es/it/nl/ar paketleri | tam çeviri | 15 sebep + 3 gün etiketi İngilizce, Arapça çoğul tek biçim | karışık dil | `i18n.test.ts` (paketler tiplerle de zorunlu) | düzeltildi |
+| F43 | `stayRules({ availableWeekdays: [5, 6] })`, Cuma → Pazar | 2 gece geçerli (hariç bitiş: Pazar sabahı çıkış, gece değil; adapter belgesi "diğer günlerin geceleri kapalı") | Pazar `closed/out-of-schedule` ile reddedildi | geçerli konaklama reddi | `stay-weekdays.test.tsx` | düzeltildi (yalnız adapter; çekirdek ve dahil bitişli aralıklar aynı) |
+| F44 | `minNights: 2`, başlangıçtan sonra hiçbir gün çıkışa izin vermiyor | gerçek sebep (`end-not-allowed`, `check-in-only`) | "Minimum 2 gece" | yanlış sebep metni | `engine-reasons.test.tsx` | düzeltildi |
+| F45 | `startWeekdays: [1], endWeekdays: [5]`, Pazartesi aynı gün aralığı | `weekday-end` reddi | geçerli sayıldı | kurala aykırı seçim | `engine-reasons.test.tsx` | düzeltildi |
+| F46 | `renderLoadMore` sınırda | `canLoad: false` ile çağrı | sınırda hiç çağrılmıyor, `canLoad` hep `true` | alan işlevsiz | `decisions.test.tsx`, F20 testi | düzeltildi (karar: sınırda `canLoad: false` ile çağrılır; varsayılan düğme yine kaldırılır) |
+| F47 | `loadDirections="next"`, `ref.loadMore('previous')` | controller yönden bağımsız | önceki ay eklendi | sözleşme belirsiz | — | belgelendi (karar: `loadDirections` yalnız yerleşik kontrol/otomatik yükleme; controller bağımsız) |
+| F48 | continuous, controlled `visibleMonth` zaten render edilmiş aya | `goToMonth` gibi kaydırma? | liste yeni aydan yeniden kuruluyor (takılma/kopma yok) | tutarsızlık | `decisions.test.tsx` | düzeltildi (karar: `goToMonth` yolu; prop değişikliği olay göndermez, yansıyan gezinme iki kez kaydırmaz) |
+| F49 | `renderDay` + `<div {...getDayProps()}>` | geçersiz öznitelik yok | `type="button"` div'e yazılıyor | HTML geçersizliği (işlev etkilenmiyor) | `decisions.test.tsx` | düzeltildi (karar: `getDayProps({ type: null })`, `role="button"`; varsayılan `type="button"`) |
+| F50a | continuous, son günde `ArrowRight` | `onLoadMore` (`trigger: 'keyboard'`) | yalnız `renderedMonthsChange` | veri yükleme tetiklenmiyor | `keyboard-loadmore.test.tsx` | düzeltildi |
+| F50b | `EventSource` `'resize'`/`'scroll'` | — | hiç gönderilmiyor | yalnız tip | — | belgelendi (karar: union aynı; olay bazında gerçek kaynaklar belgelendi, `resize`/`scroll` ayrılmış) |
+| F50c | `ref.select()` tarihsiz sorunla reddedilir | ? | `onInvalidSelection` `date: ''` | geçersiz tarih alanı | `decisions.test.tsx` | düzeltildi (karar: `issue.date` ya da `null`; tip `CalendarDate \| null`) |
+| F51 | `select(aynıDeğer)`, eşit değerde `reset()`, sınırda `next()` | değişiklik yoksa olay yok? | `change`/`selectionComplete`, `change`, `visibleMonthChange` (aynı ay, `clamped: true`) | gereksiz olay | `decisions.test.tsx` | düzeltildi (karar: değişiklik yoksa `change`/`visibleMonthChange` yok; programatik aynı değer completion üretmez; kullanıcı yeniden tamamlaması `selectionComplete` üretir; `invalidSelection`/`dateClick` bastırılmaz) |
+
+Kalan açık: **0**. Kararlar 2026-11-07'de verildi (aşağıdaki seçenekler kayıt için duruyor).
+
+### Karar seçenekleri
+
+- **F39b** (yıl aralığı dışı): (a) belgelendiği gibi tanımsız bırak; (b) `addMonths` gibi 0001-01-01/9999-12-31'e sıkıştır; (c) `RangeError` fırlat. Öneri: (b) — iki fonksiyon tutarlı olur, hiçbir zaman geçersiz metin üretilmez.
+- **F46** (`canLoad`): (a) sınırda da `renderLoadMore({ canLoad: false })` çağır (özel kontroller sınırda görünür hale gelir — davranış değişikliği); (b) mevcut davranışı koru, `canLoad`'ı kullanımdan kaldırılmış say. Öneri: (a) — "tarih kalmadı" gibi bir metin göstermenin tek yolu.
+- **F47** (`ref.loadMore` ve `loadDirections`): (a) controller da `loadDirections`'a uysun (izin yoksa işlem yapmasın); (b) `loadDirections` yalnız yerleşik kontrolleri belirlesin, controller bağımsız olsun (mevcut; belgelendi). Öneri: (b).
+- **F48** (continuous + controlled `visibleMonth`): (a) ay zaten render edilmişse `goToMonth` gibi kaydır; (b) yeniden kurmayı koru ve belgele. (a)'da ebeveyn `onVisibleMonthChange`'i yansıtıyorsa geri besleme riski var; öneri: (a), kaynak `prop` iken yalnız gerçekten değişen ay için.
+- **F49** (`type="button"`): (a) `getDayProps({ type: null })` ile kaldırılabilsin (küçük API eklemesi); (b) belge: `renderDay`'de `<button>` kullanın. Öneri: (a).
+- **F50b**: (a) `'resize'`/`'scroll'`u `EventSource`'tan çıkar (tip kırıcı, sürüm notu); (b) ayrılmış değer olarak bırak. **F50c**: (a) `InvalidSelectionEvent.date` `CalendarDate | null` olsun (tip kırıcı); (b) seçimdeki ilgili tarihe (tekil değer / aralık başlangıcı) düş.
+- **F51**: (a) değişiklik yoksa olay gönderme (`select` aynı değer, eşit `reset`, sınırda `next`/`previous`); (b) mevcut davranışı koru ve belgele (`clamped: true` sınırı bildirir). Öneri: (a), `next`/`previous` için kesin; `select` için `selectionComplete`'in "onay" olarak kullanıldığı uygulamalar varsa (b).
+
+### Dokümantasyon sırasında görülen diğer gözlemler (hata olarak kanıtlanmadı)
+
+- S05: Aynı JS görevinde iki `element.click()` ilkini kaybediyor (aktivasyon son render edilen durumu okur). Gerçek kullanıcı etkileşiminde oluşmaz; betikler/testler için not.
+- S06: Her gün tıklaması bir `update` ve bir `nested-update` commit'i üretiyor (layout effect'ten durum güncellemesi). Performans ölçümünde bir karenin altında; azaltılabilir mi incelenmeli.
+- S07: `element.click()` (detail 0) `source: 'keyboard'` olarak raporlanıyor; Enter/Space ile aynı tıklama türü olduğundan beklenen davranış.
+- S08 (açık gözlem, yeniden üretilemedi): 2026-11-07'de `npm run test:browser` ilk çalıştırmasında D01, React'in "change in the order of Hooks" console hatasıyla bir kez başarısız oldu. Bileşen adı çıktıda yoktu. O sırada başka bir ajan paket kaynaklarını (`Calendar.tsx`, `engine.ts`) düzenliyordu ve kontrol Vite dev sunucusunda (HMR açık) çalışıyordu; hiçbir şey değişmeden yapılan ikinci çalıştırma 17/17 geçti. Araştırma (yeniden üretilemedi):
+  - Statik denetim: `packages/calendar-kit/src` ve `apps/demo/src` içindeki 140 dosya, 207 bileşen/hook, 282 hook çağrısı; koşul, döngü, iç içe fonksiyon veya erken `return` sonrasında hook yok (denetim betiği bilinen hatalı örneklerin dördünü de yakaladı).
+  - Temiz production build (`vite build` + `vite preview`, HMR yok) ve düzenleme yapılmayan yeni bir dev sunucusu: her biri 3 tur, 1440×900 ve 375×812, farklı sayfa sıralarıyla 117 sayfa ziyareti, 582 gün tıklaması, 909 tuş, 123 kontrol değişikliği (Lab'ın bütün seçenekleri dahil), popover/dialog tetikleyicileri; `pageerror` ve console hata/uyarısı yok (yalnız `/favicon.ico` 404).
+  - HMR denemesi: dev sunucusu açıkken `Calendar.tsx`'e bileşenin ortasına `useRef` ve ayrı bir layout effect eklendi; React Refresh güncellemeyi aynı belgede hatasız uyguladı.
+  - `npm run test:browser` düzenleme olmadan üç kez art arda: 17/17, hook uyarısı yok.
+  Yeniden görülürse: tam console çıktısını (bileşen yığını) ve o anda değişen dosyaları kaydedin.

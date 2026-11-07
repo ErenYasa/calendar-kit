@@ -1,0 +1,12 @@
+.popover {
+  position: fixed;
+  z-index: 50;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 16px));
+  overflow: auto;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #d0d4d9;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
