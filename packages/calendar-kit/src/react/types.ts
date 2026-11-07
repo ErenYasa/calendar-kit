@@ -287,6 +287,13 @@ export interface DayRenderContext<TDayData = unknown> {
 
 export type DayPropsInput = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
   ref?: Ref<HTMLElement>;
+  /**
+   * Omit (default) for a `<button>`: `type="button"` is set. Pass `null` when
+   * spreading onto another element (e.g. a `<div>`): no `type` attribute is
+   * written and `role="button"` is added unless you pass a `role`. Enter and
+   * Space then select the day (a native button does that itself).
+   */
+  type?: 'button' | null;
   [dataAttr: `data-${string}`]: string | number | boolean | undefined;
 };
 

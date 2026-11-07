@@ -90,3 +90,42 @@ describe('F48 continuous + controlled visibleMonth takes the goToMonth path', ()
     expect(scrolled).toEqual(['2026-12']);
   });
 });
+
+describe('F49 getDayProps({ type: null }) for a non-button day element', () => {
+  const renderDivDays = (onChange: (v: unknown) => void, role?: string) =>
+    render(
+      <Calendar
+        mode="single"
+        today={TODAY}
+        onChange={onChange}
+        renderDay={({ getDayProps, defaultContent }) => <div {...getDayProps({ type: null, role })}>{defaultContent}</div>}
+      />,
+    );
+  it('writes no type attribute, adds role="button" and keeps roving focus', () => {
+    const { container } = renderDivDays(() => {});
+    const el = container.querySelector<HTMLElement>('div[data-date="2026-11-10"][id]')!;
+    expect(el.tagName).toBe('DIV');
+    expect(el.hasAttribute('type')).toBe(false);
+    expect(el.getAttribute('role')).toBe('button');
+    expect(container.querySelectorAll('[id][data-date][tabindex="0"]').length).toBe(1);
+    act(() => el.focus());
+    fireEvent.keyDown(el, { key: 'ArrowRight' });
+    expect(document.activeElement?.getAttribute('data-date')).toBe('2026-11-11');
+  });
+  it('Enter and Space select the day', () => {
+    const values: unknown[] = [];
+    const { container } = renderDivDays((v) => values.push(v));
+    const el = (date: string) => container.querySelector<HTMLElement>(`div[data-date="${date}"][id]`)!;
+    act(() => el('2026-11-10').focus());
+    fireEvent.keyDown(el('2026-11-10'), { key: 'Enter' });
+    fireEvent.keyDown(el('2026-11-10'), { key: 'ArrowRight' });
+    fireEvent.keyDown(el('2026-11-11'), { key: ' ' });
+    expect(values).toEqual(['2026-11-10', '2026-11-11']);
+  });
+  it('a role you pass wins; the default getDayProps() still writes type="button"', () => {
+    const { container } = renderDivDays(() => {}, 'option');
+    expect(container.querySelector('div[data-date="2026-11-10"][id]')!.getAttribute('role')).toBe('option');
+    const { container: c2 } = render(<Calendar mode="single" today={TODAY} renderDay={({ getDayProps, defaultContent }) => <button {...getDayProps()}>{defaultContent}</button>} />);
+    expect(c2.querySelector('button[data-date="2026-11-10"]')!.getAttribute('type')).toBe('button');
+  });
+});
