@@ -15,9 +15,9 @@ Her madde tam olarak bir grupta sayılır.
 
 | Grup | Sayı | Maddeler |
 |---|---|---|
-| Düzeltildi | 43 | F01–F26, F28, F30, F32–F38, F39a, F40–F45, F50a |
-| Yalnızca belgelendi (davranış bilinçli olarak aynı) | 3 | F27, F29, F31 |
-| Bekleyen (karar gerekli) | 8 | F39b, F46, F47, F48, F49, F50b, F50c, F51 |
+| Düzeltildi | 49 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51 |
+| Yalnızca belgelendi (davranış bilinçli olarak aynı) | 5 | F27, F29, F31, F47, F50b |
+| Bekleyen (karar gerekli) | 0 | — |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
 | Gözlem (hata olarak kanıtlanmadı) | 3 | S05, S06, S07 |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
@@ -169,23 +169,23 @@ Her madde önce yeniden üretildi (vitest; görsel olanlar gerçek Chrome). Duru
 |---|---|---|---|---|---|---|
 | F38 | `getDayData` → `{ icon, label }`, 40 px hücre | etiket daire içinde | ikon akışta, etiket 2 köşesiyle halkanın dışında | görsel çakışma | `styles.test.ts` F38, tarayıcı F30 (ikonlu günler dahil, ikon hücre içinde) | düzeltildi |
 | F39a | `addDays(d, 1.5)`, `addMonths(d, 1.5)` | geçerli tarih | `"2026-01-2.5"`, `"2026-2.5-28"` | geçersiz `CalendarDate` | `date-arithmetic.test.tsx` | düzeltildi (sıfıra doğru kırpma) |
-| F39b | `addDays('9999-12-31', 1)` | ? | `"10000-01-01"`; `addMonths` ise 9999-12'de sıkıştırır | sözleşme: 0001–9999 dışı tanımsız (F31) | — | karar gerekiyor |
+| F39b | `addDays('9999-12-31', 1)` | en yakın sınır (`addMonths` gibi) | `"10000-01-01"`; `addMonths` ise 9999-12'de sıkıştırır | geçersiz `CalendarDate` | `date-arithmetic.test.tsx` | düzeltildi (karar: 0001-01-01…9999-12-31'e sıkıştır; `NaN` → `RangeError`) |
 | F40 | `getToday({ now: NaN })`, `fromJSDate(new Date('x'))` | tek tip hata | `timeZone` yokken `null` (tip `CalendarDate`), varken `RangeError` | null sızıntısı | `date-arithmetic.test.tsx` | düzeltildi (her iki yolda `RangeError`) |
 | F41 | `mergeMessages(en, { today: undefined })` | temel metin kalır | metin `undefined` olur | boş UI metni | `messages-merge.test.tsx` | düzeltildi |
 | F42 | de/fr/es/it/nl/ar paketleri | tam çeviri | 15 sebep + 3 gün etiketi İngilizce, Arapça çoğul tek biçim | karışık dil | `i18n.test.ts` (paketler tiplerle de zorunlu) | düzeltildi |
 | F43 | `stayRules({ availableWeekdays: [5, 6] })`, Cuma → Pazar | 2 gece geçerli (hariç bitiş: Pazar sabahı çıkış, gece değil; adapter belgesi "diğer günlerin geceleri kapalı") | Pazar `closed/out-of-schedule` ile reddedildi | geçerli konaklama reddi | `stay-weekdays.test.tsx` | düzeltildi (yalnız adapter; çekirdek ve dahil bitişli aralıklar aynı) |
 | F44 | `minNights: 2`, başlangıçtan sonra hiçbir gün çıkışa izin vermiyor | gerçek sebep (`end-not-allowed`, `check-in-only`) | "Minimum 2 gece" | yanlış sebep metni | `engine-reasons.test.tsx` | düzeltildi |
 | F45 | `startWeekdays: [1], endWeekdays: [5]`, Pazartesi aynı gün aralığı | `weekday-end` reddi | geçerli sayıldı | kurala aykırı seçim | `engine-reasons.test.tsx` | düzeltildi |
-| F46 | `renderLoadMore` sınırda | `canLoad: false` ile çağrı | sınırda hiç çağrılmıyor, `canLoad` hep `true` | alan işlevsiz | sonda (vitest) | karar gerekiyor |
-| F47 | `loadDirections="next"`, `ref.loadMore('previous')` | ? | önceki ay eklendi | sözleşme belirsiz | sonda (vitest) | karar gerekiyor |
-| F48 | continuous, controlled `visibleMonth` zaten render edilmiş aya | `goToMonth` gibi kaydırma? | liste yeni aydan yeniden kuruluyor (takılma/kopma yok) | tutarsızlık | sonda (vitest) | karar gerekiyor |
-| F49 | `renderDay` + `<div {...getDayProps()}>` | geçersiz öznitelik yok | `type="button"` div'e yazılıyor | HTML geçersizliği (işlev etkilenmiyor) | sonda (vitest) | karar gerekiyor (API ekleme gerekir) |
+| F46 | `renderLoadMore` sınırda | `canLoad: false` ile çağrı | sınırda hiç çağrılmıyor, `canLoad` hep `true` | alan işlevsiz | `decisions.test.tsx`, F20 testi | düzeltildi (karar: sınırda `canLoad: false` ile çağrılır; varsayılan düğme yine kaldırılır) |
+| F47 | `loadDirections="next"`, `ref.loadMore('previous')` | controller yönden bağımsız | önceki ay eklendi | sözleşme belirsiz | — | belgelendi (karar: `loadDirections` yalnız yerleşik kontrol/otomatik yükleme; controller bağımsız) |
+| F48 | continuous, controlled `visibleMonth` zaten render edilmiş aya | `goToMonth` gibi kaydırma? | liste yeni aydan yeniden kuruluyor (takılma/kopma yok) | tutarsızlık | `decisions.test.tsx` | düzeltildi (karar: `goToMonth` yolu; prop değişikliği olay göndermez, yansıyan gezinme iki kez kaydırmaz) |
+| F49 | `renderDay` + `<div {...getDayProps()}>` | geçersiz öznitelik yok | `type="button"` div'e yazılıyor | HTML geçersizliği (işlev etkilenmiyor) | `decisions.test.tsx` | düzeltildi (karar: `getDayProps({ type: null })`, `role="button"`; varsayılan `type="button"`) |
 | F50a | continuous, son günde `ArrowRight` | `onLoadMore` (`trigger: 'keyboard'`) | yalnız `renderedMonthsChange` | veri yükleme tetiklenmiyor | `keyboard-loadmore.test.tsx` | düzeltildi |
-| F50b | `EventSource` `'resize'`/`'scroll'` | — | hiç gönderilmiyor | yalnız tip | — | karar gerekiyor (tipten çıkarmak kırıcı) |
-| F50c | `ref.select()` tarihsiz sorunla reddedilir | ? | `onInvalidSelection` `date: ''` | geçersiz tarih alanı | sonda (vitest) | karar gerekiyor (tip değişikliği) |
-| F51 | `select(aynıDeğer)`, eşit değerde `reset()`, sınırda `next()` | değişiklik yoksa olay yok? | `change`/`selectionComplete`, `change`, `visibleMonthChange` (aynı ay, `clamped: true`) | gereksiz olay | sonda (vitest) | karar gerekiyor |
+| F50b | `EventSource` `'resize'`/`'scroll'` | — | hiç gönderilmiyor | yalnız tip | — | belgelendi (karar: union aynı; olay bazında gerçek kaynaklar belgelendi, `resize`/`scroll` ayrılmış) |
+| F50c | `ref.select()` tarihsiz sorunla reddedilir | ? | `onInvalidSelection` `date: ''` | geçersiz tarih alanı | `decisions.test.tsx` | düzeltildi (karar: `issue.date` ya da `null`; tip `CalendarDate \| null`) |
+| F51 | `select(aynıDeğer)`, eşit değerde `reset()`, sınırda `next()` | değişiklik yoksa olay yok? | `change`/`selectionComplete`, `change`, `visibleMonthChange` (aynı ay, `clamped: true`) | gereksiz olay | `decisions.test.tsx` | düzeltildi (karar: değişiklik yoksa `change`/`visibleMonthChange` yok; programatik aynı değer completion üretmez; kullanıcı yeniden tamamlaması `selectionComplete` üretir; `invalidSelection`/`dateClick` bastırılmaz) |
 
-Kalan açık: **8** (F39b, F46, F47, F48, F49, F50b, F50c, F51) — hepsi karar gerektiriyor.
+Kalan açık: **0**. Kararlar 2026-11-07'de verildi (aşağıdaki seçenekler kayıt için duruyor).
 
 ### Karar seçenekleri
 
