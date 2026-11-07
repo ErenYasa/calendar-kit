@@ -8,6 +8,9 @@ const concepts = from(() => import('./pages/concepts'));
 const features = from(() => import('./pages/features'));
 const api = from(() => import('./pages/api'));
 const styling = from(() => import('./pages/styling'));
+const rules = from(() => import('./pages/rules'));
+const helpers = from(() => import('./pages/helpers'));
+const events = from(() => import('./pages/events'));
 const recipes = from(() => import('./pages/recipes'));
 const project = from(() => import('./pages/project'));
 
@@ -60,13 +63,18 @@ export const NAV: NavGroup[] = [
     title: 'API reference',
     pages: [
       p('api-props', 'Calendar props', api('PropsReference')),
-      p('api-events', 'Callbacks & events', api('EventsReference')),
-      p('api-controller', 'Controller (ref)', api('ControllerReference')),
-      p('api-rules', 'Rules, adapters & helpers', api('RulesReference')),
+      p('api-events', 'Callbacks & events', events('EventsReference')),
+      p('api-controller', 'Controller (ref)', events('ControllerReference')),
+      p('api-rules', 'Rules & adapters', rules('RulesReference')),
+      p('api-dates', 'Date helpers', helpers('DateHelpers')),
+      p('api-messages', 'Messages & formatting', helpers('MessagesReference')),
       p('api-types', 'Types', api('TypesReference')),
     ],
   },
-  { title: 'Styling', pages: [p('styling', 'Styling & Customization', styling('Styling'))] },
+  {
+    title: 'Styling',
+    pages: [p('styling', 'Styling & Customization', styling('Styling')), p('styling-reference', 'Styling reference', styling('StylingReference'))],
+  },
   {
     title: 'Recipes',
     pages: [
