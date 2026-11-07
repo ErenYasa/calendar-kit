@@ -129,3 +129,15 @@ describe('F49 getDayProps({ type: null }) for a non-button day element', () => {
     expect(c2.querySelector('button[data-date="2026-11-10"]')!.getAttribute('type')).toBe('button');
   });
 });
+
+describe('F50 invalidSelection.date for a rejected select()', () => {
+  it('is null (not an empty string) when the issue has no day, and the issue day otherwise', async () => {
+    const { createRef } = await import('react');
+    const ref = createRef<import('../src').CalendarController>();
+    const dates: unknown[] = [];
+    render(<Calendar ref={ref} mode="multiple" today={TODAY} rules={{ maxSelections: 1 }} minDate={d('2026-11-05')} onInvalidSelection={(e) => dates.push(e.date)} />);
+    act(() => void ref.current!.select([d('2026-11-10'), d('2026-11-11')]));
+    act(() => void ref.current!.select([d('2026-11-01')]));
+    expect(dates).toEqual([null, '2026-11-01']);
+  });
+});

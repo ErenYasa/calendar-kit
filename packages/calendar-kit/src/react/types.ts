@@ -62,7 +62,12 @@ export interface SelectionClearEvent<V = unknown> extends BaseEvent {
 }
 export interface InvalidSelectionEvent extends BaseEvent {
   type: 'invalidSelection';
-  date: CalendarDate;
+  /**
+   * The day the issue is about (`issue.date`). `null` when the issue has no
+   * day, e.g. `select()` rejected for `max-selections` or an invalid value.
+   * A rejected click always carries the clicked day.
+   */
+  date: CalendarDate | null;
   issue: ValidationIssue;
   message: string;
   source: EventSource;

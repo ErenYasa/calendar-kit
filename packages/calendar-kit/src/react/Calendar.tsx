@@ -867,7 +867,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const result = createSelectionEngine<TContext>({ rules: engineRules, state: nextState, today, context: props.ruleContext as TContext }).validate(nextSel);
     if (!result.valid && result.issue) {
       const message = formatIssue(result.issue, messages, helpers);
-      emit({ type: 'invalidSelection', instanceId, date: result.issue.date ?? ('' as CalendarDate), issue: result.issue, message, source: 'programmatic' });
+      emit({ type: 'invalidSelection', instanceId, date: result.issue.date ?? null, issue: result.issue, message, source: 'programmatic' });
       return result;
     }
     commit(nextState, 'set', null, 'programmatic');
