@@ -3,7 +3,8 @@
  * (nights, check-in-only, …) into the generic `SelectionRules` of the core.
  * The core itself never knows about stays, boats or events.
  */
-import { type CalendarDate, type Weekday, addDays } from '../date/calendarDate.js';
+import { type CalendarDate, type Weekday, addDays, getWeekday } from '../date/calendarDate.js';
+import { combineRules } from '../core/rules.js';
 import type { DayAvailability, RuleContext, SelectionRules } from '../core/types.js';
 
 type BaseRules<TContext> = Pick<
@@ -35,7 +36,12 @@ export interface StayRulesOptions<TContext = unknown> extends BaseRules<TContext
   allowSameDay?: boolean;
   checkInWeekdays?: readonly Weekday[];
   checkOutWeekdays?: readonly Weekday[];
-  /** Weekdays with service; nights on other weekdays are closed (schedule rule). */
+  /**
+   * Weekdays with service (schedule rule): nights starting on other weekdays
+   * cannot be booked (no check-in, no night inside a stay), but the morning
+   * after the last available night is a valid check-out (exclusive end).
+   * Example: `[5, 6]` (Friday and Saturday nights) allows Friday → Sunday.
+   */
   availableWeekdays?: readonly Weekday[];
   getDayStatus?: (date: CalendarDate, ctx: RuleContext<TContext>) => StayDayStatus | null | undefined;
 }
@@ -61,7 +67,6 @@ export function stayRules<TContext = unknown>(options: StayRulesOptions<TContext
   if (fixedNights != null) rules.fixedLength = fixedNights;
   if (checkInWeekdays) rules.startWeekdays = checkInWeekdays;
   if (checkOutWeekdays) rules.endWeekdays = checkOutWeekdays;
-  if (availableWeekdays) rules.availableWeekdays = availableWeekdays;
   if (getDayStatus) {
     rules.getDayAvailability = (date, ctx): DayAvailability | undefined => {
       const status = getDayStatus(date, ctx) ?? 'available';
@@ -83,7 +88,15 @@ export function stayRules<TContext = unknown>(options: StayRulesOptions<TContext
       }
     };
   }
-  return rules;
+  if (!availableWeekdays) return rules;
+  // Not `rules.availableWeekdays` (that closes the whole day, including the
+  // check-out morning): only the nights are restricted. A separate set so that
+  // relaxSchedule relaxes it independently of real availability.
+  const nights: SelectionRules<TContext> = {
+    getDayAvailability: (date) =>
+      availableWeekdays.includes(getWeekday(date)) ? undefined : { canStart: false, canPassThrough: false, reason: 'out-of-schedule', schedule: true },
+  };
+  return combineRules(rules, nights);
 }
 
 // --------------------------------------------------------- inclusive days
