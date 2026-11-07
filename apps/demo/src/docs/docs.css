@@ -354,11 +354,27 @@ body {
 }
 .docs-table tbody th {
   font-weight: 400;
-  white-space: nowrap;
+}
+/* The name/prop column and the type column: wrap long lists (e.g. several type
+   names separated by commas) instead of squeezing the other columns. Up to
+   ~500px on desktop, less when the table is narrower. */
+/* Table cells ignore max-width, so the limit sits on a wrapper inside them. */
+.docs-cell-limit {
+  max-width: 500px;
+}
+/* Inline code in table cells wraps at spaces; a name longer than the cell is
+   broken rather than overflowing (break-word keeps names whole whenever they
+   fit). Multi-line code blocks (pre) keep their horizontal scroll. */
+.docs-table :not(pre) > code {
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 .docs-type {
   white-space: pre-wrap;
   color: #d2a8ff;
+}
+.docs-table .docs-type {
+  white-space: pre-wrap;
 }
 .docs-required {
   color: #ff9e8a;

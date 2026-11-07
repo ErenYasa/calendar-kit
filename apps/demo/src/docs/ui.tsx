@@ -33,11 +33,15 @@ export function PropsTable({ rows, caption }: { rows: readonly PropRow[]; captio
           {rows.map((r) => (
             <tr key={r.name}>
               <th scope="row">
-                <code>{r.name}</code>
-                {r.required && <span className="docs-required"> required</span>}
+                <div className="docs-cell-limit">
+                  <code>{r.name}</code>
+                  {r.required && <span className="docs-required"> required</span>}
+                </div>
               </th>
               <td>
-                <code className="docs-type">{r.type}</code>
+                <div className="docs-cell-limit">
+                  <code className="docs-type">{r.type}</code>
+                </div>
               </td>
               <td>{r.default ? <code>{r.default}</code> : <span className="docs-muted">—</span>}</td>
               <td>{r.description}</td>
@@ -67,7 +71,15 @@ export function DataTable({ head, rows, caption }: { head: readonly string[]; ro
         <tbody>
           {rows.map((r, i) => (
             <tr key={i}>
-              {r.map((c, j) => (j === 0 ? <th key={j} scope="row">{c}</th> : <td key={j}>{c}</td>))}
+              {r.map((c, j) =>
+                j === 0 ? (
+                  <th key={j} scope="row">
+                    <div className="docs-cell-limit">{c}</div>
+                  </th>
+                ) : (
+                  <td key={j}>{c}</td>
+                ),
+              )}
             </tr>
           ))}
         </tbody>
