@@ -3,7 +3,9 @@
  * Each test failed before its change.
  */
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+afterEach(() => vi.restoreAllMocks());
 import { Calendar, type LoadMoreRenderProps, toCalendarDate as d } from '../src';
 
 const TODAY = d('2026-11-02');
@@ -41,5 +43,50 @@ describe('F46 renderLoadMore at the boundary', () => {
     const { container } = render(<Calendar mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} maxDate={d('2026-12-20')} />);
     fireEvent.click(container.querySelector('.cal-load-more')!);
     expect(container.querySelector('.cal-load-more')).toBeNull();
+  });
+});
+
+describe('F48 continuous + controlled visibleMonth takes the goToMonth path', () => {
+  const scrolled: string[] = [];
+  const setup = () => {
+    scrolled.length = 0;
+    vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(function (this: HTMLElement) {
+      scrolled.push(this.dataset.month ?? '?');
+    });
+  };
+  const months = () => [...document.querySelectorAll<HTMLElement>('[data-month]')].map((m) => m.dataset.month);
+
+  it('scrolls to an already rendered month and keeps the loaded list', () => {
+    setup();
+    const { rerender, container } = render(<Calendar mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} visibleMonth={'2026-11' as never} />);
+    fireEvent.click(container.querySelector('.cal-load-more')!);
+    fireEvent.click(container.querySelector('.cal-load-more')!);
+    expect(months()).toEqual(['2026-11', '2026-12', '2027-01']);
+    scrolled.length = 0;
+    rerender(<Calendar mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} visibleMonth={'2027-01' as never} />);
+    expect(months()).toEqual(['2026-11', '2026-12', '2027-01']);
+    expect(scrolled).toEqual(['2027-01']);
+  });
+  it('an unrendered month rebuilds the bounded list around it and scrolls to it; no visibleMonthChange for a prop change', () => {
+    setup();
+    const events: string[] = [];
+    const { rerender } = render(
+      <Calendar mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} visibleMonth={'2026-11' as never} onEvent={(e) => events.push(e.type)} />,
+    );
+    events.length = 0;
+    rerender(<Calendar mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} visibleMonth={'2027-06' as never} onEvent={(e) => events.push(e.type)} />);
+    expect(months()).toEqual(['2027-06']);
+    expect(scrolled).toEqual(['2027-06']);
+    expect(events).not.toContain('visibleMonthChange');
+  });
+  it('the parent echoing goToMonth does not scroll a second time', () => {
+    setup();
+    const ref = { current: null as null | import('../src').CalendarController };
+    const { rerender, container } = render(<Calendar ref={ref} mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} visibleMonth={'2026-11' as never} />);
+    fireEvent.click(container.querySelector('.cal-load-more')!);
+    scrolled.length = 0;
+    act(() => void ref.current!.goToMonth('2026-12'));
+    rerender(<Calendar ref={ref} mode="single" today={TODAY} navigation="continuous" numberOfMonths={1} visibleMonth={'2026-12' as never} />);
+    expect(scrolled).toEqual(['2026-12']);
   });
 });

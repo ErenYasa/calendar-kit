@@ -340,6 +340,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
   const endpointSourceRef = useRef<EventSource | null>(null);
   const loadMoreAreaRefs = useRef<Partial<Record<LoadDirection, HTMLElement | null>>>({});
   const pendingScrollRef = useRef<{ month: CalendarMonth; behavior: ScrollBehavior } | null>(null);
+  // The month a navigation asked a controlled parent to show (see the visibleMonth effect).
+  const navigatedRef = useRef<CalendarMonth | null>(null);
   const preserveRef = useRef<{ month: CalendarMonth; top: number } | null>(null);
   const lastLoadRef = useRef<{ direction: LoadDirection; months: CalendarMonth[] } | null>(null);
 
@@ -676,6 +678,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       } else pendingScrollRef.current = { month: target, behavior };
     }
     if (!anchorProp) setAnchorState(target);
+    else navigatedRef.current = target;
     if (target !== referenceMonth || clamped)
       emit({ type: 'visibleMonthChange', instanceId, previous: referenceMonth, month: target, source, reason, clamped });
     return { month: target, clamped };
@@ -1049,6 +1052,27 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     if (vp && vp.scrollHeight > vp.clientHeight) vp.scrollTop += delta;
     else window.scrollBy(0, delta);
   }, [renderedKey]);
+
+  // Continuous mode: a controlled visibleMonth change takes the goToMonth path
+  // (scroll to the month; an unrendered month rebuilds the bounded list around
+  // it and is scrolled to once rendered). The parent echoing a navigation the
+  // calendar itself started is skipped: that scroll is already under way.
+  const prevAnchorPropRef = useRef(anchorProp);
+  useIsomorphicLayoutEffect(() => {
+    const prev = prevAnchorPropRef.current;
+    prevAnchorPropRef.current = anchorProp;
+    const echo = navigatedRef.current;
+    navigatedRef.current = null;
+    if (!anchorProp || prev === anchorProp || echo === anchorProp || navigation !== 'continuous') return;
+    let target = anchorProp;
+    if (minMonth && target < minMonth) target = minMonth;
+    if (maxMonth && target > maxMonth) target = maxMonth;
+    const el = monthRefs.current.get(target);
+    if (el) {
+      pendingScrollRef.current = null;
+      scrollToMonthElement(el, 'auto');
+    } else pendingScrollRef.current = { month: target, behavior: 'auto' };
+  }, [anchorProp]);
 
   // Continuous mode: scroll to a programmatic target once it has rendered.
   useIsomorphicLayoutEffect(() => {
