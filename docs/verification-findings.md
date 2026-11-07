@@ -157,3 +157,25 @@ altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da 
   parıltıyı durdurur. Sonraki `loading` arka plan yenilemesidir: görünüm, seçim
   ve odak korunur (`LoadingSnapshot.refreshing`). Testler: `regressions.test.tsx`
   (F16), `styles.test.ts` (F16 reduced motion), tarayıcı kontrolü F16.
+
+## Dokümantasyon sırasında bulunan paket sorunları (açık, düzeltilmedi)
+
+`feature/demo-documentation` işinde kaynak okunarak ve küçük denemelerle bulundu. Paket
+davranışı değiştirilmedi; dokümanda mevcut davranış anlatılıyor. Önceliklendirme bekliyor.
+
+| ID | Konu | Gözlem |
+|---|---|---|
+| F39 | `addDays` sınır/tamsayı denetimi | `addDays('9999-12-31', 1)` → `"10000-01-01"`, `addDays(d, 1.5)` → geçersiz metin; `addMonths` ise 0001-01/9999-12'de sıkıştırır |
+| F40 | `getToday({ now: NaN })` | `timeZone` yokken `null` döner (tip `CalendarDate`), varken `RangeError` fırlatır |
+| F41 | `mergeMessages` | açık `undefined` değer temel metni siler |
+| F42 | Dil paketleri | de/fr/es/it/nl/ar paketlerinde birçok sebep metni ve `start-only`/`end-only` etiketleri İngilizce kalıyor |
+| F43 | `stayRules({ availableWeekdays })` | dışarıdaki hafta günü yalnızca geceyi değil çıkış gününü de kapatıyor |
+| F44 | Ulaşılabilir bitiş araması | asıl sebep çıkış günü yokken bile `min-length` raporlanabiliyor (F25'in amacıyla kısmen çelişir) |
+| F45 | `endWeekdays` | aynı gün aralıklarında denetlenmiyor |
+| F46 | `LoadMoreRenderProps.canLoad` | `renderLoadMore` yalnızca yükleme mümkünken çağrıldığı için her zaman `true` |
+| F47 | `ref.loadMore(direction)` | `loadDirections`'ı yok sayıyor |
+| F48 | Continuous + controlled `visibleMonth` | zaten render edilmiş bir aya geçişte scroll yapılmıyor |
+| F49 | `getDayProps` | div gibi buton olmayan elemana da `type="button"` ekliyor |
+| F50 | Olay tipleri | `LoadMoreEvent.trigger: 'keyboard'` ve `EventSource` `'resize'`/`'scroll'` hiç gönderilmiyor; `select()` tarihsiz sorunlarda `date: ''` veriyor |
+| F51 | Gereksiz yeniden olaylar | `select(aynıDeğer)`, `reset()` ve min/max'ta `next()`/`previous()` değişiklik olmadan olay gönderiyor |
+
