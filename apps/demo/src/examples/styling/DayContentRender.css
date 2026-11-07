@@ -1,0 +1,16 @@
+.stacked-day {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+.stacked-day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2f9e44;
+}
+.stacked-day-dot[data-busy] {
+  background: #e8590c;
+}

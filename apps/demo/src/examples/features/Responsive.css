@@ -1,0 +1,10 @@
+.resizable {
+  resize: horizontal;
+  overflow: auto;
+  width: 100%;
+  min-width: 220px;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px dashed #9aa0a6;
+  border-radius: 8px;
+}

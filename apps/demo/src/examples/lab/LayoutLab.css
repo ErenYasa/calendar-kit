@@ -1,0 +1,125 @@
+.lab {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.lab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 14px;
+}
+.lab-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lab-controls .lab-check {
+  flex-direction: row;
+  align-items: center;
+  align-self: flex-end;
+}
+
+/* The calendar on top at full width; measurements and events below it,
+   side by side when there is room and stacked when narrow. */
+.lab-stage {
+  min-width: 0;
+}
+.lab-resizable {
+  resize: horizontal;
+  overflow: auto;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 200px;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px dashed #9aa0a6;
+  border-radius: 8px;
+  background: #fff;
+}
+.lab-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #59636e;
+}
+
+.lab-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.lab-panel {
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+.lab-panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.lab-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.lab-panel-head h3 {
+  margin: 0;
+}
+.lab-empty {
+  margin: 0;
+  color: #59636e;
+}
+.lab-stats {
+  margin: 0 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-scroll {
+  max-height: 220px;
+  overflow: auto;
+}
+.lab-commits table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.lab-commits th,
+.lab-commits td {
+  padding: 2px 6px;
+  border-bottom: 1px solid #eaeef2;
+  text-align: end;
+  white-space: nowrap;
+}
+.lab-commits th:nth-child(2),
+.lab-commits td:nth-child(2) {
+  text-align: start;
+}
+.lab-commits thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+.lab-events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.lab-events li {
+  padding: 3px 0;
+  border-bottom: 1px solid #eaeef2;
+  overflow-wrap: anywhere;
+}
+.lab-count {
+  color: #59636e;
+}

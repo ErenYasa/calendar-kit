@@ -362,17 +362,24 @@ describe('F20 focus survives a custom load-more control disappearing at the boun
         orientation="vertical"
         numberOfMonths={1}
         maxDate={d('2026-11-20')}
-        renderLoadMore={({ loadMore }) => (
-          <button type="button" onClick={loadMore}>
-            custom more
-          </button>
-        )}
+        // Since F46 the renderer is also called at the boundary (canLoad: false);
+        // this one removes its button there, as the default control does.
+        renderLoadMore={({ loadMore, canLoad }) =>
+          canLoad ? (
+            <button type="button" onClick={loadMore}>
+              custom more
+            </button>
+          ) : (
+            <p>No more dates</p>
+          )
+        }
       />,
     );
     const btn = screen.getByText('custom more');
     act(() => btn.focus());
     fireEvent.click(btn);
     expect(screen.queryByText('custom more')).toBeNull();
+    expect(screen.getByText('No more dates')).toBeTruthy();
     expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-01"]'));
   });
 });

@@ -1,0 +1,15 @@
+.add-month {
+  display: block;
+  margin: 8px auto;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.no-more {
+  margin: 8px 0;
+  text-align: center;
+  opacity: 0.7;
+}

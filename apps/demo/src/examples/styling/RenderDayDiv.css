@@ -1,0 +1,6 @@
+/* The div keeps the cal-day-button class, so the default circle, pointer,
+   focus ring and selected/disabled colours apply. Unlike a <button>, a div's
+   text can be selected by a double click; turn that off. */
+.rdd-day {
+  user-select: none;
+}

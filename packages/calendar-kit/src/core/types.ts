@@ -184,7 +184,7 @@ export type ActivationKind =
   | 'toggle-on' // multiple
   | 'toggle-off' // multiple
   | 'clear' // range: click on lone start without same-day support
-  | 'none' // no change (read-only or re-selecting the single value)
+  | 'none' // read-only: nothing happens (re-activating the selected single date is 'select')
   | 'rejected';
 
 export interface SelectionState {

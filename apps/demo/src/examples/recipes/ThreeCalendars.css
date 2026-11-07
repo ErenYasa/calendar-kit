@@ -1,0 +1,10 @@
+.three {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.three-summary,
+.three-wide {
+  grid-column: 1 / -1;
+  margin: 0;
+}

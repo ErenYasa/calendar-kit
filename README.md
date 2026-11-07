@@ -6,7 +6,8 @@ React + TypeScript için hafif, erişilebilir, responsive ve genişletilebilir t
 
 - Bağımlılık yok (React/ReactDOM peer). Moment, react-dates veya başka tarih kütüphanesi kullanılmaz.
 - Tipik kullanım **20.2 kB gzip** JS + **2.6 kB gzip** CSS (ölçüm aşağıda).
-- 142 paket testi + 2 demo testi, gerçek Chrome'da 9 tarayıcı regresyon kontrolü (`npm run test:browser`) ve dist üzerinden SSR duman testi.
+- Vitest paket ve demo testleri, gerçek Chrome'da tarayıcı regresyon ve dokümantasyon sitesi kontrolleri (`npm run test:browser`) ve dist üzerinden SSR duman testi.
+- İngilizce dokümantasyon sitesi `apps/demo` içindedir: her özellik açıklama, canlı örnek ve aynı dosyadan gelen "View code" ile anlatılır.
 
 ---
 
@@ -26,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Demo: **http://127.0.0.1:5173**
+Dokümantasyon / demo: **http://127.0.0.1:5173** (hash rotaları, ör. `#/tooltip`)
 
 | Komut (kök dizinde) | Ne yapar |
 |---|---|
@@ -56,12 +57,17 @@ calendar-kit/
 │  ├─ src/styles/index.scss      ← varsayılan tema → dist/styles.css
 │  ├─ test/                      ← vitest
 │  └─ scripts/                   ← size.mjs, ssr-smoke.mjs
-└─ apps/demo/                    ← yalnızca public API'yi kullanan demo
+└─ apps/demo/                    ← dokümantasyon sitesi (yalnızca public API)
+   ├─ src/docs/                  ← kabuk, menü, sayfalar (pages/), Example/kod bileşenleri
+   ├─ src/examples/              ← her örnek tek dosya (+ CSS); canlı bileşen ve gösterilen kod buradan
+   ├─ src/snippets/              ← canlı olmayan kod parçaları (kurulum, Next.js) — typecheck edilir
+   ├─ code-plugin.ts             ← `?code` import'u: dosya + yerel bağımlılıkları, build'de renklendirilir
+   └─ bench.html, src/bench.tsx  ← `npm run perf` ölçüm sayfası
 ```
 
 Katmanlar tek yönlü bağımlıdır: `date` ← `core` ← `adapters` ← `react`. Çekirdek (`createSelectionEngine`) React olmadan da kullanılabilir (ör. sunucuda aynı kurallarla doğrulama; 2.9 kB gzip).
 
-**Demo ve public API ayrımı:** demo kodu yalnızca public adları import eder (`import { Calendar } from 'calendar-kit'`, `import 'calendar-kit/styles.css'`). Geliştirmede (HMR, paket build'i gerekmeden) bu iki public giriş noktası demonun `vite.config.ts` ve `tsconfig.json` dosyalarında workspace kaynaklarına eşlenir. Yayımlanan paketin `exports` haritası yalnızca `dist`'i gösterir; her hedefin tarball'da bulunduğu `test/package.test.ts` ile doğrulanır.
+**Demo ve public API ayrımı:** dokümantasyon örnekleri yalnızca public adları import eder (`calendar-kit`, `calendar-kit/core`, `calendar-kit/client`, `calendar-kit/styles.css`); bu `apps/demo/test/examples.test.tsx` ile denetlenir. Geliştirmede (HMR, paket build'i gerekmeden) bu public giriş noktaları demonun `vite.config.ts` ve `tsconfig.json` dosyalarında workspace kaynaklarına eşlenir. Yayımlanan paketin `exports` haritası yalnızca `dist`'i gösterir; her hedefin tarball'da bulunduğu `test/package.test.ts` ile doğrulanır.
 
 **Temel kararlar (kısa gerekçe):**
 
@@ -262,7 +268,7 @@ Takvim fetch yapmaz. Uygulama `getDataStatus(month)` ile ay durumunu verir; `unk
 - Varsayılan ay/ay-ekleme yükleme görünümü **yalnızca gün iskeletidir**: her gün için eşit boyutlu bir hap (rakam genişliğinden bağımsız), görünür "Yükleniyor" yazısı yok. Ekran okuyucular için gizli durum metni, kök `aria-busy` ve canlı bölge duyurusu vardır. Görünür bir gösterge isterseniz `renderLoading` verin.
 - `onLoadingChange` yalnızca durum geçişlerinde gelir.
 
-**Hızlı gezinmede bayat veri koruması** (`apps/demo/src/data.ts`): her ay kendi `AbortController`'ı ve sıra numarasıyla istenir; yanıt yalnızca istendiği aya ve hâlâ güncel istekse yazılır; artık render edilmeyen ayların istekleri iptal edilir.
+**Hızlı gezinmede bayat veri koruması** (`apps/demo/src/examples/shared/availability.ts`): her ay kendi `AbortController`'ı ve sıra numarasıyla istenir; yanıt yalnızca istendiği aya ve hâlâ güncel istekse yazılır; artık render edilmeyen ayların istekleri iptal edilir.
 
 ## 12. Tooltip
 
@@ -319,7 +325,7 @@ Tümü typed; `onEvent(e)` aynı olayları discriminated union olarak (özel cal
 | `onOutsideClick` | Takvim ağacı dışındaki pointerdown. |
 | `onScroll` | Ay alanı kaydırıldı (frame başına bir). |
 
-**Sıra** (test edildi): başlangıç tıklaması `dateClick → dayFocusChange → change → activeEndpointChange`; bitiş tıklaması `dateClick → (dayFocusChange) → change → selectionComplete → activeEndpointChange`; reddedilen `dateClick → (dayFocusChange) → invalidSelection`. `activeEndpoint` **controlled** ise `onActiveEndpointChange` bir istektir ve `change`'den hemen sonra, eylem anında gelir; **uncontrolled** ise efektif uç noktadaki gerçek geçişi commit'ten sonra bildirir (ebeveyn controlled değeri reddederse olay gelmez; ebeveynin değeri dışarıdan değiştirmesi `source: 'prop'` ile bildirilir). Türetilmiş durum olayları (`validationChange`, `visibleMonthsChange`, `renderedMonthsChange`, `loadingChange`, `layoutChange`, `tooltipOpenChange`) commit'ten sonra effect'te gelir.
+**Sıra** (test edildi): başlangıç tıklaması `dateClick → dayFocusChange → change → activeEndpointChange` (gerçek tarayıcılarda buton `pointerdown`'da odak aldığı için `dayFocusChange`, `dateClick`'ten önce gelebilir; bu ikisinin sırasına güvenmeyin); bitiş tıklaması `dateClick → (dayFocusChange) → change → selectionComplete → activeEndpointChange`; reddedilen `dateClick → (dayFocusChange) → invalidSelection`. `activeEndpoint` **controlled** ise `onActiveEndpointChange` bir istektir ve `change`'den hemen sonra, eylem anında gelir; **uncontrolled** ise efektif uç noktadaki gerçek geçişi commit'ten sonra bildirir (ebeveyn controlled değeri reddederse olay gelmez; ebeveynin değeri dışarıdan değiştirmesi `source: 'prop'` ile bildirilir). Türetilmiş durum olayları (`validationChange`, `visibleMonthsChange`, `renderedMonthsChange`, `loadingChange`, `layoutChange`, `tooltipOpenChange`) commit'ten sonra effect'te gelir.
 
 Callback'ler render sırasında çağrılmaz; kimlik değişimi olayı yeniden üretmez. **StrictMode:** geliştirmede React effect'leri simüle unmount/remount ile iki kez çalıştırır; `onReady` her (simüle) mount için gelebilir. Paket "uygulama ömrü boyunca bir kez" garantisi vermez; gerçek remount'ta olaylar yeniden gelir. Kullanıcı eylemi olayları StrictMode'da çift gelmez (test edildi).
 
@@ -350,7 +356,7 @@ Sonradan mount olan takvim güncel değeri gösterir; birinin unmount olması or
 - `messages`: kısmi override. Hazır paketler: `messagesEn` (varsayılan), `messagesTr`, `messagesDe`, `messagesFr`, `messagesEs`, `messagesIt`, `messagesNl`, `messagesAr` (tree-shake edilir).
 - Stil: `import 'calendar-kit/styles.css'` (JS CSS import etmez). Özelleştirme sırası: **CSS değişkenleri** (`--cal-accent`, `--cal-range`, `--cal-preview`, `--cal-focus`, `--cal-circle`, `--cal-radius`, …) → **`data-*` durum öznitelikleri** (`data-range-start`, `data-in-range`, `data-disabled`, `data-mod-*`, …) → **`classNames`** (`root, header, footer, viewport, months, month, monthHeader, monthTitle, navigation, navButton, weekdays, weekday, grid, week, dayCell, dayButton, dayContent, rangeBackground, tooltip, loadMore, loading, error, liveRegion, readOnlyNotice`; `dayCell/dayButton/dayContent` fonksiyon da alır) → **`unstyled`** (varsayılan sınıf adları hiç eklenmez). `!important` gerekmez.
 
-Görsellerdeki ürün görünümü yalnızca bu araçlarla üretildi: `apps/demo/src/demo.css` → `.ref-look`.
+Özelleştirme örnekleri (CSS kodlarıyla birlikte): dokümantasyon sitesinin "Styling & Customization" sayfası (`apps/demo/src/examples/styling/`).
 
 ## 17. Erişilebilirlik
 
@@ -446,22 +452,22 @@ Sütunlar birbirinin yerine kullanılamaz:
 
 | Ay / gün | CPU | Başlangıç tıklaması: render · işleme · sonraki kare | Hover: render · işleme | Bitiş tıklaması: render · işleme | Ok tuşu: render · işleme | Sonraki ay: render · işleme |
 |---|---|---|---|---|---|---|
-| 2 / 61 | 1× | 1.7 · 1.1 · 5.3 | 0.8 · 1.8 | 2.5 · 1.3 | 0.7 · 1.7 | 1.4 · 1.6 |
-| 2 / 61 | 4× | 3.8 · 2.4 · 11.7 | 1.6 · 3.1 | 4.8 · 2.6 | 1.3 · 2.8 | 2.9 · 3.5 |
-| 2 / 61 | 6× | 5.3 · 3.5 · 18.9 | 2.2 · 4.6 | 7.5 · 3.6 | 2.2 · 4.3 | 5.2 · 5.8 |
-| 12 / 365 | 1× | 6.1 · 2.7 · 12.6 | 2.5 · 4.1 | 9.3 · 3.8 | 1.9 · 3.0 | 4.1 · 4.6 |
-| 12 / 365 | 4× | 16.0 · 7.0 · 35.6 | 4.9 · 8.0 | 21.8 · 7.7 | 4.6 · 7.1 | 9.4 · 11.3 |
-| 12 / 365 | 6× | 24.9 · 10.7 · 57.0 | 7.4 · 12.0 | 31.7 · 11.7 | 6.4 · 10.9 | 13.9 · 17.2 |
+| 2 / 61 | 1× | 1.8 · 1.2 · 6.0 | 0.9 · 2.0 | 2.2 · 1.4 | 0.7 · 2.0 | 1.5 · 1.8 |
+| 2 / 61 | 4× | 3.7 · 2.5 · 12.0 | 1.6 · 3.0 | 4.6 · 2.4 | 1.0 · 2.9 | 3.4 · 3.7 |
+| 2 / 61 | 6× | 6.0 · 3.9 · 19.5 | 2.1 · 4.4 | 6.6 · 3.8 | 2.0 · 4.3 | 5.1 · 6.6 |
+| 12 / 365 | 1× | 5.9 · 2.7 · 12.5 | 2.5 · 4.1 | 9.5 · 3.9 | 1.8 · 2.8 | 4.2 · 4.8 |
+| 12 / 365 | 4× | 17.5 · 6.9 · 36.8 | 5.1 · 8.1 | 21.9 · 7.3 | 4.2 · 7.1 | 9.0 · 10.9 |
+| 12 / 365 | 6× | 24.9 · 10.3 · 54.5 | 7.3 · 12.3 | 33.7 · 12.0 | 7.3 · 10.9 | 13.7 · 17.2 |
 
-(Medyanlar; p95 değerleri betik çıktısında. Son ölçüm 2026-11-07, Chrome 156, F16/F32/F37 değişikliklerinden sonra; önceki ölçümle (Chrome 155) farklar ölçüm gürültüsü içinde.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
+(Medyanlar; p95 değerleri betik çıktısında. Son ölçüm 2026-11-07, Chrome 156, F38–F51 paket değişikliklerinden sonra. Aynı oturumda, aynı makinede değişiklik öncesi commit (60336d3) ile A/B çalıştırıldı; tüm satırlarda farklar ölçüm gürültüsü içinde, en büyük medyan farkı 2 ay · 6× · sonraki ay işleme 5.1 → 6.6 ms.) "render" bazı tıklamalarda "işleme"den büyük görünebilir: render, pointerdown'daki küçük odak güncellemesi dahil etkileşimin tüm commit'lerini toplar; işleme ise `click` olayından ölçülür.
 
-Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 32 ms, p95 43 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
+Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 ms) altında. 12 ay (365 gün) 4×–6× yavaşlamada tıklamalar bir kareyi aşar (bitiş tıklaması 6×'te render 34 ms, p95 43 ms): uzun listelerde `navigation="continuous"` + küçük `maxRenderedMonths` önerilir. Render sayısı (jsdom, `test/perf.test.tsx`, assert edilir): hover başına ortalama 2.75 gün hücresi render edilir.
 
 ## 21. Dağıtım, destek, lisans
 
-- `dist/index.js` (ESM, sourcemap), `dist/types/**/*.d.ts`, `dist/styles.css`. `exports`: `"."`, `"./styles.css"`. `sideEffects: ["*.css"]`. React/ReactDOM bundle'a dahil değil.
-- React: peer `>=18.2` (`useId`, `useSyncExternalStore` gerekir). Testler React 19.3 ile çalıştırıldı; React 18 ile ayrıca test edilmedi.
-- Tarayıcılar (container query `cqmin` + `color-mix`): Chrome/Edge 111+, Safari 16.2+, Firefox 113+.
+- `dist/index.js`, `dist/core.js`, `dist/client.js` (ESM, sourcemap), `dist/types/**/*.d.ts`, `dist/styles.css` (+ `styles.css.d.ts`). `exports`: `"."`, `"./core"`, `"./client"`, `"./styles.css"`. `sideEffects: ["*.css"]`. React/ReactDOM bundle'a dahil değil.
+- React: peer `>=18.2` (`useId`, `useSyncExternalStore` gerekir). Paket testleri React 19.3 ile çalışır; `npm pack` çıktısı React 18.3 ve 19.2 tüketicilerinde yalnızca yerelde denendi (`docs/verification-findings.md`).
+- Tarayıcı gereksinimi (container query `cqmin` + `color-mix`): Chrome/Edge 111+, Safari 16.2+, Firefox 113+. Yalnızca Chrome otomatik olarak test edilir; Safari, Firefox ve mobil cihazlar doğrulanmadı.
 - Lisans: MIT (varsayım — yayın öncesi onaylanmalı; `LICENSE`).
 
 ## 22. Desteklenen davranışlar ve bilinen sınırlar
