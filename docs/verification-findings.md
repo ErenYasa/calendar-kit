@@ -9,16 +9,17 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız, 37 bulgu + 4 şüphe)
+## Sayım (çakışmasız: 51 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 54 madde; + 7 şüphe/gözlem)
 
 Her madde tam olarak bir grupta sayılır.
 
 | Grup | Sayı | Maddeler |
 |---|---|---|
-| Düzeltildi | 34 | F01–F26, F28, F30, F32–F37 |
+| Düzeltildi | 43 | F01–F26, F28, F30, F32–F38, F39a, F40–F45, F50a |
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 3 | F27, F29, F31 |
-| Bekleyen (karar gerekli) | 0 | — |
+| Bekleyen (karar gerekli) | 8 | F39b, F46, F47, F48, F49, F50b, F50c, F51 |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
+| Gözlem (hata olarak kanıtlanmadı) | 3 | S05, S06, S07 |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
 Bulgu listesi dışında, hiç yapılmamış ve **doğrulanmamış** ortam kontrolleri:
@@ -158,24 +159,46 @@ altı kontrolün altısı da başarısız oldu; düzeltilmiş kodda altısı da 
   ve odak korunur (`LoadingSnapshot.refreshing`). Testler: `regressions.test.tsx`
   (F16), `styles.test.ts` (F16 reduced motion), tarayıcı kontrolü F16.
 
-## Dokümantasyon sırasında bulunan paket sorunları (açık, düzeltilmedi)
+## F38–F51: değerlendirme (2026-11-08)
 
-`feature/demo-documentation` işinde kaynak okunarak ve küçük denemelerle bulundu. Paket
-davranışı değiştirilmedi; dokümanda mevcut davranış anlatılıyor. Önceliklendirme bekliyor.
+Her madde önce yeniden üretildi (vitest; görsel olanlar gerçek Chrome). Durumlar:
+**düzeltildi** (kanıtlanmış hata, mevcut sözleşme korunarak, regresyon testiyle),
+**bug değil**, **karar gerekiyor** (davranış sözleşmesi değişikliği; seçenekler aşağıda).
 
-| ID | Konu | Gözlem |
-|---|---|---|
-| F39 | `addDays` sınır/tamsayı denetimi | `addDays('9999-12-31', 1)` → `"10000-01-01"`, `addDays(d, 1.5)` → geçersiz metin; `addMonths` ise 0001-01/9999-12'de sıkıştırır |
-| F40 | `getToday({ now: NaN })` | `timeZone` yokken `null` döner (tip `CalendarDate`), varken `RangeError` fırlatır |
-| F41 | `mergeMessages` | açık `undefined` değer temel metni siler |
-| F42 | Dil paketleri | de/fr/es/it/nl/ar paketlerinde birçok sebep metni ve `start-only`/`end-only` etiketleri İngilizce kalıyor |
-| F43 | `stayRules({ availableWeekdays })` | dışarıdaki hafta günü yalnızca geceyi değil çıkış gününü de kapatıyor |
-| F44 | Ulaşılabilir bitiş araması | asıl sebep çıkış günü yokken bile `min-length` raporlanabiliyor (F25'in amacıyla kısmen çelişir) |
-| F45 | `endWeekdays` | aynı gün aralıklarında denetlenmiyor |
-| F46 | `LoadMoreRenderProps.canLoad` | `renderLoadMore` yalnızca yükleme mümkünken çağrıldığı için her zaman `true` |
-| F47 | `ref.loadMore(direction)` | `loadDirections`'ı yok sayıyor |
-| F48 | Continuous + controlled `visibleMonth` | zaten render edilmiş bir aya geçişte scroll yapılmıyor |
-| F49 | `getDayProps` | div gibi buton olmayan elemana da `type="button"` ekliyor |
-| F50 | Olay tipleri | `LoadMoreEvent.trigger: 'keyboard'` ve `EventSource` `'resize'`/`'scroll'` hiç gönderilmiyor; `select()` tarihsiz sorunlarda `date: ''` veriyor |
-| F51 | Gereksiz yeniden olaylar | `select(aynıDeğer)`, `reset()` ve min/max'ta `next()`/`previous()` değişiklik olmadan olay gönderiyor |
+| ID | Tetikleme senaryosu | Beklenen | Gerçek (düzeltme öncesi) | Etki | Test | Durum |
+|---|---|---|---|---|---|---|
+| F38 | `getDayData` → `{ icon, label }`, 40 px hücre | etiket daire içinde | ikon akışta, etiket 2 köşesiyle halkanın dışında | görsel çakışma | `styles.test.ts` F38, tarayıcı F30 (ikonlu günler dahil, ikon hücre içinde) | düzeltildi |
+| F39a | `addDays(d, 1.5)`, `addMonths(d, 1.5)` | geçerli tarih | `"2026-01-2.5"`, `"2026-2.5-28"` | geçersiz `CalendarDate` | `date-arithmetic.test.tsx` | düzeltildi (sıfıra doğru kırpma) |
+| F39b | `addDays('9999-12-31', 1)` | ? | `"10000-01-01"`; `addMonths` ise 9999-12'de sıkıştırır | sözleşme: 0001–9999 dışı tanımsız (F31) | — | karar gerekiyor |
+| F40 | `getToday({ now: NaN })`, `fromJSDate(new Date('x'))` | tek tip hata | `timeZone` yokken `null` (tip `CalendarDate`), varken `RangeError` | null sızıntısı | `date-arithmetic.test.tsx` | düzeltildi (her iki yolda `RangeError`) |
+| F41 | `mergeMessages(en, { today: undefined })` | temel metin kalır | metin `undefined` olur | boş UI metni | `messages-merge.test.tsx` | düzeltildi |
+| F42 | de/fr/es/it/nl/ar paketleri | tam çeviri | 15 sebep + 3 gün etiketi İngilizce, Arapça çoğul tek biçim | karışık dil | `i18n.test.ts` (paketler tiplerle de zorunlu) | düzeltildi |
+| F43 | `stayRules({ availableWeekdays: [5, 6] })`, Cuma → Pazar | 2 gece geçerli (hariç bitiş: Pazar sabahı çıkış, gece değil; adapter belgesi "diğer günlerin geceleri kapalı") | Pazar `closed/out-of-schedule` ile reddedildi | geçerli konaklama reddi | `stay-weekdays.test.tsx` | düzeltildi (yalnız adapter; çekirdek ve dahil bitişli aralıklar aynı) |
+| F44 | `minNights: 2`, başlangıçtan sonra hiçbir gün çıkışa izin vermiyor | gerçek sebep (`end-not-allowed`, `check-in-only`) | "Minimum 2 gece" | yanlış sebep metni | `engine-reasons.test.tsx` | düzeltildi |
+| F45 | `startWeekdays: [1], endWeekdays: [5]`, Pazartesi aynı gün aralığı | `weekday-end` reddi | geçerli sayıldı | kurala aykırı seçim | `engine-reasons.test.tsx` | düzeltildi |
+| F46 | `renderLoadMore` sınırda | `canLoad: false` ile çağrı | sınırda hiç çağrılmıyor, `canLoad` hep `true` | alan işlevsiz | sonda (vitest) | karar gerekiyor |
+| F47 | `loadDirections="next"`, `ref.loadMore('previous')` | ? | önceki ay eklendi | sözleşme belirsiz | sonda (vitest) | karar gerekiyor |
+| F48 | continuous, controlled `visibleMonth` zaten render edilmiş aya | `goToMonth` gibi kaydırma? | liste yeni aydan yeniden kuruluyor (takılma/kopma yok) | tutarsızlık | sonda (vitest) | karar gerekiyor |
+| F49 | `renderDay` + `<div {...getDayProps()}>` | geçersiz öznitelik yok | `type="button"` div'e yazılıyor | HTML geçersizliği (işlev etkilenmiyor) | sonda (vitest) | karar gerekiyor (API ekleme gerekir) |
+| F50a | continuous, son günde `ArrowRight` | `onLoadMore` (`trigger: 'keyboard'`) | yalnız `renderedMonthsChange` | veri yükleme tetiklenmiyor | `keyboard-loadmore.test.tsx` | düzeltildi |
+| F50b | `EventSource` `'resize'`/`'scroll'` | — | hiç gönderilmiyor | yalnız tip | — | karar gerekiyor (tipten çıkarmak kırıcı) |
+| F50c | `ref.select()` tarihsiz sorunla reddedilir | ? | `onInvalidSelection` `date: ''` | geçersiz tarih alanı | sonda (vitest) | karar gerekiyor (tip değişikliği) |
+| F51 | `select(aynıDeğer)`, eşit değerde `reset()`, sınırda `next()` | değişiklik yoksa olay yok? | `change`/`selectionComplete`, `change`, `visibleMonthChange` (aynı ay, `clamped: true`) | gereksiz olay | sonda (vitest) | karar gerekiyor |
 
+Kalan açık: **8** (F39b, F46, F47, F48, F49, F50b, F50c, F51) — hepsi karar gerektiriyor.
+
+### Karar seçenekleri
+
+- **F39b** (yıl aralığı dışı): (a) belgelendiği gibi tanımsız bırak; (b) `addMonths` gibi 0001-01-01/9999-12-31'e sıkıştır; (c) `RangeError` fırlat. Öneri: (b) — iki fonksiyon tutarlı olur, hiçbir zaman geçersiz metin üretilmez.
+- **F46** (`canLoad`): (a) sınırda da `renderLoadMore({ canLoad: false })` çağır (özel kontroller sınırda görünür hale gelir — davranış değişikliği); (b) mevcut davranışı koru, `canLoad`'ı kullanımdan kaldırılmış say. Öneri: (a) — "tarih kalmadı" gibi bir metin göstermenin tek yolu.
+- **F47** (`ref.loadMore` ve `loadDirections`): (a) controller da `loadDirections`'a uysun (izin yoksa işlem yapmasın); (b) `loadDirections` yalnız yerleşik kontrolleri belirlesin, controller bağımsız olsun (mevcut; belgelendi). Öneri: (b).
+- **F48** (continuous + controlled `visibleMonth`): (a) ay zaten render edilmişse `goToMonth` gibi kaydır; (b) yeniden kurmayı koru ve belgele. (a)'da ebeveyn `onVisibleMonthChange`'i yansıtıyorsa geri besleme riski var; öneri: (a), kaynak `prop` iken yalnız gerçekten değişen ay için.
+- **F49** (`type="button"`): (a) `getDayProps({ type: null })` ile kaldırılabilsin (küçük API eklemesi); (b) belge: `renderDay`'de `<button>` kullanın. Öneri: (a).
+- **F50b**: (a) `'resize'`/`'scroll'`u `EventSource`'tan çıkar (tip kırıcı, sürüm notu); (b) ayrılmış değer olarak bırak. **F50c**: (a) `InvalidSelectionEvent.date` `CalendarDate | null` olsun (tip kırıcı); (b) seçimdeki ilgili tarihe (tekil değer / aralık başlangıcı) düş.
+- **F51**: (a) değişiklik yoksa olay gönderme (`select` aynı değer, eşit `reset`, sınırda `next`/`previous`); (b) mevcut davranışı koru ve belgele (`clamped: true` sınırı bildirir). Öneri: (a), `next`/`previous` için kesin; `select` için `selectionComplete`'in "onay" olarak kullanıldığı uygulamalar varsa (b).
+
+### Dokümantasyon sırasında görülen diğer gözlemler (hata olarak kanıtlanmadı)
+
+- S05: Aynı JS görevinde iki `element.click()` ilkini kaybediyor (aktivasyon son render edilen durumu okur). Gerçek kullanıcı etkileşiminde oluşmaz; betikler/testler için not.
+- S06: Her gün tıklaması bir `update` ve bir `nested-update` commit'i üretiyor (layout effect'ten durum güncellemesi). Performans ölçümünde bir karenin altında; azaltılabilir mi incelenmeli.
+- S07: `element.click()` (detail 0) `source: 'keyboard'` olarak raporlanıyor; Enter/Space ile aynı tıklama türü olduğundan beklenen davranış.
