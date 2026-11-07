@@ -122,3 +122,14 @@ describe('F16 reduced motion on the initial-load skeleton', () => {
     for (const s of shimmer) expect(reduced.some((rm) => wins(rm, s)), s.selector).toBe(true);
   });
 });
+
+describe('custom day content stays above the selection circle', () => {
+  it('the circle (::before) is painted behind the button content, inside the button', () => {
+    // renderDay + getDayProps keep the cal-day-button class; text rendered there
+    // without its own positioning must not end up under the circle.
+    const button = find((r) => !r.media && r.selector === '.cal-day-button', 'day button rule');
+    const circle = find((r) => !r.media && r.selector === '.cal-day-button::before', 'circle rule');
+    expect(button.some((r) => /position:\s*absolute/.test(r.body) && /z-index:\s*1\b/.test(r.body)), 'button is a stacking context').toBe(true);
+    expect(circle.some((r) => /z-index:\s*-1\b/.test(r.body)), 'circle behind content').toBe(true);
+  });
+});

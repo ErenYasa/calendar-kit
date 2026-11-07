@@ -177,9 +177,13 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
   cursor: pointer;
   touch-action: manipulation;
 
+  // The circle sits behind whatever the button contains (the button is a
+  // stacking context via position + z-index), so content rendered through
+  // renderDay/getDayProps without its own positioning stays visible.
   &::before {
     content: '';
     position: absolute;
+    z-index: -1;
     top: 50%;
     left: 50%;
     width: calc(var(--cal-circle) * 100cqmin);
