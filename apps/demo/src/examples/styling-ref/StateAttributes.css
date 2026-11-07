@@ -1,0 +1,78 @@
+/* One colour per state, shared by the calendar and the legend. */
+.sr-demo {
+  --sr-today: #7048e8;
+  --sr-start: #2f9e44;
+  --sr-end: #e03131;
+  --sr-band: #d0ebff;
+  --sr-preview: #ffec99;
+  --sr-weekend: #1971c2;
+  --sr-off: #c9a3a3;
+}
+
+/* The default theme draws every state from a CSS variable, so the cheapest
+   way to recolour a state is to set that variable on the cell carrying the
+   state attribute. The cell's children (button, range band) inherit it. */
+.sr-cell[data-today] {
+  --cal-today: var(--sr-today);
+}
+.sr-cell[data-range-start] {
+  --cal-accent: var(--sr-start);
+  --cal-ring: color-mix(in srgb, var(--sr-start) 35%, white);
+}
+.sr-cell[data-range-end] {
+  --cal-accent: var(--sr-end);
+  --cal-ring: color-mix(in srgb, var(--sr-end) 35%, white);
+}
+.sr-cell[data-band] {
+  --cal-range: var(--sr-band);
+}
+/* While a new end is being previewed, the band shows the preview. */
+.sr-cell[data-band-preview] {
+  --cal-preview: var(--sr-preview);
+}
+.sr-cell[data-preview-end] {
+  --cal-accent: #f08c00;
+}
+.sr-cell[data-unavailable] {
+  --cal-muted: var(--sr-off);
+}
+
+/* Your own properties on your own class: weekend numbers in blue. The
+   default disabled and selected colours are more specific and still win. */
+.sr-btn[data-mod-weekend] {
+  color: var(--sr-weekend);
+}
+.sr-btn[data-today] {
+  font-style: italic;
+}
+
+/* Legend */
+.sr-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+.sr-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, monospace;
+}
+.sr-key::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sr-swatch);
+}
+.sr-key[data-key='today'] { --sr-swatch: var(--sr-today); }
+.sr-key[data-key='start'] { --sr-swatch: var(--sr-start); }
+.sr-key[data-key='end'] { --sr-swatch: var(--sr-end); }
+.sr-key[data-key='band'] { --sr-swatch: var(--sr-band); }
+.sr-key[data-key='preview'] { --sr-swatch: var(--sr-preview); }
+.sr-key[data-key='weekend'] { --sr-swatch: var(--sr-weekend); }
+.sr-key[data-key='off'] { --sr-swatch: var(--sr-off); }
