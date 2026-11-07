@@ -735,8 +735,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setList({ key: listKey, first, last });
     // The default control disappears at the min/max boundary; keep focus in the grid.
     const exhausted = dir === 'next' ? !!maxMonth && last >= maxMonth : !!minMonth && first <= minMonth;
-    // The control (default or custom renderLoadMore) is removed at the boundary;
-    // if focus was inside it, keep focus in the grid.
+    // At the boundary the default control is removed and a custom one shows its
+    // canLoad: false state; if focus was inside it, keep focus in the grid.
     const active = typeof document !== 'undefined' ? document.activeElement : null;
     const focusInControl = !!active && (active === control || !!loadMoreAreaRefs.current[dir]?.contains(active));
     if (exhausted && focusInControl && added[0]) {
@@ -1473,16 +1473,19 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     const loadingNode =
       loadingAdded &&
       props.renderLoading?.({ scope: 'load-more', months: lastLoadRef.current!.months, status: 'loading', messages: { loading: messages.loading } }, slotCtx);
+    // At the min/max boundary the default button is removed; a custom
+    // renderLoadMore is still called (with canLoad: false) so it can show a
+    // message or a disabled control.
     const ctl =
-      loadMode === 'button' && enabled
-        ? props.renderLoadMore
+      loadMode !== 'button'
+        ? null
+        : props.renderLoadMore
           ? props.renderLoadMore({ direction: dir, canLoad: enabled, loading: loadingAdded, loadMore: () => loadMore(dir, 'button'), label }, slotCtx)
-          : (
+          : enabled && (
               <button type="button" className={cx(p('load-more'), cn?.loadMore)} data-direction={dir} onClick={(e) => loadMore(dir, 'button', e.currentTarget)}>
                 {label}
               </button>
-            )
-        : null;
+            );
     return (
       <div
         ref={(el) => {

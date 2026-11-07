@@ -407,6 +407,11 @@ export interface ErrorRenderProps {
 
 export interface LoadMoreRenderProps {
   direction: LoadDirection;
+  /**
+   * `false` at the minDate/maxDate boundary. The renderer is still called there
+   * (the default button is removed) so it can show a message or a disabled
+   * control; `loadMore()` does nothing while `canLoad` is false.
+   */
   canLoad: boolean;
   loading: boolean;
   loadMore: () => void;
