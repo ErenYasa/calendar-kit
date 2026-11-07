@@ -587,7 +587,13 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     setInternalEndpoint({ value: next.activeEndpoint, key: selectionKey(next.selection) });
     const nextValidation = createSelectionEngine<TContext>({ rules: engineRules, state: next, today, context: props.ruleContext as TContext }).validate(next.selection);
     const nextPhase = getSelectionPhase(next.selection);
-    emit({
+    // F51: no change event when the value stays the same. A user activation
+    // that completes the same value again still reports selectionComplete
+    // (e.g. re-picking the selected date to close a popover); a programmatic
+    // select()/reset()/clear() of the same value reports nothing.
+    const unchanged = selectionKey(prevSel) === selectionKey(next.selection);
+    const userAction = source === 'pointer' || source === 'keyboard';
+    if (!unchanged) emit({
       type: 'change',
       instanceId,
       mode,
@@ -608,10 +614,11 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       (reason === 'select' || reason === 'complete' || reason === 'set') && nextPhase === 'complete'
         ? true
         : reason === 'toggle-on' && next.selection.mode === 'multiple' && rules.maxSelections != null && next.selection.value.length === rules.maxSelections;
-    if (completes && nextValidation.valid) emit({ type: 'selectionComplete', instanceId, mode, value: next.selection.value, source });
+    if (completes && nextValidation.valid && (!unchanged || userAction)) emit({ type: 'selectionComplete', instanceId, mode, value: next.selection.value, source });
     if (nextPhase === 'empty' && getSelectionPhase(prevSel) !== 'empty') emit({ type: 'selectionClear', instanceId, previous: prevSel.value, source });
 
     // Announcement
+    if (unchanged && !userAction) return;
     const s = next.selection;
     if (s.mode === 'range') {
       if (s.value.start && s.value.end) announce(messages.announceRange(shortDate(s.value.start), shortDate(s.value.end)));
@@ -679,7 +686,9 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
     }
     if (!anchorProp) setAnchorState(target);
     else navigatedRef.current = target;
-    if (target !== referenceMonth || clamped)
+    // F51: staying on the same month (e.g. next() at maxDate) is no change; the
+    // returned result still says the request was clamped.
+    if (target !== referenceMonth)
       emit({ type: 'visibleMonthChange', instanceId, previous: referenceMonth, month: target, source, reason, clamped });
     return { month: target, clamped };
   }

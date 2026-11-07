@@ -141,3 +141,73 @@ describe('F50 invalidSelection.date for a rejected select()', () => {
     expect(dates).toEqual([null, '2026-11-01']);
   });
 });
+
+describe('F51 no change/navigation events when state does not change', () => {
+  const setup = (extra: Record<string, unknown> = {}) => {
+    const ref = { current: null as null | import('../src').CalendarController };
+    const events: string[] = [];
+    const ignore = ['validationChange', 'tooltipOpenChange', 'dayFocusChange', 'renderedMonthsChange', 'visibleMonthsChange', 'ready', 'layoutChange'];
+    const utils = render(
+      <Calendar
+        ref={ref as never}
+        mode="single"
+        today={TODAY}
+        defaultValue={d('2026-11-10')}
+        maxDate={d('2026-12-31')}
+        numberOfMonths={1}
+        onEvent={(e) => !ignore.includes(e.type) && events.push(e.type)}
+        {...extra}
+      />,
+    );
+    events.length = 0;
+    return { ref, events, ...utils };
+  };
+
+  it('select() of the same completed value emits nothing; a different value still emits change + selectionComplete', () => {
+    const { ref, events } = setup();
+    act(() => void ref.current!.select(d('2026-11-10')));
+    expect(events).toEqual([]);
+    act(() => void ref.current!.select(d('2026-11-12')));
+    expect(events).toEqual(['change', 'selectionComplete']);
+  });
+  it('reset() to an equal value and clear() on an empty selection emit nothing', () => {
+    const { ref, events } = setup();
+    act(() => ref.current!.reset());
+    expect(events).toEqual([]);
+    act(() => ref.current!.clear());
+    expect(events).toEqual(['change', 'selectionClear']);
+    events.length = 0;
+    act(() => ref.current!.clear());
+    expect(events).toEqual([]);
+  });
+  it('a rejected select() is still reported every time', () => {
+    const { ref, events } = setup();
+    act(() => void ref.current!.select(d('2027-03-01')));
+    act(() => void ref.current!.select(d('2027-03-01')));
+    expect(events).toEqual(['invalidSelection', 'invalidSelection']);
+  });
+  it('next() at maxDate emits no visibleMonthChange; goToMonth still returns clamped: true', () => {
+    const { ref, events } = setup({ defaultVisibleMonth: '2026-12' });
+    act(() => ref.current!.next());
+    expect(events).toEqual([]);
+    let r: unknown;
+    act(() => void (r = ref.current!.goToMonth('2027-05')));
+    expect(r).toEqual({ month: '2026-12', clamped: true });
+    expect(events).toEqual([]);
+  });
+  it('a user re-picking the selected date completes the selection again (dateClick + selectionComplete, no change)', () => {
+    const { container, events } = setup();
+    fireEvent.click(container.querySelector('button[data-date="2026-11-10"]')!, { detail: 1 });
+    expect(events).toEqual(['dateClick', 'selectionComplete']);
+  });
+  it('a range completed again by the user reports selectionComplete each time', () => {
+    const completes: string[] = [];
+    const { container } = render(<Calendar mode="range" today={TODAY} numberOfMonths={1} onSelectionComplete={(e) => { const v = e.value as { start: string; end: string }; completes.push(`${v.start}~${v.end}`); }} />);
+    const click = (date: string) => fireEvent.click(container.querySelector(`button[data-date="${date}"]`)!, { detail: 1 });
+    click('2026-11-10');
+    click('2026-11-12');
+    click('2026-11-10');
+    click('2026-11-12');
+    expect(completes).toEqual(['2026-11-10~2026-11-12', '2026-11-10~2026-11-12']);
+  });
+});

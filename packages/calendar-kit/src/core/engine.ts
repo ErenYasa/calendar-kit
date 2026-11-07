@@ -401,7 +401,8 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
       case 'readonly':
         return { kind: 'none', date, issue: null, next: state };
       case 'single':
-        if (sel.value === date) return { kind: 'none', date, issue: null, next: state };
+        // Activating the selected date selects it again (same value): the
+        // calendar reports selectionComplete but no change (F51).
         return planned('select', date, { mode: 'single', value: date }, checkStartBasic(date));
       case 'multiple': {
         if (sel.value.includes(date))
