@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countNights, stayRules } from 'calendar-kit';
 
 // Günübirlik kullanım: bir konaklama aynı gün başlayıp bitebilir (0 gece).
-// Hariç bitişli aynı gün aralığının uzunluğu 0'dır; bu yüzden minimum konaklama ayarlanamaz.
+// Hariç bitişli aynı gün aralığının uzunluğu 0’dır; bu yüzden en kısa konaklama süresi belirlenemez.
 const dayUse = stayRules({ allowSameDay: true });
 
 export default function SameDay() {

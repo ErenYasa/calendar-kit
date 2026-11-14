@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Calendar, addDays, getMonth, getToday } from 'calendar-kit';
 
-// Kontrolsüz: seçimi takvim tutar. `defaultValue` ve `defaultVisibleMonth`
+// Uncontrolled: seçimi takvim tutar. `defaultValue` ve `defaultVisibleMonth`
 // yalnızca bir kez, mount sırasında okunur.
 export default function Uncontrolled() {
   const [today] = useState(() => getToday());
