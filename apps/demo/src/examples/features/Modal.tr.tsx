@@ -3,7 +3,7 @@ import { Calendar, type DateRange } from 'calendar-kit';
 import './Modal.css';
 
 // Yerel <dialog> öğesi odak hapsini, Escape tuşunu ve odağın geri dönmesini üstlenir.
-// Üst katmanda (top layer) render edildiği için araç ipucu portalı diyaloğun içine konur.
+// Üst katmanda (top layer) render edildiği için tooltip portalı diyaloğun içine konur.
 export default function Modal() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [host, setHost] = useState<HTMLDivElement | null>(null);

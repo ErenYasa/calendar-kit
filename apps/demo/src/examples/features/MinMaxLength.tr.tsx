@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countNights, stayRules } from 'calendar-kit';
 
 // 2 ile 7 gece arası. Bir başlangıç seçiliyken kuralı bozacak bitişler devre
-// dışı kalır; sebep günün etiketinde ve araç ipucunda yer alır.
+// dışı kalır; sebep günün etiketinde ve tooltip’inde yer alır.
 const rules = stayRules({ minNights: 2, maxNights: 7, disablePast: true });
 
 export default function MinMaxLength() {

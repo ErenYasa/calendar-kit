@@ -3,7 +3,8 @@ import { Calendar, type DateRange, type SelectionRules, eachDay, getWeekday } fr
 
 // Paketin bilmediği bir kural: bir aralık en fazla bir hafta sonu içerebilir.
 // `validateSelection` önerilen her seçim için çalışır; bir sorun döndürmek
-// seçimi reddeder ve sorunun `message` metni duyurulur, araç ipucunda gösterilir.
+// seçimi reddeder: seçim değişmez; takvim sorunun `message` metnini ekran
+// okuyucuya bildirir ve tooltip’te gösterir.
 const rules: SelectionRules = {
   disablePast: true,
   validateSelection: (selection) => {

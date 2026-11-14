@@ -3,7 +3,7 @@ import { Calendar, addMonthsToMonth, getMonth, getToday, stayRules } from 'calen
 import { useAvailability } from '../shared/availability.tr';
 
 // Ay başına veri: uygulama takvimin render ettiği ayları yükler ve her ayın
-// durumunu bildirir. Yüklenen/bilinmeyen aylar iskelet gösterir ve seçimi
+// durumunu bildirir. Verisi yüklenen veya bilinmeyen aylarda tarihler yerine boş yer tutucular görünür ve seçimi
 // engeller; hata durumunda bir yeniden deneme düğmesi çıkar. Burada görünen iki
 // aydan sonraki ay bir kez başarısız olur: hatayı görmek ve yeniden denemek için
 // "sonraki" düğmesine basın.

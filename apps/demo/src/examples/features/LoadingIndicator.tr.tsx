@@ -3,7 +3,8 @@ import { Calendar, addMonthsToMonth, getMonth, getToday } from 'calendar-kit';
 import { useAvailability } from '../shared/availability.tr';
 import './LoadingIndicator.css';
 
-// renderLoading, varsayılan gün iskeletinin üstüne görünür bir gösterge ekler:
+// renderLoading, tarihler yüklenirken gösterilen
+// varsayılan boş yer tutuculara ek olarak görünür bir gösterge ekler:
 // verisi yüklenen bir ay için "month" kapsamı, sürekli modda yeni eklenen aylar
 // için "load-more", takvim genelindeki `loading` prop’u için "initial".
 export default function LoadingIndicator() {

@@ -11,14 +11,14 @@ const MARGIN = 8;
 // document.body içine taşınan bir açılır pencerede (popover). Gizli bir depo
 // (store) yoktur; üçü de aynı prop’ları alır. `activeEndpoint` da paylaşılır;
 // böylece bir takvimde seçilen başlangıç diğerinde tamamlanabilir. Görünen ay,
-// odak ve araç ipucu her takvime özeldir.
+// odak ve tooltip her takvime özeldir.
 export default function SyncedEverywhere() {
   const [today] = useState(() => getToday());
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [endpoint, setEndpoint] = useState<RangeEndpoint>('start');
   const shared = { rules, value: range, onChange: setRange, activeEndpoint: endpoint, onActiveEndpointChange: setEndpoint };
 
-  // Modal: diyalog üst katmanda (top layer) yer alır, bu yüzden araç ipucu portal ile onun içine konur.
+  // Modal: diyalog üst katmanda (top layer) yer alır, bu yüzden tooltip portal ile onun içine konur.
   const dialog = useRef<HTMLDialogElement>(null);
   const [dialogContent, setDialogContent] = useState<HTMLDivElement | null>(null);
 

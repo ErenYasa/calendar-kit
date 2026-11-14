@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Calendar } from 'calendar-kit';
 
-// Henüz hiç veri gösterilmeden `loading` = ilk yükleme: günler iskelet olarak
-// çizilir (görünür metin yok; ekran okuyucular bir durum mesajı alır) ve
-// seçilemez. Daha sonra yeniden açılırsa = arka planda yenileme: görünüm,
-// seçim ve klavye odağı korunur, yalnızca aria-busy ayarlanır.
+// İlk yükleme: takvim ilk açıldığında `loading` açıksa tarihlerin yerinde boş
+// yer tutucular görünür (ekran okuyucular bir durum mesajı alır) ve varsayılan
+// unknownDataPolicy 'block' ile hiçbir gün seçilemez.
+// Arka planda yenileme: tarihler bir kez gösterildikten sonra `loading` yeniden
+// açılırsa görünüm, seçim ve klavye odağı korunur; günler seçilebilir kalır,
+// yalnızca aria-busy ayarlanır. "Yeniden yükle" takvimi yeni bir key ile yeniden
+// mount eder; böylece ilk yükleme tekrar görünür.
 export default function InitialLoad() {
   const [mount, setMount] = useState(0);
   const [loading, setLoading] = useState(true);

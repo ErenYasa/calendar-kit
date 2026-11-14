@@ -1,0 +1,8 @@
+.month-position {
+  display: grid;
+  gap: 24px;
+}
+.month-position-label {
+  margin: 0 0 8px;
+  font-weight: 600;
+}

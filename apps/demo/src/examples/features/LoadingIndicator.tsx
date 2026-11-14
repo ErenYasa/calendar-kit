@@ -3,7 +3,8 @@ import { Calendar, addMonthsToMonth, getMonth, getToday } from 'calendar-kit';
 import { useAvailability } from '../shared/availability';
 import './LoadingIndicator.css';
 
-// renderLoading adds a visible indicator on top of the default day skeleton:
+// renderLoading adds a visible indicator on top of the default
+// placeholders shown while dates load:
 // scope "month" for a month whose data is loading, "load-more" for months just
 // added in continuous mode, "initial" for the calendar-wide `loading` prop.
 export default function LoadingIndicator() {

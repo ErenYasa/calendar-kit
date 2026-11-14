@@ -4,9 +4,11 @@ import './Synced.css';
 
 const rules = stayRules({ minNights: 2, disablePast: true });
 
-// Gizli bir depo (store) yoktur: iki takvim aynı prop’ları alarak durumu paylaşır.
+// Gizli bir store yoktur: iki takvim aynı prop’ları alarak durumu paylaşır.
 // Birinde seçim yapmak diğerini günceller; `activeEndpoint` da paylaşılır, böylece
-// soldakinde seçilen başlangıç sağdakinde tamamlanabilir.
+// A’da seçilen başlangıç B’de tamamlanabilir.
+// orientation="vertical" yalnızca B’nin kendi iki ayını yerleştirir (alt alta);
+// A ile B’nin sayfadaki yerini .synced grid’i belirler.
 export default function Synced() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [endpoint, setEndpoint] = useState<RangeEndpoint>('start');
@@ -15,7 +17,7 @@ export default function Synced() {
   return (
     <div className="synced">
       <Calendar mode="range" {...shared} aria-label="Takvim A" />
-      <Calendar mode="range" {...shared} orientation="vertical" aria-label="Takvim B" />
+      <Calendar mode="range" {...shared} numberOfMonths={2} orientation="vertical" aria-label="Takvim B" />
     </div>
   );
 }

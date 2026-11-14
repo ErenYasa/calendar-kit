@@ -3,7 +3,7 @@ import { Calendar, type DateRange, stayRules } from 'calendar-kit';
 
 const rules = stayRules({ minNights: 3, disablePast: true });
 
-// boundary="viewport": araç ipucu takvimin dışına taşabilir (pencerenin içinde
+// boundary="viewport": tooltip takvimin dışına taşabilir (pencerenin içinde
 // kalır) ve takvimin üst bilgisini örtebilir. Önce placement="right" denenir;
 // sığmazsa sırasıyla sol, sonra üst ve alt denenir.
 export default function TooltipViewport() {

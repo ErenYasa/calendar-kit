@@ -8,7 +8,7 @@ const MARGIN = 8;
 
 // Portal ile document.body içine render edilen bir açılır pencere (popover).
 // Portal yalnızca DOM’u taşır; konumlandırma uygulamanın işidir (takvim yalnızca
-// kendi araç ipucunu konumlandırır). Burada konum, kaydırmada (herhangi bir
+// kendi tooltip’ini konumlandırır). Burada konum, kaydırmada (herhangi bir
 // kaydırma kabında) ve yeniden boyutlandırmada tetikleyiciyi izler, yukarıda daha
 // çok yer varsa yukarı açılır, yatayda görünüm alanının içinde kalır ve
 // tetikleyici kaydırılarak görünümden çıkınca kapanır. Escape, dışarıya tıklama

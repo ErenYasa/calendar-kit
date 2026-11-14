@@ -15,8 +15,14 @@ export function SelectionModes() {
         <p>Clicks toggle dates. <code>rules.maxSelections</code> limits how many distinct dates can be selected.</p>
         <Example src="features/ModeMultiple" title="Multiple dates" />
         <p>
-          Weekday rules apply to every picked date in multiple mode: <code>startWeekdays</code> limits which weekdays can be chosen. Rejections are announced
-          and shown in the day&apos;s tooltip; their wording comes from <code>messages.reasons</code>.
+          Weekday rules apply to every picked date in multiple mode: <code>startWeekdays</code> limits which weekdays can be chosen. If you try to select a
+          day that is not allowed, the selection does not change. The calendar tells screen readers why, and also shows the reason in the day&apos;s tooltip.
+          The texts come from <code>messages.reasons</code>.
+        </p>
+        <p>
+          Exceptions: a day blocked because it is in the past or the future, outside <code>minDate</code>/<code>maxDate</code>, invalid, or still waiting for
+          its data has no default tooltip (the reason is still announced and is part of the day&apos;s label). When you pass <code>getDayTooltip</code>, your
+          content is shown instead of the default tooltip.
         </p>
         <Example src="features/SessionDays" title="Tuesday and Thursday sessions" />
       </Section>
@@ -160,6 +166,20 @@ export function Orientation() {
       <Section title="Vertical">
         <Example src="features/Vertical" title="Vertical months" />
       </Section>
+      <Section title="Fixed number of week rows">
+        <p>
+          A month needs four, five or six week rows, depending on how many days it has and on which weekday it starts. By default each month gets only the
+          rows it needs, so the calendar gets taller or shorter when the user moves to a month with a different number of rows. <code>fixedWeeks</code>{' '}
+          always renders six rows (the unused ones stay empty): the height stays the same from month to month, so the content below the calendar does not
+          jump. It does not change how many months are shown.
+        </p>
+        <p>
+          The example shows the same month twice — the first month from now on that fits in five rows, with Monday as the first day of the week — once with{' '}
+          <code>fixedWeeks=&#123;false&#125;</code> and once with <code>fixedWeeks=&#123;true&#125;</code>. Week rows are outlined so the sixth, empty row is
+          visible.
+        </p>
+        <Example src="features/FixedWeeks" title="Five-row month with and without fixedWeeks" />
+      </Section>
       <Section title="Paged or continuous navigation">
         <p>
           <code>navigation=&quot;paged&quot;</code> (default) shows a window of <code>numberOfMonths</code> months; the arrows replace it by{' '}
@@ -183,12 +203,17 @@ export function Orientation() {
 export function MonthPosition() {
   return (
     <Page title="Reference month position" lead="Where the reference month appears inside a window of several months.">
-      <Section title="Middle position">
+      <Section title="First or middle position">
         <p>
-          <code>monthPosition</code> is 1-based: with 3 months, <code>1</code> shows reference + 2 next, <code>2</code> previous + reference + next. The order is
-          always chronological. When the window would cross <code>minDate</code>/<code>maxDate</code> it shifts inside them.
+          <code>monthPosition</code> (1-based) sets where the reference month sits among the months shown. It does not change the reference month, only its
+          place. With November as the reference month and three months, <code>monthPosition=&#123;1&#125;</code> shows November, December and January;{' '}
+          <code>monthPosition=&#123;2&#125;</code> shows October, November and December.
         </p>
-        <Example src="features/MonthPosition" title="Reference month in the middle" />
+        <p>
+          The example compares both with the same reference month (the current month) and three months. The order is always chronological. When the window
+          would cross <code>minDate</code>/<code>maxDate</code> it shifts inside them.
+        </p>
+        <Example src="features/MonthPosition" title="monthPosition 1 and 2 compared" />
       </Section>
     </Page>
   );
@@ -341,7 +366,8 @@ export function TooltipPage() {
       <Section title="Day tooltips">
         <p>
           Return text or <code>&#123; content, persistent &#125;</code> from <code>getDayTooltip(&#123; day, data &#125;)</code>. Tooltips open on hover, keyboard
-          focus and tap; <code>persistent</code> ones show without interaction. By default rejected days show their reason and today shows “Today”.
+          focus and tap; <code>persistent</code> ones show without interaction. By default a day that cannot be picked shows the reason (except for past/future,
+          min/max, invalid and missing-data reasons) and today shows “Today”.
         </p>
         <Example src="features/Tooltip" title="Reasons and hints" />
       </Section>
@@ -367,7 +393,7 @@ export function TooltipPage() {
       <ul>
         <li>The tooltip is portalled with fixed positioning; the root&apos;s tooltip CSS variables and font are copied to it.</li>
         <li>Escape closes it without moving focus; a tap outside closes a touch tooltip. Text wraps instead of being cut.</li>
-        <li>Skeleton days (loading) never show tooltips. The reason is always in the day&apos;s aria-label as well.</li>
+        <li>Empty placeholders shown while dates load never show tooltips. The reason is always in the day&apos;s aria-label as well.</li>
         <li><code>renderDayTooltip(&#123; day, content, trigger, placement &#125;)</code> replaces the tooltip&apos;s content.</li>
       </ul>
     </Page>
@@ -391,7 +417,7 @@ export function DayContent() {
           { name: 'badge', type: 'ReactNode', description: 'A small badge.' },
           { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner (the badge sits in the top end corner); it does not move the number or label.' },
           { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Dots; each label is announced.' },
-          { name: 'description', type: 'string', description: 'Added to the accessible label.' },
+          { name: 'description', type: 'string', description: 'The day’s accessible description (aria-describedby): screen readers read it after the day’s label.' },
         ]}
       />
       <p>
@@ -405,26 +431,36 @@ export function DayContent() {
 export function Loading() {
   return (
     <Page title="Loading & errors" lead="The calendar never fetches. Your app loads data and tells the calendar what is known.">
-      <Section title="Initial load and background refresh">
+      <Section title="Initial load">
         <p>
-          <code>loading</code> before the calendar was ever shown without it is the <strong>initial load</strong>: days are drawn as an equal-size skeleton (no
-          visible text; a status message for screen readers and <code>aria-busy</code>), and no day can be selected by pointer, keyboard or controller. Turned
-          on again later it is a <strong>background refresh</strong>: view, selection and focus stay as they are. To show the skeleton again, remount with a
-          new <code>key</code>.
+          If <code>loading</code> is on when the calendar first opens, empty placeholders shown while dates load replace the dates: the days have no numbers,
+          screen readers get a status message and the calendar sets <code>aria-busy</code>. Whether a day can be picked meanwhile depends on{' '}
+          <code>unknownDataPolicy</code>: with <code>&apos;block&apos;</code> (the default) nothing can be selected — not by pointer, keyboard or{' '}
+          <code>ref.select()</code>; with <code>&apos;allow&apos;</code> selection works as usual.
+        </p>
+        <p>
+          In the example, “Reload (initial load)” remounts the calendar with a new <code>key</code>, so the placeholders appear again for three seconds.
         </p>
         <Example src="features/InitialLoad" title="Initial load and refresh" />
+      </Section>
+      <Section title="Background refresh">
+        <p>
+          Once the dates have been shown, turning <code>loading</code> on again keeps the current view, selection and focus. The days keep their numbers and
+          only <code>aria-busy</code> is set. A background refresh never blocks selection, whatever the policy. Try “Refresh in background” in the example
+          above.
+        </p>
       </Section>
       <Section title="Data per month, errors and retry">
         <p>
           Start requests from <code>onRenderedMonthsChange</code> and return each month&apos;s status from <code>getDataStatus(month)</code>:{' '}
-          <code>unknown</code>, <code>loading</code>, <code>loaded</code> or <code>error</code>. Days whose data is not loaded cannot be selected (
-          <code>unknownDataPolicy: &apos;allow&apos;</code> changes that). An error shows a retry button that calls <code>onRetry(months)</code>.
+          <code>unknown</code>, <code>loading</code>, <code>loaded</code> or <code>error</code>. Months whose data is still loading or unknown show the
+          placeholders, and with the default policy their days cannot be selected (<code>unknownDataPolicy: &apos;allow&apos;</code> changes that). An error shows a retry button that calls <code>onRetry(months)</code>.
         </p>
         <Example src="features/MonthData" title="Async availability" />
       </Section>
       <Section title="A visible loading indicator">
         <p>
-          The default loading view is only the day skeleton plus a screen-reader status. <code>renderLoading</code> adds your own visible indicator; it is
+          The default loading view is only the placeholders plus a screen-reader status. <code>renderLoading</code> adds your own visible indicator; it is
           called with <code>scope</code> <code>&apos;month&apos;</code>, <code>&apos;load-more&apos;</code> or <code>&apos;initial&apos;</code>, the affected{' '}
           <code>months</code> and the localised text.
         </p>
@@ -432,17 +468,17 @@ export function Loading() {
       </Section>
       <PropsTable
         rows={[
-          { name: 'loading', type: 'boolean', description: 'Calendar-wide loading (initial or refresh, see above).' },
+          { name: 'loading', type: 'boolean', description: 'Calendar-wide loading (initial load or background refresh, see above).' },
           { name: 'getDataStatus', type: '(month) => DataStatus', description: 'Status of each month’s data.' },
           { name: 'onRetry', type: '(months) => void', description: 'Called by the default error UI.' },
-          { name: 'renderLoading', type: "({ scope: 'initial' | 'month' | 'load-more', months, status }) => ReactNode", description: 'An extra visible indicator (the skeleton stays).' },
+          { name: 'renderLoading', type: "({ scope: 'initial' | 'month' | 'load-more', months, status }) => ReactNode", description: 'An extra visible indicator (the placeholders stay).' },
           { name: 'renderError', type: '({ months, retry }) => ReactNode', description: 'Custom error UI.' },
           { name: 'onLoadingChange', type: '(event) => void', description: 'Transitions only: initial, refreshing, loadingMonths, errorMonths, busy.' },
         ]}
       />
       <Note>
         <p>
-          The skeleton shimmer and spinner stop when the user prefers reduced motion. Protect against stale responses in your loader: the example aborts
+          The placeholders&apos; shimmer and the spinner stop when the user prefers reduced motion. Protect against stale responses in your loader: the example aborts
           requests for months that are no longer rendered.
         </p>
       </Note>
@@ -453,6 +489,13 @@ export function Loading() {
 export function I18n() {
   return (
     <Page title="Locales, week start & RTL" lead="Month and weekday names come from Intl; the calendar's own texts come from message packs.">
+      <Note>
+        <p>
+          A calendar&apos;s language comes only from its own <code>locale</code> and <code>messages</code>; the docs language switch does not change it. To
+          change the calendar&apos;s texts or add a language that has no ready pack, see the sections on customizing calendar text and adding your own
+          language pack in <a href="#/api-messages">Messages &amp; formatting</a>.
+        </p>
+      </Note>
       <Section title="Turkish">
         <Example src="features/LocaleTurkish" title="Turkish locale" />
       </Section>
@@ -562,6 +605,12 @@ export function Synced() {
   return (
     <Page title="Synced calendars" lead="Several calendars can show and edit the same selection. There is no hidden store: share state through props.">
       <Section title="Shared value and endpoint">
+        <p>
+          Calendars A and B receive the same <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code> and <code>onActiveEndpointChange</code>, so
+          a start picked in A can be finished in B. B also has <code>numberOfMonths=&#123;2&#125;</code> and <code>orientation=&quot;vertical&quot;</code>:
+          its two months are stacked inside B. <code>orientation</code> only sets how a calendar lays out its own months; it does not change where A and B
+          sit on the page — that is your layout (here a CSS grid).
+        </p>
         <Example src="features/Synced" title="Two calendars, one selection" />
       </Section>
       <Section title="Inline and in a dialog">

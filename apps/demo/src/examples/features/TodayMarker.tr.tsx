@@ -1,7 +1,7 @@
 import { Calendar } from 'calendar-kit';
 import './TodayMarker.css';
 
-// highlightToday={false} ince çemberi ve "Today" araç ipucunu kaldırır.
+// highlightToday={false} ince çemberi ve "Today" tooltip’ini kaldırır.
 // Bugün bilgisi günün erişilebilir etiketinde ("today") ve day.today’de kalır.
 // `today` prop’u verilmediğinde hangi tarihin bugün olduğuna timeZone karar verir.
 export default function TodayMarker() {

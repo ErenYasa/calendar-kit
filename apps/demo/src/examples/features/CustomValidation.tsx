@@ -3,7 +3,8 @@ import { Calendar, type DateRange, type SelectionRules, eachDay, getWeekday } fr
 
 // A rule the package does not know: a range may contain at most one weekend.
 // `validateSelection` runs for every proposed selection; returning an issue
-// rejects it and its `message` is announced and shown in the tooltip.
+// rejects it: the selection does not change, and its `message` is read to
+// screen readers and shown in the tooltip.
 const rules: SelectionRules = {
   disablePast: true,
   validateSelection: (selection) => {

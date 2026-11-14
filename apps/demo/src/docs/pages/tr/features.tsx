@@ -15,8 +15,14 @@ export function SelectionModes() {
         <p>Tıklamalar tarihleri seçer veya seçimi kaldırır. <code>rules.maxSelections</code> en fazla kaç farklı tarihin seçilebileceğini sınırlar.</p>
         <Example src="features/ModeMultiple" title="Çoklu tarih" />
         <p>
-          Çoklu modda hafta günü kuralları seçilen her tarihe uygulanır: <code>startWeekdays</code> hangi hafta günlerinin seçilebileceğini sınırlar. Reddedilen
-          seçimler duyurulur ve günün araç ipucunda gösterilir; metinleri <code>messages.reasons</code>’tan gelir.
+          Çoklu modda hafta günü kuralları seçilen her tarihe uygulanır: <code>startWeekdays</code> hangi hafta günlerinin seçilebileceğini sınırlar. İzin
+          verilmeyen bir günü seçmeye çalışırsanız seçim değişmez. Takvim, nedeni ekran okuyucuya bildirir; günün tooltip’inde de gösterir. Metinler{' '}
+          <code>messages.reasons</code>’tan gelir.
+        </p>
+        <p>
+          İstisnalar: geçmişte ya da gelecekte olduğu, <code>minDate</code>/<code>maxDate</code> dışında kaldığı, geçersiz olduğu veya verisi henüz gelmediği
+          için engellenen günlerde varsayılan tooltip gösterilmez (neden yine de bildirilir ve günün etiketinde yer alır). <code>getDayTooltip</code>{' '}
+          verirseniz varsayılan tooltip yerine sizin içeriğiniz gösterilir.
         </p>
         <Example src="features/SessionDays" title="Salı ve perşembe seansları" />
       </Section>
@@ -27,8 +33,8 @@ export function SelectionModes() {
       <Section title="Başlangıç değerleri">
         <PropsTable
           rows={[
-            { name: 'value', type: 'CalendarDate | null · DateRange · readonly CalendarDate[]', description: 'Moda ait kontrollü değer.' },
-            { name: 'defaultValue', type: <><code>value</code> ile aynı</>, description: 'Kontrolsüz başlangıç değeri; mount sırasında bir kez okunur.' },
+            { name: 'value', type: 'CalendarDate | null · DateRange · readonly CalendarDate[]', description: 'Moda ait controlled değer: değeri siz tutar, onChange ile güncellersiniz.' },
+            { name: 'defaultValue', type: <><code>value</code> ile aynı</>, description: 'Uncontrolled başlangıç değeri: değeri takvim tutar; mount sırasında bir kez okunur.' },
             { name: 'onChange', type: '(value, event) => void', description: 'Kullanıcı ve controller değişikliklerinde çağrılır; prop değişikliklerinde asla çağrılmaz.' },
             { name: 'activeEndpoint / defaultActiveEndpoint', type: "'start' | 'end'", description: 'Yalnızca aralık modu: sonraki tıklamanın hangi ucu belirleyeceği.' },
           ]}
@@ -65,7 +71,7 @@ export function DateLimits() {
         <p>
           Bugün, <code>today</code> prop’undan gelir ya da <code>timeZone</code> içinde (varsayılan: tarayıcının saat dilimi) hesaplanır ve gece yarısından sonra
           görünen ay değişmeden yenilenir. <code>disablePast</code>/<code>disableFuture</code>’ı, işaretçiyi ve etiketi belirler.{' '}
-          <code>highlightToday=&#123;false&#125;</code> yalnızca daireyi ve “Bugün” araç ipucunu gizler.
+          <code>highlightToday=&#123;false&#125;</code> yalnızca daireyi ve “Bugün” tooltip’ini gizler.
         </p>
         <Example src="features/TodayMarker" title="Bugün işaretçisi ve saat dilimi" />
       </Section>
@@ -86,7 +92,7 @@ export function LengthRules() {
     <Page title="Uzunluk kuralları" lead="En kısa, en uzun ve sabit aralık süreleri; konaklamalarda gece, gün aralıklarında gün olarak ölçülür.">
       <Section title="En kısa ve en uzun">
         <p>
-          Bir başlangıç seçiliyken kuralı bozacak bitişler devre dışı bırakılır; sebepleri günün erişilebilir etiketinde ve varsayılan araç ipucunda yer alır.{' '}
+          Bir başlangıç seçiliyken kuralı bozacak bitişler devre dışı bırakılır; sebepleri günün erişilebilir etiketinde ve varsayılan tooltip’inde yer alır.{' '}
           <code>requireReachableEnd</code> ile (her iki adaptörde de açık) ardından geçerli bir bitiş gelemeyecek başlangıç reddedilir — örneğin 2 gecelik
           minimumda sonraki gece doluysa.
         </p>
@@ -141,8 +147,8 @@ export function DayRules() {
           { name: 'closed', type: 'boolean', description: 'Bu günde hiçbir şey yapılamaz.' },
           { name: 'canStart / canEnd / canPassThrough', type: 'boolean', default: '!closed', description: 'Başlangıç veya tekli seçim / aralık bitişi / aralığın içi.' },
           { name: 'reason', type: 'string', description: 'Kendi etiketiniz (ör. check-out-only); messages.dayReasons ile yerelleştirilir.' },
-          { name: 'message', type: 'string', description: 'Araç ipuçları ve duyurular için hazır metin.' },
-          { name: 'schedule', type: 'boolean', description: 'Kısıtlama bir takvim (schedule) kuralıdır; relaxSchedule tarafından yok sayılır.' },
+          { name: 'message', type: 'string', description: 'Tooltip’ler ve duyurular için hazır metin.' },
+          { name: 'schedule', type: 'boolean', description: 'Kısıtlama bir takvim düzeni (schedule) kuralıdır; relaxSchedule tarafından yok sayılır.' },
         ]}
       />
       <p>
@@ -160,6 +166,20 @@ export function Orientation() {
       </Section>
       <Section title="Dikey">
         <Example src="features/Vertical" title="Dikey aylar" />
+      </Section>
+      <Section title="Sabit hafta satırı sayısı">
+        <p>
+          Bir ay, kaç günden oluştuğuna ve haftanın hangi gününde başladığına göre dört, beş ya da altı hafta satırı gerektirir. Varsayılan olarak her ay yalnızca
+          ihtiyaç duyduğu satırları alır; bu yüzden kullanıcı satır sayısı farklı bir aya geçtiğinde takvim uzar ya da kısalır. <code>fixedWeeks</code>{' '}
+          her zaman altı satır render eder (kullanılmayanlar boş kalır): yükseklik aydan aya aynı kalır, böylece takvimin altındaki içerik kaymaz.
+          Gösterilen ay sayısını değiştirmez.
+        </p>
+        <p>
+          Örnek aynı ayı iki kez gösterir — haftanın ilk günü pazartesi iken bu aydan itibaren beş satıra sığan ilk ay — bir kez{' '}
+          <code>fixedWeeks=&#123;false&#125;</code>, bir kez <code>fixedWeeks=&#123;true&#125;</code> ile. Altıncı, boş satır görünsün diye hafta satırları
+          çerçevelenmiştir.
+        </p>
+        <Example src="features/FixedWeeks" title="fixedWeeks ile ve fixedWeeks olmadan beş satırlık ay" />
       </Section>
       <Section title="Sayfalı veya sürekli gezinme">
         <p>
@@ -185,12 +205,17 @@ export function Orientation() {
 export function MonthPosition() {
   return (
     <Page title="Referans ayın konumu" lead="Birden fazla aylık bir pencerede referans ayın nerede görüneceği.">
-      <Section title="Ortada konum">
+      <Section title="Başta veya ortada">
         <p>
-          <code>monthPosition</code> 1’den başlar: 3 ayda <code>1</code> referans ay + sonraki 2 ayı, <code>2</code> önceki + referans + sonraki ayı gösterir.
-          Sıralama her zaman kronolojiktir. Pencere <code>minDate</code>/<code>maxDate</code>’i aşacaksa sınırların içine kaydırılır.
+          <code>monthPosition</code> (1’den başlar) referans ayın gösterilen aylar arasındaki yerini belirler. Referans ayı değiştirmez, yalnızca yerini
+          değiştirir. Referans ay kasım ve ay sayısı üç iken <code>monthPosition=&#123;1&#125;</code> kasım, aralık ve ocak ayını;{' '}
+          <code>monthPosition=&#123;2&#125;</code> ekim, kasım ve aralık ayını gösterir.
         </p>
-        <Example src="features/MonthPosition" title="Referans ay ortada" />
+        <p>
+          Örnek, ikisini aynı referans ayla (içinde bulunulan ay) ve üç ayla karşılaştırır. Sıralama her zaman kronolojiktir. Pencere{' '}
+          <code>minDate</code>/<code>maxDate</code>’i aşacaksa sınırların içine kaydırılır.
+        </p>
+        <Example src="features/MonthPosition" title="monthPosition 1 ve 2 karşılaştırması" />
       </Section>
     </Page>
   );
@@ -264,7 +289,7 @@ export function LoadMore() {
           listeyi uzatır.
         </p>
         <p>
-          Kontrollü bir <code>visibleMonth</code> burada da çalışır: prop’u değiştirmek <code>goToMonth()</code> gibi davranır. Zaten render edilmiş bir aya
+          Controlled bir <code>visibleMonth</code> (değerini siz verirsiniz) burada da çalışır: prop’u değiştirmek <code>goToMonth()</code> gibi davranır. Zaten render edilmiş bir aya
           kaydırılır ve yüklenen aylar kalır; render edilmemiş bir ay için liste onun çevresinde yeniden kurulur (<code>maxRenderedMonths</code> sınırında;
           veri yüklemenin takip edebilmesi için <code>onRenderedMonthsChange</code> ile bildirilir) ve ay render edilince ona kaydırılır. Geçiş anlıktır, odak
           hareket etmez ve kendi prop değişikliğiniz için <code>onVisibleMonthChange</code> çağrılmaz. Prop’u <code>onVisibleMonthsChange</code>’ten değil,{' '}
@@ -340,18 +365,18 @@ export function GoToMonth() {
 
 export function TooltipPage() {
   return (
-    <Page title="Araç ipucu" lead="Günleri açıklayın: bir günün neden seçilemediğini, bir fiyatı ya da aralık seçilirken bir ipucunu.">
-      <Section title="Gün araç ipuçları">
+    <Page title="Tooltip" lead="Günleri açıklayın: bir günün neden seçilemediğini, bir fiyatı ya da aralık seçilirken bir ipucunu.">
+      <Section title="Gün tooltip’leri">
         <p>
-          <code>getDayTooltip(&#123; day, data &#125;)</code>’ten metin veya <code>&#123; content, persistent &#125;</code> döndürün. Araç ipuçları fareyle
-          üzerine gelindiğinde, klavye odağında ve dokunmada açılır; <code>persistent</code> olanlar etkileşim olmadan görünür. Varsayılan olarak reddedilen
-          günler sebeplerini, bugün ise “Bugün” metnini gösterir.
+          <code>getDayTooltip(&#123; day, data &#125;)</code>’ten metin veya <code>&#123; content, persistent &#125;</code> döndürün. Tooltip’ler fareyle
+          üzerine gelindiğinde, klavye odağında ve dokunmada açılır; <code>persistent</code> olanlar etkileşim olmadan görünür. Varsayılan olarak seçilemeyen
+          bir gün nedenini gösterir (geçmiş/gelecek, min/max, geçersiz tarih ve eksik veri nedenleri hariç); bugün ise “Bugün” metnini gösterir.
         </p>
         <Example src="features/Tooltip" title="Sebepler ve ipuçları" />
       </Section>
       <Section title="Görüntü alanı sınırı ve konumlandırma">
         <p>
-          Varsayılan <code>boundary=&quot;calendar&quot;</code> ile araç ipucu kendi ayının içinde, ay başlığının ve hafta günü satırının altında kalır; böylece
+          Varsayılan <code>boundary=&quot;calendar&quot;</code> ile tooltip kendi ayının içinde, ay başlığının ve hafta günü satırının altında kalır; böylece
           gezinmeyi asla örtmez. <code>boundary=&quot;viewport&quot;</code> ise pencere içinde kalmak koşuluyla takvimin dışına taşmasına izin verir (dar
           takvimlerde kullanışlıdır). Önce tercih edilen <code>placement</code>, sonra karşı taraf, ardından kalan taraflar denenir; metin kesilmek yerine alt
           satıra geçer.
@@ -365,15 +390,15 @@ export function TooltipPage() {
           { name: 'boundary', type: "'calendar' | 'viewport'", default: "'calendar'", description: 'calendar: ayın içinde, başlığın ve hafta günü satırının altında kalır. viewport: takvimin dışına taşabilir.' },
           { name: 'offset', type: 'number', default: '8', description: 'Güne olan boşluk (px).' },
           { name: 'container', type: 'HTMLElement | null', default: 'document.body', description: 'Portal hedefi (ör. bir <dialog>).' },
-          { name: 'openDate', type: 'CalendarDate | null', description: 'Kontrollü açık gün.' },
-          { name: 'className', type: 'string', description: 'Araç ipucuna eklenen ek sınıf.' },
+          { name: 'openDate', type: 'CalendarDate | null', description: 'Açık gün (controlled).' },
+          { name: 'className', type: 'string', description: 'Tooltip’e eklenen ek sınıf.' },
         ]}
       />
       <ul>
-        <li>Araç ipucu sabit konumlandırmayla portal üzerinden render edilir; kökün araç ipucu CSS değişkenleri ve yazı tipi ona kopyalanır.</li>
-        <li>Escape odağı taşımadan kapatır; dışarıya dokunmak dokunmayla açılan araç ipucunu kapatır. Metin kesilmek yerine alt satıra geçer.</li>
-        <li>İskelet günler (yükleme) asla araç ipucu göstermez. Sebep her zaman günün aria-label’ında da bulunur.</li>
-        <li><code>renderDayTooltip(&#123; day, content, trigger, placement &#125;)</code> araç ipucunun içeriğini değiştirir.</li>
+        <li>Tooltip sabit konumlandırmayla portal üzerinden render edilir; kökün tooltip CSS değişkenleri ve yazı tipi ona kopyalanır.</li>
+        <li>Escape odağı taşımadan kapatır; dışarıya dokunmak dokunmayla açılan tooltip’i kapatır. Metin kesilmek yerine alt satıra geçer.</li>
+        <li>Tarihler yüklenirken gösterilen boş yer tutucular asla tooltip göstermez. Sebep her zaman günün aria-label’ında da bulunur.</li>
+        <li><code>renderDayTooltip(&#123; day, content, trigger, placement &#125;)</code> tooltip’in içeriğini değiştirir.</li>
       </ul>
     </Page>
   );
@@ -396,7 +421,7 @@ export function DayContent() {
           { name: 'badge', type: 'ReactNode', description: 'Küçük bir rozet.' },
           { name: 'icon', type: 'ReactNode', description: 'Üst başlangıç köşesinde küçük bir simge (rozet üst bitiş köşesindedir); sayıyı veya etiketi kaydırmaz.' },
           { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Noktalar; her etiket ekran okuyucuya duyurulur.' },
-          { name: 'description', type: 'string', description: 'Erişilebilir etikete eklenir.' },
+          { name: 'description', type: 'string', description: 'Günün erişilebilir açıklaması (aria-describedby): ekran okuyucular onu günün etiketinden sonra okur.' },
         ]}
       />
       <p>
@@ -410,27 +435,39 @@ export function DayContent() {
 export function Loading() {
   return (
     <Page title="Yükleme ve hatalar" lead="Takvim hiçbir zaman veri çekmez. Verileri uygulamanız yükler ve neyin bilindiğini takvime söyler.">
-      <Section title="İlk yükleme ve arka planda yenileme">
+      <Section title="İlk yükleme">
         <p>
-          Takvim daha önce hiç onsuz gösterilmemişken <code>loading</code> <strong>ilk yükleme</strong> anlamına gelir: günler eşit boyutlu bir iskelet olarak
-          çizilir (görünür metin yok; ekran okuyucular için bir durum mesajı ve <code>aria-busy</code>) ve hiçbir gün işaretçi, klavye veya controller ile
-          seçilemez. Daha sonra yeniden açılırsa <strong>arka planda yenileme</strong> olur: görünüm, seçim ve odak oldukları gibi kalır. İskeleti yeniden
-          göstermek için yeni bir <code>key</code> ile yeniden mount edin.
+          Takvim ilk açıldığında <code>loading</code> açıksa tarihlerin yerinde, tarihler yüklenirken gösterilen boş yer tutucular görünür: günlerde sayı
+          yoktur, ekran okuyucular bir durum mesajı alır ve takvim <code>aria-busy</code> ayarlar. Bu sırada bir günün seçilip seçilemeyeceği{' '}
+          <code>unknownDataPolicy</code>’ye bağlıdır: <code>&apos;block&apos;</code> (varsayılan) ile hiçbir şey seçilemez — ne fareyle ne klavyeyle ne de{' '}
+          <code>ref.select()</code> ile; <code>&apos;allow&apos;</code> ile seçim her zamanki gibi çalışır.
+        </p>
+        <p>
+          Örnekte “Yeniden yükle (ilk yükleme)” takvimi yeni bir <code>key</code> ile yeniden mount eder; böylece yer tutucular üç saniye boyunca yeniden
+          görünür.
         </p>
         <Example src="features/InitialLoad" title="İlk yükleme ve yenileme" />
+      </Section>
+      <Section title="Arka planda yenileme">
+        <p>
+          Tarihler bir kez gösterildikten sonra <code>loading</code> yeniden açılırsa mevcut görünüm, seçim ve odak korunur. Günler sayılarını korur, yalnızca{' '}
+          <code>aria-busy</code> ayarlanır. Arka planda yenileme, politika ne olursa olsun seçimi hiçbir zaman engellemez. Yukarıdaki örnekte “Arka planda
+          yenile” düğmesiyle deneyin.
+        </p>
       </Section>
       <Section title="Ay bazında veri, hatalar ve yeniden deneme">
         <p>
           İstekleri <code>onRenderedMonthsChange</code>’ten başlatın ve her ayın durumunu <code>getDataStatus(month)</code>’tan döndürün:{' '}
-          <code>unknown</code>, <code>loading</code>, <code>loaded</code> veya <code>error</code>. Verisi yüklenmemiş günler seçilemez (
-          <code>unknownDataPolicy: &apos;allow&apos;</code> bunu değiştirir). Hata durumunda <code>onRetry(months)</code>’u çağıran bir yeniden dene düğmesi
+          <code>unknown</code>, <code>loading</code>, <code>loaded</code> veya <code>error</code>. Verisi hâlâ yüklenen veya bilinmeyen
+          aylarda yer tutucular görünür ve varsayılan politikada bu ayların günleri seçilemez (<code>unknownDataPolicy: &apos;allow&apos;</code> bunu
+          değiştirir). Hata durumunda <code>onRetry(months)</code>’u çağıran bir yeniden dene düğmesi
           gösterilir.
         </p>
         <Example src="features/MonthData" title="Asenkron müsaitlik" />
       </Section>
       <Section title="Görünür bir yükleme göstergesi">
         <p>
-          Varsayılan yükleme görünümü yalnızca gün iskeleti ve ekran okuyucu için bir durumdan ibarettir. <code>renderLoading</code> kendi görünür
+          Varsayılan yükleme görünümü yalnızca yer tutuculardan ve ekran okuyucu için bir durum mesajından ibarettir. <code>renderLoading</code> kendi görünür
           göstergenizi ekler; <code>scope</code> (<code>&apos;month&apos;</code>, <code>&apos;load-more&apos;</code> veya <code>&apos;initial&apos;</code>),
           etkilenen <code>months</code> ve yerelleştirilmiş metinle çağrılır.
         </p>
@@ -438,17 +475,17 @@ export function Loading() {
       </Section>
       <PropsTable
         rows={[
-          { name: 'loading', type: 'boolean', description: 'Takvim genelinde yükleme (ilk yükleme veya yenileme, yukarıya bakın).' },
+          { name: 'loading', type: 'boolean', description: 'Takvim genelinde yükleme (ilk yükleme veya arka planda yenileme, yukarıya bakın).' },
           { name: 'getDataStatus', type: '(month) => DataStatus', description: 'Her ayın verisinin durumu.' },
           { name: 'onRetry', type: '(months) => void', description: 'Varsayılan hata arayüzü tarafından çağrılır.' },
-          { name: 'renderLoading', type: "({ scope: 'initial' | 'month' | 'load-more', months, status }) => ReactNode", description: 'Ek görünür bir gösterge (iskelet kalır).' },
+          { name: 'renderLoading', type: "({ scope: 'initial' | 'month' | 'load-more', months, status }) => ReactNode", description: 'Ek görünür bir gösterge (yer tutucular kalır).' },
           { name: 'renderError', type: '({ months, retry }) => ReactNode', description: 'Özel hata arayüzü.' },
           { name: 'onLoadingChange', type: '(event) => void', description: 'Yalnızca geçişlerde: initial, refreshing, loadingMonths, errorMonths, busy.' },
         ]}
       />
       <Note>
         <p>
-          Kullanıcı azaltılmış hareketi tercih ettiğinde iskelet parıltısı ve dönen gösterge durur. Yükleyicinizde eskimiş yanıtlara karşı önlem alın: örnek,
+          Kullanıcı azaltılmış hareketi tercih ettiğinde yer tutucuların parıltısı ve dönen gösterge durur. Yükleyicinizde eskimiş yanıtlara karşı önlem alın: örnek,
           artık render edilmeyen aylar için yapılan istekleri iptal eder.
         </p>
       </Note>
@@ -459,6 +496,13 @@ export function Loading() {
 export function I18n() {
   return (
     <Page title="Yerel ayarlar, hafta başı ve RTL" lead="Ay ve hafta günü adları Intl’den, takvimin kendi metinleri mesaj paketlerinden gelir.">
+      <Note>
+        <p>
+          Bir takvimin dili yalnızca kendi <code>locale</code> ve <code>messages</code> prop’larından gelir; dokümantasyonun dil seçimi bunu değiştirmez.
+          Takvimin metinlerini değiştirmek veya hazır paketi olmayan bir dil eklemek için <a href="#/api-messages">Mesajlar ve biçimlendirme</a> sayfasındaki
+          takvim metinlerini özelleştirme ve kendi dil paketinizi ekleme bölümlerine bakın.
+        </p>
+      </Note>
       <Section title="Türkçe">
         <Example src="features/LocaleTurkish" title="Türkçe yerel ayar" />
       </Section>
@@ -515,7 +559,7 @@ export function Slots() {
           { name: 'renderNavigation', type: '({ canPrevious, canNext, previous, next, months, labels }, ctx)', description: 'Okların yerini alır (sayfalı mod).' },
           { name: 'renderMonthHeader', type: '({ month, title, index, navigation, status }, ctx)', description: 'Bir ayın başlık satırının yerini alır.' },
           { name: 'renderLoading / renderError / renderLoadMore', type: 'functions', description: 'Bkz. Yükleme ve Kademeli ay yükleme.' },
-          { name: 'renderDayTooltip / renderDayContent / renderDay', type: 'functions', description: 'Bkz. Araç ipucu ve Stil ve özelleştirme.' },
+          { name: 'renderDayTooltip / renderDayContent / renderDay', type: 'functions', description: 'Bkz. Tooltip ve Stil ve özelleştirme.' },
         ]}
       />
     </Page>
@@ -528,27 +572,27 @@ export function Placement() {
       <Section title="Satır içi">
         <p>
           Diğer tüm örnekler satır içidir: takvim sayfanın bir parçasıdır. Kendini asla kapatmaz. <code>onOutsideClick</code>, React ağacının dışındaki işaretçi
-          basışlarını bildirir (araç ipucu gibi kendi portalları içeride sayılır).
+          basışlarını bildirir (tooltip gibi kendi portalları içeride sayılır).
         </p>
       </Section>
       <Section title="Modal">
         <p>
           <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar, Escape ile kapanır ve odağı geri verir. Modal bir
-          diyalog üst katmanda (top layer) olduğu için araç ipucu portalını <code>tooltip.container</code> ile diyaloğun içine yönlendirin.
+          diyalog üst katmanda (top layer) olduğu için tooltip portalını <code>tooltip.container</code> ile diyaloğun içine yönlendirin.
         </p>
         <Example src="features/Modal" title="Diyalog içinde takvim" />
       </Section>
       <Section title="Portal üzerinden açılır pencere (popover)">
         <p>
           Bir portal yalnızca takvimin DOM’unu başka bir yere taşır (burada <code>document.body</code> içine); hiçbir şeyi konumlandırmaz. Açılır pencereyi
-          konumlandırmak uygulamanızın sorumluluğundadır — takvim yalnızca kendi araç ipucunu konumlandırır. <code>position: fixed</code> ile bir kez
+          konumlandırmak uygulamanızın sorumluluğundadır — takvim yalnızca kendi tooltip’ini konumlandırır. <code>position: fixed</code> ile bir kez
           yerleştirilen bir açılır pencere, sayfa kaydırılırken konduğu yerde kalır; böylece tetikleyicisinden kopar ve ekranın dışına taşabilir. Örnek,
           konumu her kaydırmada (herhangi bir kaydırma kapsayıcısında, capture aşamasında) ve yeniden boyutlandırmada tetikleyiciye göre yeniden hesaplar ve
           bunu kare başına tek güncellemeye indirger; üstte daha fazla yer varsa yukarı doğru açılır; açılır pencereyi yatayda görüntü alanının içinde tutar ve
           yüksekliğini kullanılabilir alanla sınırlar; tetikleyici görünümden çıkınca da kapanır.
         </p>
         <p>
-          Kapatmak da uygulamanın işidir: Escape (takvim Escape’i yalnızca araç ipuçlarından biri açıkken tüketir), <code>onOutsideClick</code> ile bildirilen
+          Kapatmak da uygulamanın işidir: Escape (takvim Escape’i yalnızca tooltip’lerinden biri açıkken tüketir), <code>onOutsideClick</code> ile bildirilen
           bir dış tıklama (takvimin kendi portalları içeride sayılır), <code>onSelectionComplete</code> içinde bir seçim (<code>onChange</code> değil: zaten
           seçili tarihi yeniden seçmek değişiklik yaymaz, ama seçimi yine tamamlar) ya da sayfayla birlikte unmount. Odak <code>onReady</code> sırasında{' '}
           <code>ref.focusDate()</code> ile ızgaraya taşınır ve kapanışta <code>focus(&#123; preventScroll: true &#125;)</code> ile tetikleyiciye döner. Takvim,
@@ -570,12 +614,18 @@ export function Synced() {
   return (
     <Page title="Senkron takvimler" lead="Birden fazla takvim aynı seçimi gösterip düzenleyebilir. Gizli bir store yoktur: durumu prop’lar üzerinden paylaşın.">
       <Section title="Paylaşılan değer ve uç">
+        <p>
+          A ve B takvimleri aynı <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code> ve <code>onActiveEndpointChange</code> değerlerini
+          alır; böylece A’da seçilen başlangıç B’de tamamlanabilir. B’de ayrıca <code>numberOfMonths=&#123;2&#125;</code> ve{' '}
+          <code>orientation=&quot;vertical&quot;</code> vardır: B’nin iki ayı kendi içinde alt alta dizilir. <code>orientation</code> yalnızca bir takvimin kendi
+          aylarını nasıl yerleştireceğini belirler; A ile B’nin sayfadaki yerini değiştirmez — bu sizin yerleşiminize bağlıdır (burada bir CSS grid).
+        </p>
         <Example src="features/Synced" title="İki takvim, tek seçim" />
       </Section>
       <Section title="Satır içi ve diyalogda">
         <p>
           Diyalogdaki bir takvim yalnızca başka bir örnektir: ona aynı durumu verin. Mount edildiğinde güncel değeri gösterir ve değişiklikleri satır içinde
-          hemen görünür. Araç ipucu portalı diyaloğun içine (üst katman) yönlendirilir.
+          hemen görünür. Tooltip portalı diyaloğun içine (üst katman) yönlendirilir.
         </p>
         <Example src="features/SyncedDialog" title="Satır içi ve diyalog senkronize" />
       </Section>
@@ -591,11 +641,11 @@ export function Synced() {
             <strong>Paylaşılan</strong> (siz ilettiğiniz için): seçim, sıradaki doldurulacak uç ve kurallar.
           </li>
           <li>
-            <strong>Takvime özgü</strong>: görünen ay, klavye odağı, fareyle üzerine gelme ve araç ipucu. Siz kontrol etmedikçe her takvim kendininkini tutar.
+            <strong>Takvime özgü</strong>: görünen ay, klavye odağı, fareyle üzerine gelme ve tooltip. Siz controlled olarak vermedikçe her takvim kendininkini tutar.
           </li>
           <li>
             Diyalog üst katmanda olduğu için takvimi <code>tooltip={'{{ container: dialogContentElement }}'}</code> alır;{' '}
-            <code>document.body</code> içine portal edilen bir araç ipucu diyaloğun arkasında kalırdı.
+            <code>document.body</code> içine portal edilen bir tooltip diyaloğun arkasında kalırdı.
           </li>
           <li>
             Portal yalnızca DOM’u taşır. Açılır pencereyi konumlandırmak (tetikleyiciyi izlemek, yön değiştirmek, görüntü alanında kalmak) ve kapatmak
@@ -610,9 +660,9 @@ export function Synced() {
         rows={[
           { name: <>Seçim</>, type: 'value', description: 'Aynı value’yu ilettiğinizde paylaşılır.' },
           { name: <>Kurallar ve müsaitlik</>, type: 'rules', description: 'Aynı kaynaktan oluşturulduğunda paylaşılır.' },
-          { name: <>Görünen ay</>, type: 'visibleMonth', description: 'Siz kontrol etmedikçe takvime özgüdür.' },
-          { name: <>Etkin uç</>, type: 'activeEndpoint', description: 'Kontrollü olduğunda paylaşılır; aksi halde değerden türetilir (yine tutarlıdır).' },
-          { name: <>Odak, üzerine gelme, araç ipucu, render edilen aylar</>, type: '—', description: 'Her zaman takvime özgüdür.' },
+          { name: <>Görünen ay</>, type: 'visibleMonth', description: 'Siz controlled olarak vermedikçe takvime özgüdür.' },
+          { name: <>Etkin uç</>, type: 'activeEndpoint', description: 'Controlled olduğunda paylaşılır; aksi halde değerden türetilir (yine tutarlıdır).' },
+          { name: <>Odak, üzerine gelme, tooltip, render edilen aylar</>, type: '—', description: 'Her zaman takvime özgüdür.' },
         ]}
       />
       <p>Sonradan mount edilen bir takvim güncel değeri gösterir; birini unmount etmek diğerlerini sıfırlamaz. Ayrıca bkz. <a href="#/recipe-three-calendars">Üç senkron takvim tarifi</a>.</p>
@@ -633,7 +683,7 @@ export function Accessibility() {
           { name: 'Home / End', type: 'move', description: 'Haftanın başı / sonu.' },
           { name: 'PageUp / PageDown', type: 'move', description: 'Önceki / sonraki ay (Shift ile: yıl).' },
           { name: 'Enter / Space', type: 'select', description: 'Odaktaki günü etkinleştirir.' },
-          { name: 'Escape', type: 'dismiss', description: 'Açık bir araç ipucunu odağı taşımadan kapatır (yalnızca biri açıkken tüketilir).' },
+          { name: 'Escape', type: 'dismiss', description: 'Açık bir tooltip’i odağı taşımadan kapatır (yalnızca biri açıkken tüketilir).' },
         ]}
       />
       <ul>
