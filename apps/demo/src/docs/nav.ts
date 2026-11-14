@@ -37,10 +37,10 @@ const g = (en: string, tr: string, pages: DocPage[]): NavGroup => ({ title: { en
 export const NAV: NavGroup[] = [
   g('Getting started', 'Başlarken', [
     p('introduction', 'Introduction', 'Giriş', start('Introduction')),
-    p('installation', 'Installation & Quick Start', 'Kurulum ve hızlı başlangıç', start('Installation')),
+    p('installation', 'Installation & quick start', 'Kurulum ve hızlı başlangıç', start('Installation')),
     p('react-nextjs', 'React & Next.js', 'React ve Next.js', start('ReactNext')),
   ]),
-  g('Core concepts', 'Temel kavramlar', [p('core-concepts', 'Core Concepts', 'Temel kavramlar', concepts('CoreConcepts'))]),
+  g('Core concepts', 'Temel kavramlar', [p('core-concepts', 'Core concepts', 'Temel kavramlar', concepts('CoreConcepts'))]),
   g('Features', 'Özellikler', [
     p('selection-modes', 'Selection modes', 'Seçim modları', features('SelectionModes')),
     p('date-limits', 'Date limits', 'Tarih sınırları', features('DateLimits')),
@@ -48,16 +48,16 @@ export const NAV: NavGroup[] = [
     p('day-rules', 'Start/end days & validation', 'Başlangıç/bitiş günleri ve doğrulama', features('DayRules')),
     p('orientation', 'Orientation & months', 'Yön ve ay sayısı', features('Orientation')),
     p('month-position', 'Reference month position', 'Referans ayın konumu', features('MonthPosition')),
-    p('responsive', 'Responsive layout', 'Duyarlı yerleşim', features('Responsive')),
+    p('responsive', 'Responsive layout', 'Responsive yerleşim', features('Responsive')),
     p('day-size', 'Day size & inner scroll', 'Gün boyutu ve iç kaydırma', features('DaySize')),
-    p('load-more', 'Progressive months', 'Kademeli ay yükleme', features('LoadMore')),
-    p('go-to-month', 'Programmatic navigation', 'Programla gezinme', features('GoToMonth')),
+    p('load-more', 'Loading more months', 'Daha fazla ay yükleme', features('LoadMore')),
+    p('go-to-month', 'Changing the month from code', 'Ayı koddan değiştirme', features('GoToMonth')),
     p('tooltip', 'Tooltip', 'Tooltip', features('TooltipPage')),
-    p('day-content', 'Day content', 'Gün içeriği', features('DayContent')),
+    p('day-content', 'Labels, badges & icons on days', 'Günlerde etiket, badge ve simge', features('DayContent')),
     p('loading', 'Loading & errors', 'Yükleme ve hatalar', features('Loading')),
     p('i18n', 'Locales, week start & RTL', 'Yerel ayarlar, hafta başı ve RTL', features('I18n')),
     p('slots', 'Slots & render props', 'Slotlar ve render prop’ları', features('Slots')),
-    p('placement', 'Inline, modal & portal', 'Satır içi, modal ve portal', features('Placement')),
+    p('placement', 'Inline, in a dialog or a popover', 'Satır içinde, diyalogda veya popover’da', features('Placement')),
     p('synced', 'Synced calendars', 'Senkron takvimler', features('Synced')),
     p('accessibility', 'Keyboard & accessibility', 'Klavye ve erişilebilirlik', features('Accessibility')),
     p('layout-lab', 'Layout, events & measurement', 'Yerleşim, olaylar ve ölçüm', lab('LayoutLab')),
@@ -72,19 +72,19 @@ export const NAV: NavGroup[] = [
     p('api-types', 'Types', 'Tipler', api('TypesReference')),
   ]),
   g('Styling', 'Stil', [
-    p('styling', 'Styling & Customization', 'Stil ve özelleştirme', styling('Styling')),
+    p('styling', 'Styling & customization', 'Stil ve özelleştirme', styling('Styling')),
     p('styling-reference', 'Styling reference', 'Stil başvurusu', styling('StylingReference')),
   ]),
-  g('Recipes', 'Tarifler', [
+  g('Recipes', 'Uygulama örnekleri', [
     p('recipe-home-rental', 'Home rental', 'Ev kiralama', recipes('HomeRental')),
     p('recipe-boat-rental', 'Boat rental', 'Tekne kiralama', recipes('BoatRental')),
     p('recipe-event-tickets', 'Event tickets', 'Etkinlik biletleri', recipes('EventTickets')),
     p('recipe-three-calendars', 'Three synced calendars', 'Üç senkron takvim', recipes('ThreeCalendars')),
   ]),
   g('Project', 'Proje', [
-    p('testing', 'Testing & Compatibility', 'Test ve uyumluluk', project('Testing')),
+    p('testing', 'Testing & compatibility', 'Test ve uyumluluk', project('Testing')),
     p('performance', 'Performance', 'Performans', project('Performance')),
-    p('migration', 'Migration & Troubleshooting', 'Geçiş ve sorun giderme', project('Migration')),
+    p('migration', 'Migration & troubleshooting', 'Geçiş ve sorun giderme', project('Migration')),
   ]),
 ];
 

@@ -61,6 +61,9 @@ left in a Turkish page.
 | paged / continuous navigation | sayfalı / sürekli gezinme |
 | load more, progressive months | daha fazla ay yükleme, kademeli ay yükleme |
 | tooltip | tooltip (İngilizce kalır: “günün tooltip’i”) |
+| badge (DefaultDayData.badge) | badge (İngilizce kalır; “rozet” kullanmayın) |
+| popover | popover (İngilizce kalır) |
+| responsive | responsive (İngilizce kalır) |
 | slot, render prop | slot, render prop |
 | controller (ref) | controller (ref) |
 | event, callback, handler | olay, callback, işleyici |
@@ -84,6 +87,6 @@ left in a Turkish page.
 | render (verb) | render etmek |
 | snapshot | anlık durum (snapshot) |
 | bundle size | paket boyutu |
-| recipe | tarif |
+| recipe | uygulama örneği (menü grubu: “Uygulama örnekleri”; “tarif” kullanmayın) |
 | fallback | yedek değer |
 | deprecated | kullanımdan kaldırılmış |
