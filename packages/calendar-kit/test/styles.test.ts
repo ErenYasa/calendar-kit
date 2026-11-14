@@ -140,3 +140,17 @@ describe('F38 a day icon does not push the label out of the circle', () => {
     expect(icon.some((r) => /position:\s*absolute/.test(r.body))).toBe(true);
   });
 });
+
+describe('badge width in wide cells', () => {
+  it('a badge may use up to half the cell width, not only the circle (it was cut in wide, short cells)', () => {
+    const badge = find((r) => !r.media && r.selector === '.cal-day-badge', 'badge rule');
+    expect(badge.some((r) => /max-width:\s*max\((calc\()?var\(--cal-circle\) \* 66cqmin\)?, 50cqw\)/.test(r.body))).toBe(true);
+  });
+});
+
+describe('icon and badge on the same day', () => {
+  it('with an icon, the badge starts at the middle and grows toward the end (they overlapped)', () => {
+    const rule = find((r) => !r.media && r.selector === '.cal-day-icon ~ .cal-day-badge', 'icon + badge rule');
+    expect(rule.some((r) => /inset-inline-start:\s*50%/.test(r.body) && /inset-inline-end:\s*auto/.test(r.body))).toBe(true);
+  });
+});

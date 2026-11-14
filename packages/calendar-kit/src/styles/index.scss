@@ -232,10 +232,26 @@ $p: 'cal'; // must match PREFIX in src/react/utils.ts
   position: absolute;
   top: calc(-14cqmin);
   inset-inline-end: calc(-14cqmin);
+  // A badge is a pill with its own background, so unlike the label it does not
+  // have to stay inside the circle: in a wide cell it may grow up to half the
+  // cell width (from its end-side anchor it then still ends inside the cell),
+  // so a short value such as "-20%" is shown in full. In a small cell the
+  // circle-based limit applies and a longer value is cut with an ellipsis;
+  // pass the full text as `description` (part of the day's accessible label).
+  max-width: max(calc(var(--cal-circle) * 66cqmin), 50cqw);
   padding: 0 4px;
   border-radius: 999px;
   background: var(--cal-accent);
   color: var(--cal-accent-contrast);
+}
+
+// With an icon in the start corner, the badge starts at the middle of the day
+// and grows toward the end, so icon and badge never overlap; it still ends
+// inside the cell.
+.#{$p}-day-icon ~ .#{$p}-day-badge {
+  inset-inline-start: 50%;
+  inset-inline-end: auto;
+  max-width: calc(50cqw - 2cqmin);
 }
 
 // Out of the flow (top start corner, mirroring the badge) so an icon does not
