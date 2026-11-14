@@ -5,7 +5,7 @@ import { Note, Page, PropsTable, Section } from '../../ui';
 export function CoreConcepts() {
   return (
     <Page
-      title="Temel Kavramlar"
+      title="Temel kavramlar"
       lead="Diğer tüm sayfaların üzerine kurulduğu birkaç fikir: tarih biçimi, modlar, değeri kimin tuttuğu, hangi ayların gösterildiği, slotlara ne verildiği ve aralıkların nasıl sayıldığı."
     >
       <Section title="Tarih biçimi">
@@ -42,41 +42,57 @@ export function CoreConcepts() {
             {
               name: "'range'",
               type: '{ start, end }',
-              description: 'İki tıklama: önce başlangıç, sonra bitiş. Aralıklar hariç bitişli (konaklamalar) veya dahil bitişli (günler) olabilir.',
+              description: 'İki tıklamayla seçilen bir başlangıç ve bir bitiş tarihi. Bitiş gününün sayılıp sayılmadığı (günler veya geceler) aşağıda anlatılıyor.',
             },
-            { name: "'multiple'", type: 'readonly CalendarDate[]', description: 'Birbirinden bağımsız, istediğiniz sayıda tarih (maxSelections ile sınırlayın).' },
-            { name: "'readonly'", type: '—', description: 'Müsaitliği gösterir; hiçbir şey seçilemez.' },
+            { name: "'multiple'", type: 'readonly CalendarDate[]', description: 'Birbirinden bağımsız, istediğiniz sayıda tarih; her tıklama bir tarih ekler veya çıkarır (sayıyı maxSelections ile sınırlayın).' },
+            { name: "'readonly'", type: '—', description: 'Yalnızca ayları ve müsaitliği gösterir; bir güne tıklamak hiçbir şey seçmez.' },
           ]}
         />
         <p>
-          Değerin tipi moda göre belirlenir; bu yüzden <code>onChange</code> da buna göre tiplenir. Canlı örnekler için{' '}
-          <a href="#/selection-modes">Seçim modları</a> sayfasına bakın.
+          Değerin tipi moda göre belirlenir: <code>mode=&quot;range&quot;</code> ile <code>onChange</code> bir <code>&#123; start, end &#125;</code> nesnesi
+          alır ve tek bir tarih verirseniz TypeScript hata gösterir. Canlı örnekler için <a href="#/selection-modes">Seçim modları</a> sayfasına bakın.
         </p>
       </Section>
       <Section title="Uncontrolled">
         <p>
-          Uncontrolled kullanımda değeri takvim tutar: bir başlangıç değeri verirsiniz (örneğin{' '}
-          <code>defaultValue=&#123;addDays(today, 3)&#125;</code>), kullanıcı onu değiştirir ve takvim değişikliği kendisi saklar.{' '}
-          <code>defaultValue</code> yalnızca bir kez, takvim ilk render edildiğinde okunur; sonraki değişiklikler yok sayılır (<code>value</code> kullanın ya
-          da başlangıç değerine dönmek için <code>ref.reset()</code> çağırın). <code>mode</code> değişirse seçim, <code>onChange</code> çağrılmadan yeni
-          modun boş değerinden başlar.
+          Uncontrolled kullanımda seçili değeri takvimin kendisi tutar. İsterseniz bir başlangıç değeri verirsiniz (örneğin{' '}
+          <code>defaultValue=&#123;addDays(today, 3)&#125;</code>); kullanıcı başka bir gün seçtiğinde takvim onu saklar ve bileşeninizin state tutması
+          gerekmez. <code>onChange</code> yine çağrılır, böylece seçime tepki verebilirsiniz. Sayfada seçime ihtiyaç duyan başka bir şey yoksa bu yolu
+          kullanın.
+        </p>
+        <ul>
+          <li>
+            <code>defaultValue</code> yalnızca bir kez, takvim ilk render edildiğinde okunur; sonradan değiştirmenin etkisi olmaz. Seçimi dışarıdan değiştirmek
+            için <code>value</code> kullanın (controlled, aşağıda) ya da <code>defaultValue</code>’ya dönmek için <code>ref.reset()</code> çağırın. ref,
+            React’in <code>ref</code> prop’u aracılığıyla verdiği nesnedir; takvimde <code>reset()</code> ve <code>clear()</code> gibi metotları içerir.
+          </li>
+          <li>
+            <code>mode</code> değişirse seçim yeni modda boş başlar ve <code>onChange</code> çağrılmaz.
+          </li>
+        </ul>
+        <p>Örnekte başlangıçta bugünden üç gün sonrası seçilidir. Başka bir gün seçin: bileşende hiç state olmadan takvim seçimi saklar.
         </p>
         <Example src="concepts/Uncontrolled" title="Uncontrolled takvim" />
       </Section>
       <Section title="Controlled">
         <p>
-          Controlled kullanımda değeri siz tutarsınız: <code>value</code>’yu kendi state’inizden verir, bu state’i <code>onChange</code> içinde
-          güncellersiniz (örneğin <code>value=&#123;range&#125;</code> ve <code>onChange=&#123;setRange&#125;</code>). Asıl değer sizin state’inizdir:
-          takvim tam olarak <code>value</code>’yu gösterir; değeri dışarıdan değiştirmek (bir düğmeyle, URL’den, başka bir takvimden){' '}
-          <code>onChange</code>’i tetiklemez. Seçime bağlı başka arayüz parçaları varsa controlled kullanımı tercih edin.
+          Controlled kullanımda değeri bileşeniniz tutar: <code>value</code>’yu kendi state’inizden verir, bu state’i <code>onChange</code> içinde
+          güncellersiniz (örneğin <code>value=&#123;range&#125;</code> ve <code>onChange=&#123;setRange&#125;</code>). Takvim her zaman tam olarak{' '}
+          <code>value</code>’yu gösterir. State’i siz değiştirdiğinizde (bir düğmeyle, URL’den veya başka bir takvimden) takvim ona uyar ve{' '}
+          <code>onChange</code>’i çağırmaz. Sayfanın başka parçaları seçimi gösteriyor veya değiştiriyorsa (fiyat, özet gibi) controlled kullanımı tercih
+          edin.
+        </p>
+        <p>
+          Örnekte takvimin altındaki metin ve iki düğme aynı state’i kullanır: “Bugün + 7’yi seç” ve “Temizle” takvime dokunmadan seçimi değiştirir.
         </p>
         <Example src="concepts/Controlled" title="Controlled takvim" />
       </Section>
       <Section title="Referans ay">
         <p>
-          Referans ay, takvimin göstereceği ayları belirlemek için baz aldığı aydır. Şu sırayla seçilir: <code>visibleMonth</code> (controlled) veya{' '}
-          <code>defaultVisibleMonth</code>; bunlar yoksa seçimin ayı; o da yoksa bugünün ayı. Bugün prop olarak verilmediğinde varsayılan ay, takvimin
-          ilk öğrendiği bugüne göre sabitlenir; sonradan gece yarısı geçse de yalnızca bugün işareti yer değiştirir.
+          Referans ay, takvimin göstereceği ayları belirlemek için baz aldığı aydır: gösterilen aylar ondan itibaren sayılır, önceki/sonraki okları onu
+          kaydırır. Takvim ilk render edildiğinde şu sırayla belirlenir: <code>visibleMonth</code> (controlled) veya <code>defaultVisibleMonth</code>; bunlar yoksa ilk seçimin ayı; o da yoksa içinde
+          bulunulan ay. <code>today</code> vermezseniz takvim, tarihi ilk okuduğunda bulduğu ayı korur; sonradan gece yarısı geçtiğinde yalnızca bugün
+          işareti yer değiştirir, gösterilen aylar aynı kalır.
         </p>
         <p>
           Birden çok ay gösterildiğinde <code>monthPosition</code> (1’den başlar), referans ayın gösterilen aylar arasında kaçıncı sırada duracağını
@@ -96,20 +112,43 @@ export function CoreConcepts() {
       </Section>
       <Section title="Seçim aşaması">
         <p>
-          <code>getSelectionPhase(selection)</code> (slotlarda <code>ctx.phase</code> olarak da bulunur) <code>empty</code>, <code>start-selected</code>{' '}
-          (bitişi seçilmeyi bekleyen bir aralık) veya <code>complete</code> değerini alır. Aralık modunda <code>activeEndpoint</code>, bir sonraki tıklamanın
-          aralığın hangi ucunu ayarlayacağını gösterir; bu değeri siz de yönetebilir ve birden çok takvim arasında paylaşabilirsiniz.
+          Seçim aşaması kullanıcının ne kadar ilerlediğini söyler; örneğin ilk tıklamadan sonra “Bir bitiş tarihi seçin” göstermek için. Değeri{' '}
+          <code>empty</code> (hiçbir şey seçili değil), <code>start-selected</code> (aralığın başlangıcı seçildi, bitiş bekleniyor) veya{' '}
+          <code>complete</code> (bir tarih seçili, aralığın iki ucu da seçili ya da çoklu modda en az bir tarih var) olur. Bunu{' '}
+          <code>getSelectionPhase(selection)</code> ile alırsınız; bir slotun içinde ise doğrudan <code>ctx.phase</code> olarak hazırdır (bir sonraki
+          bölüme bakın).
+        </p>
+        <p>
+          Aralık modunda <code>activeEndpoint</code> (<code>&apos;start&apos;</code> veya <code>&apos;end&apos;</code>), bir sonraki tıklamanın aralığın
+          hangi ucunu ayarlayacağını söyler. Bunu <code>value</code> gibi siz yönetebilir ve takvimler arasında paylaşabilirsiniz; böylece bir takvimde
+          başlayan aralık başka bir takvimde tamamlanabilir (<a href="#/recipe-three-calendars">Üç senkron takvim</a>).
         </p>
       </Section>
       <Section title="Slot bağlamı">
         <p>
-          <code>renderHeader</code> ve <code>renderFooter</code> gibi slotlar, takvimin o anki durumunu <code>ctx</code> olarak alır (tipi{' '}
-          <code>SlotContext</code>). En çok kullanılan alanlar: <code>ctx.selection</code> (değer ve onun <code>mode</code>’u), <code>ctx.phase</code>,{' '}
-          <code>ctx.validation</code>, <code>ctx.visibleMonths</code>, <code>ctx.today</code>, <code>ctx.formatDate</code> (takvimin yerel ayarıyla
-          biçimlendirir) ve takvimin controller’ı olan <code>ctx.actions</code> (<code>clear()</code>, <code>goToMonth(month)</code>,{' '}
-          <code>select(value)</code>, …). Böylece bir slot, uygulamanızda hiç state tutmadan seçimi gösterebilir ve değiştirebilir.
+          Slot, takvimin bir alanını render eden fonksiyon tipinde bir prop’tur; örneğin <code>renderHeader</code> (ayların üstü) veya{' '}
+          <code>renderFooter</code> (ayların altı). Takvim bu fonksiyonu genellikle <code>ctx</code> diye adlandırılan tek bir argümanla çağırır (tipi{' '}
+          <code>SlotContext</code>): takvimin o anki durumu ve eylemleri. En çok kullanılan alanlar:
         </p>
-        <Example src="concepts/SlotContext" title="ctx ile oluşturulan alt bilgi" />
+        <ul>
+          <li>
+            <code>ctx.selection</code>: değer ve onun <code>mode</code>’u; <code>ctx.phase</code>: yukarıdaki seçim aşaması; <code>ctx.validation</code>:
+            seçimin geçerli olup olmadığı ve değilse nedeni.
+          </li>
+          <li>
+            <code>ctx.visibleMonths</code>: ekrandaki aylar; <code>ctx.today</code>: bugünün tarihi; <code>ctx.formatDate</code>: bir tarihi takvimin yerel
+            ayarıyla biçimlendirir.
+          </li>
+          <li>
+            <code>ctx.actions</code>: takvimin controller’ı, ref’iyle aynı metotlar (<code>clear()</code>, <code>goToMonth(month)</code>,{' '}
+            <code>select(value)</code>, …).
+          </li>
+        </ul>
+        <p>
+          Böylece bir slot, uygulamanızda hiç state tutmadan seçimi gösterebilir ve değiştirebilir. Örnekteki takvim uncontrolled’dır; alt bilgideki metin
+          her tıklamayı <code>ctx.phase</code> ile izler, Bugün ve Temizle düğmeleri <code>ctx.actions</code>’ı çağırır.
+        </p>
+        <Example src="concepts/SlotContext" title="Slot bağlamını okuyan alt bilgi" />
         <p>Diğer callback’ler slot bağlamı değil, farklı nesneler alır:</p>
         <ul>
           <li>
@@ -128,22 +167,26 @@ export function CoreConcepts() {
       </Section>
       <Section title="Hariç ve dahil bitişli aralıklar">
         <p>
-          Bir aralık yalnızca iki tarih saklar; bu tarihlerin ne anlama geldiğine <code>rangeSemantics</code> karar verir. Bunu adaptörler sizin için ayarlar:{' '}
-          <code>stayRules</code> <strong>hariç</strong> bitişlidir (bitiş, çıkış günüdür ve sayılmaz: 13 → 16 Kasım 3 gecedir),{' '}
-          <code>dayRangeRules</code> <strong>dahil</strong> bitişlidir (her gün sayılır: 13 → 16 Kasım 4 gündür). <code>countNights</code> ve{' '}
-          <code>countDays</code> ile sayın; sayılan günleri <code>getIncludedDays(range, semantics)</code> ile listeleyin.
+          Bir aralık yalnızca iki tarih saklar; bitiş gününün sayılıp sayılmadığına <code>rangeSemantics</code> karar verir. Bunu genellikle kendiniz
+          ayarlamazsınız, adaptörler ayarlar: <code>stayRules</code> <strong>hariç</strong> bitişlidir (bitiş, çıkış günüdür ve sayılmaz: 13 → 16 Kasım 3
+          gecedir), <code>dayRangeRules</code> <strong>dahil</strong> bitişlidir (her gün sayılır: 13 → 16 Kasım 4 gündür). Kural verilmezse aralık dahil
+          bitişlidir. <code>countNights</code> ve <code>countDays</code> ile sayın; sayılan günleri, örneğin gecelik fiyatları toplamak için,{' '}
+          <code>getIncludedDays(range, semantics)</code> ile listeleyin.
+        </p>
+        <p>Örnekte iki takvimde de aynı başlangıç ve bitişi seçip altlarındaki sayıları karşılaştırın.
         </p>
         <Example src="concepts/RangeSemantics" title="Geceler ve günler" />
       </Section>
       <Section title="Aynı gün aralıkları">
         <p>
-          Dahil bitişli aralıklarda başlangıç ve bitiş varsayılan olarak aynı gün olabilir (<code>start === end</code>; tek günlük bilet gibi). Hariç
-          bitişli aralıklarda olamaz, çünkü böyle bir konaklama 0 gecedir; günübirlik kullanım için <code>allowSameDay</code> ile açın.
+          Dahil bitişli bir aralık varsayılan olarak aynı gün başlayıp bitebilir (<code>start === end</code>): tek günlük bilet gibi. Hariç bitişli bir
+          aralık bitemez, çünkü böyle bir konaklama 0 gecedir; başlangıç gününe yeniden tıklamak seçimi temizler. Günübirlik kullanıma (aynı gün gelip
+          gitme, örneğin bir otelde gündüz odası) izin vermek için <code>allowSameDay</code> verin.
         </p>
         <Note>
           <p>
-            Hariç bitişli aynı gün aralığının uzunluğu 0’dır; bu yüzden <code>allowSameDay</code>, en az 1 gecelik bir sınırla birlikte işe yaramaz:{' '}
-            <code>minNights: 1</code> varsa günübirlik seçim yine reddedilir.
+            Hariç bitişli aynı gün aralığı 0 gecedir; bu yüzden en kısa konaklama sınırı onu yine reddeder: <code>allowSameDay</code> ve{' '}
+            <code>minNights: 1</code> birlikteyse günübirlik kullanım mümkün olmaz. Günübirlik kullanıma izin verdiğinizde en kısa süreyi boş bırakın.
           </p>
         </Note>
         <Example src="concepts/SameDay" title="Günübirlik kullanım" />

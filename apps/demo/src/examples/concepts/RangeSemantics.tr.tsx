@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countDays, countNights, dayRangeRules, stayRules } from 'calendar-kit';
 import './RangeSemantics.css';
 
-// Aynı iki tıklama farklı anlamlara gelir:
+// Aynı iki tıklama farklı sayılar verir:
 // - konaklama bitiş gününü (çıkış) hariç tutar: 13 → 16 = 3 gece
 // - gün aralığı onu dahil eder (çok günlük bilet): 13 → 16 = 4 gün
 const stay = stayRules({});

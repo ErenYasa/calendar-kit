@@ -11,48 +11,68 @@ export function Introduction() {
       title="Giriş"
       lead="calendar-kit, React + TypeScript ile yazılmış bir tarih seçim bileşenidir: tek tarih, aralık, çoklu tarih ve salt okunur müsaitlik; altında headless bir kural motoru çalışır."
     >
-      <Section title="Ne yapar">
+      <Section title="Özellikler kısaca">
         <ul>
-          <li>Tarih seçer: <code>single</code>, <code>range</code>, <code>multiple</code> ve <code>readonly</code> modları.</li>
-          <li>Seçimleri birleştirilebilir kurallarla doğrular: sınırlar, geçmiş/gelecek, minimum/maksimum/sabit uzunluk, başlangıç ve bitiş hafta günleri, gün bazında müsaitlik ve kendi doğrulayıcılarınız.</li>
-          <li>Yerleşimini pencereye değil kapsayıcısına göre kurar: birden çok ay, yatay veya dikey, sayfalı ya da “daha fazla tarih göster” ile sürekli.</li>
-          <li>Verilerinizi günlerin üzerinde gösterir (etiketler, rozetler, simgeler, işaretler, tooltip’ler); her parçayı slotlar, render prop’lar veya CSS ile değiştirebilirsiniz.</li>
-          <li>Klavye ve ekran okuyucuyla erişilebilirdir, <code>Intl</code> ile yerelleştirilir ve SSR ile çalışır.</li>
+          <li>
+            Dört seçim modu: tek tarih (<code>single</code>), başlangıç ve bitiş tarihi (<code>range</code>), birbirinden bağımsız istediğiniz sayıda tarih (
+            <code>multiple</code>) ya da hiç seçim olmadan yalnızca müsaitliği gösterme (<code>readonly</code>).
+          </li>
+          <li>
+            Hangi günlerin seçilebileceğine ve hangi seçimlerin geçerli olduğuna kurallar karar verir: en erken ve en geç tarih, geçmiş veya gelecek günlerin
+            kapatılması, en az, en fazla veya sabit uzunluk, izin verilen başlangıç ve bitiş hafta günleri, verinizden gelen gün bazında müsaitlik ve kendi
+            kontrolleriniz.
+          </li>
+          <li>
+            Yerleşim pencerenin değil, kapsayıcının genişliğine uyar: birden çok ay yan yana veya alt alta; oklarla sayfa sayfa ya da “daha fazla tarih
+            göster” düğmesiyle yeni aylar yükleyen sürekli bir liste olarak.
+          </li>
+          <li>
+            Günler verilerinizi gösterebilir: fiyat gibi etiketler, badge’ler, simgeler, işaretler ve tooltip’ler (bir günün üzerine gelindiğinde veya gün
+            odaklandığında açılan küçük kutu). Her parçayı slotlar ve render prop’larla (o parçanın JSX’ini döndüren, sizin verdiğiniz fonksiyonlar; örneğin{' '}
+            <code>renderFooter</code>) değiştirebilir ya da CSS ile yeniden biçimlendirebilirsiniz.
+          </li>
+          <li>
+            Klavyeyle ve ekran okuyucularla kullanılabilir, tarihleri ve metinleri tarayıcının <code>Intl</code> API’siyle her yerel ayara göre biçimlendirir
+            ve sunucuda render edilebilir (SSR).
+          </li>
         </ul>
       </Section>
       <Section title="Takvim ne yapar, uygulamanız ne yapar?">
         <ul>
           <li>
-            <strong>Takvim</strong> kullanıcının tarih seçmesini sağlar. Uygulamanın verdiği kuralları uygular; örneğin bir günü yalnızca çıkış tarihi olarak
-            seçilebilir yapabilir (<code>stayRules</code> içindeki <code>&apos;check-out-only&apos;</code> durumu).
+            <strong>Takvim</strong> ayları gösterir, kullanıcının tarih seçmesini sağlar ve uygulamanızın verdiği kuralları uygular. Örneğin verinizde{' '}
+            <code>stayRules</code> için <code>&apos;check-out-only&apos;</code> durumuyla işaretlenen bir gün çıkış tarihi olarak seçilebilir, giriş tarihi
+            olarak seçilemez. Takvim hiçbir zaman veri çekmez ve rezervasyon saklamaz.
           </li>
           <li>
-            <strong>Uygulamanız</strong> müsaitlik verisini kendi API’sinden alır ve takvime iletir: gün durumlarını <code>stayRules</code> veya{' '}
-            <code>dayRangeRules</code> içindeki <code>getDayStatus</code> ile ya da kendi kurallarınızdaki <code>getDayAvailability</code> ile verir (
-            <a href="#/api-rules">Kurallar ve adaptörler</a>). Verisi henüz gelmeyen ayları <code>getDataStatus</code> ile takvime bildirir (
-            <code>&apos;loading&apos;</code>, <code>&apos;unknown&apos;</code> veya <code>&apos;error&apos;</code>); hangi ayların gösterildiğini de{' '}
-            <code>onRenderedMonthsChange</code> ile öğrenir, böylece neyi yükleyeceğini bilir (<a href="#/loading">Yükleme ve hatalar</a>). Fiyat hesaplama,
-            giriş ve çıkış saatlerini seçtirme, misafir sayısını tutma ve rezervasyonu oluşturma uygulamanın işidir. Uygulamanın hesapladığı toplamı takvimin
-            altında göstermek için <code>renderFooter</code> kullanılabilir.
+            <strong>Uygulamanız</strong> müsaitlik verisini kendi API’sinden alır ve takvime fonksiyonlar aracılığıyla verir: her günün durumunu{' '}
+            <code>stayRules</code> veya <code>dayRangeRules</code> içindeki <code>getDayStatus</code> ile ya da kendi kurallarınızdaki{' '}
+            <code>getDayAvailability</code> ile (<a href="#/api-rules">Kurallar ve adaptörler</a>). <code>onRenderedMonthsChange</code> uygulamanıza
+            ekranda hangi ayların olduğunu bildirir, böylece neyi yükleyeceğini bilir; <code>getDataStatus</code> ise takvime hangi ayların henüz hazır
+            olmadığını söyler (<code>&apos;loading&apos;</code>, <code>&apos;unknown&apos;</code> veya <code>&apos;error&apos;</code>). Bu ayların günleri
+            veri gelene kadar seçilemez (<a href="#/loading">Yükleme ve hatalar</a>). Fiyatlar, giriş ve çıkış saatleri, misafir sayısı ve rezervasyonu
+            oluşturmak da uygulamanızın işidir. Uygulamanın hesapladığı bir şeyi, örneğin toplam fiyatı, takvimin altında göstermek için{' '}
+            <code>renderFooter</code> kullanın.
           </li>
         </ul>
         <p>
           <strong>Örnek:</strong> Bir ev rezervasyonunda kullanıcı tarihleri takvimden seçer. Uygulama seçilen aralık için toplam fiyatı hesaplar,{' '}
-          <code>renderFooter</code> ile gösterir ve kullanıcı onayladığında rezervasyonu oluşturur (<a href="#/recipe-home-rental">Ev kiralama tarifi</a>).
+          <code>renderFooter</code> ile gösterir ve kullanıcı onayladığında rezervasyonu oluşturur (<a href="#/recipe-home-rental">Ev kiralama örneği</a>).
         </p>
       </Section>
       <Section title="Tarihler">
         <p>
           Tarihler <code>YYYY-MM-DD</code> biçiminde düz dizelerdir (tipi <code>CalendarDate</code>), aylar ise <code>YYYY-MM</code> biçimindedir (
-          <code>CalendarMonth</code>). Seçimde <code>Date</code> nesnesi veya saat dilimi yoktur; bu yüzden bir değer sunucuda da her tarayıcıda da aynı takvim
-          gününü gösterir.
+          <code>CalendarMonth</code>). Seçimde <code>Date</code> nesnesi ve saat dilimi yoktur; bu yüzden <code>&quot;2026-11-13&quot;</code>, kullanıcının
+          saat dilimi ne olursa olsun sunucuda da her tarayıcıda da 13 Kasım’dır. Tarih oluşturmak ve denetlemek için{' '}
+          <a href="#/core-concepts">Temel kavramlar</a> sayfasına bakın.
         </p>
       </Section>
       <Section title="Desteklenen ortamlar">
         <ul>
           <li>React 18.2+ ve 19 (peer dependency); yalnızca ESM; çalışma zamanı bağımlılığı yok.</li>
           <li>
-            <code>calendar-kit/client</code> ve <code>calendar-kit/core</code> giriş noktaları üzerinden Next.js App Router (bkz. React ve Next.js).
+            <code>calendar-kit/client</code> ve <code>calendar-kit/core</code> giriş noktaları üzerinden Next.js App Router (bkz. <a href="#/react-nextjs">React ve Next.js</a>).
           </li>
           <li>
             Tarayıcılar: otomatik testler yalnızca Google Chrome’da çalışır. Safari, Firefox, gerçek mobil cihazlar ve ekran okuyucular henüz test edilmedi —
@@ -78,15 +98,18 @@ export function Installation() {
       </Section>
       <Section title="Stiller">
         <p>
-          JavaScript hiçbir zaman CSS içe aktarmaz. Varsayılan temayı bir kez içe aktarın, örneğin uygulamanızın giriş dosyasında veya kök layout’ta:{' '}
-          <code>import &apos;calendar-kit/styles.css&apos;</code>. Dosya tip bildirimiyle birlikte gelir; bu yüzden TypeScript projelerinde ayrıca bir{' '}
-          <code>*.css</code> bildirimi yazmanız gerekmez.
+          Paketin JavaScript kodu hiçbir CSS dosyasını içe aktarmaz; varsayılan temayı içe aktarana kadar takvimin stili olmaz. Temayı bir kez, örneğin
+          uygulamanızın giriş dosyasında veya kök layout’ta içe aktarın: <code>import &apos;calendar-kit/styles.css&apos;</code>. Dosya bir tip bildirimiyle
+          gelir; bu yüzden TypeScript projelerinde ayrıca bir <code>*.css</code> bildirimi yazmanız gerekmez. Renkleri ve boyutları değiştirmek için{' '}
+          <a href="#/styling">Stil ve özelleştirme</a> sayfasına bakın.
         </p>
       </Section>
       <Section title="İlk takvim">
         <p>
-          controlled bir aralık seçici (controlled: seçili değeri siz tutarsınız — takvime value ve onChange verirsiniz). Uygulama gece sayısını bu
-          değerden hesaplar.
+          Konaklama seçmek için iki aylık bir takvim. Takvim <strong>controlled</strong> kullanılır: seçili aralığı bileşeniniz kendi state’inde tutar ve{' '}
+          <code>value</code> olarak verir; takvim her yeni seçimi <code>onChange</code> ile bildirir, bu da state’i günceller. Aralık sizin state’inizde
+          olduğu için takvimin altındaki metin, <code>countNights</code> ile hesaplanan gece sayısını gösterebilir. <code>stayRules()</code> bitiş
+          tarihini çıkış günü yapar, bu yüzden o gün gece olarak sayılmaz: bir başlangıç, ardından bir bitiş tarihi seçin ve metne bakın.
         </p>
         <Example src="start/QuickStart" title="Hızlı başlangıç" />
       </Section>
@@ -97,24 +120,29 @@ export function Installation() {
 export function ReactNext() {
   return (
     <Page title="React ve Next.js" lead="Tek bileşen, üç içe aktarma yolu: kodunuzun çalıştığı yere uygun olanı seçin.">
-      <Section title="Giriş noktaları">
+      <Section title="Hangi içe aktarma yolu kullanılır?">
+        <p>
+          Düz bir React uygulamasında her dosya tarayıcıda çalışır; <code>calendar-kit</code> yeterlidir. Next.js App Router’da iki tür bileşen vardır:{' '}
+          <strong>Server Component</strong> yalnızca sunucuda çalışır, state ve olay işleyicisi tutamaz; <strong>Client Component</strong> (
+          <code>&apos;use client&apos;</code> ile başlayan bir dosya) tarayıcıda da çalışır. Diğer yollar bu ayrım için vardır.
+        </p>
         <PropsTable
           caption="İçe aktarma yolları"
           rows={[
             {
               name: 'calendar-kit',
               type: <>her şey</>,
-              description: <>Takvim, yardımcılar ve tipler. <code>&apos;use client&apos;</code> yönergesi yoktur. Düz React uygulamalarında ve kendi Client Component’lerinizin içinde kullanın.</>,
+              description: <>Takvim, yardımcılar ve tipler; <code>&apos;use client&apos;</code> yönergesi olmadan. Düz React uygulamalarında ve kendi Client Component’lerinizin içinde kullanın.</>,
             },
             {
               name: 'calendar-kit/client',
               type: "'use client'",
-              description: <><code>Calendar</code> bileşeni ve React tipleri; Client Component sınırı olarak işaretlidir, bu yüzden bir Server Component onu doğrudan render edebilir.</>,
+              description: <><code>Calendar</code> bileşeni ve React tipleri; Client Component olarak işaretlidir. Bir Server Component bu takvimi, prop olarak fonksiyon vermediği sürece doğrudan render edebilir.</>,
             },
             {
               name: 'calendar-kit/core',
               type: <>React yok</>,
-              description: 'Tarih modeli, seçim motoru, kurallar, adaptörler ve mesajlar. React’i hiç yüklemez; Server Component’lerde ve React dışı kodda güvenle kullanabilirsiniz.',
+              description: 'React olmadan tarih yardımcıları, seçim motoru, kurallar, adaptörler ve mesajlar. Server Component’lerde, API route’larında ve React dışındaki kodda çağırabilirsiniz.',
             },
             { name: 'calendar-kit/styles.css', type: 'CSS', description: 'Varsayılan tema (tip bildirimiyle birlikte).' },
           ]}
@@ -122,34 +150,42 @@ export function ReactNext() {
       </Section>
       <Section title="Düz React (Vite, CRA, …)">
         <p>
-          <a href="#/installation">Hızlı başlangıçta</a> olduğu gibi <code>calendar-kit</code>’ten içe aktarın. İstemcide render etmek için başka bir şey
-          gerekmez.
+          <a href="#/installation">Hızlı başlangıçta</a> olduğu gibi her şeyi <code>calendar-kit</code>’ten içe aktarın. Takvim yalnızca tarayıcıda render
+          ediliyorsa başka bir şey gerekmez.
         </p>
       </Section>
       <Section title="Next.js App Router ile">
         <p>
           Stil dosyasını <code>app/layout.tsx</code> içinde içe aktarın. Bir Server Component’te <code>Calendar</code>’ı <code>calendar-kit/client</code>’tan
-          render edin, yardımcıları <code>calendar-kit/core</code>’dan çağırın. Fonksiyon olan prop’lar (kurallar, <code>onChange</code>, render prop’lar) bir
-          Server Component’ten aktarılamaz; o takvimi kendi <code>&apos;use client&apos;</code> bileşeninize koyun.
+          render edin, yardımcıları <code>calendar-kit/core</code>’dan çağırın. Bir Server Component prop olarak fonksiyon veremez; bu yüzden kurallara,{' '}
+          <code>onChange</code>’e veya render prop’lara ihtiyaç duyan takvim, sayfanın render ettiği kendi <code>&apos;use client&apos;</code> bileşeninize
+          girer (aşağıdaki <code>BookingCalendar</code>).
         </p>
         <Snippet files={[...nextPage, ...nextLayout]} label="Next.js App Router örneği" />
         <Note>
           <p>
-            <code>calendar-kit</code>’ten (<code>/client</code>’tan değil) içe aktarılan <code>Calendar</code>’ı doğrudan bir Server Component’te render
-            etmek derleme sırasında <code>useSyncExternalStore is not a function</code> hatasıyla başarısız olur. Kök giriş noktasında bu yönerge bilerek
-            yoktur: olsaydı saf yardımcı fonksiyonlar istemci referanslarına dönüşür ve sunucuda çağrılamazdı.
+            Bir Server Component, <code>/client</code> yerine <code>calendar-kit</code>’ten içe aktarılan <code>Calendar</code>’ı render ederse derleme{' '}
+            <code>useSyncExternalStore is not a function</code> hatasıyla başarısız olur. Kök giriş noktasında <code>&apos;use client&apos;</code> yönergesi
+            bilerek yoktur: olsaydı <code>addDays</code> gibi yardımcılar istemci referanslarına dönüşür ve sunucuda çağrılamazdı.
           </p>
         </Note>
       </Section>
       <Section title="SSR ve hydration">
         <ul>
-          <li>Paketi içe aktarmak hiçbir global değeri değiştirmez; render sırasında <code>window</code> veya <code>document</code> okunmaz.</li>
           <li>
-            Sunucuda render ederken <code>today</code> (ya da <code>value</code>/<code>defaultVisibleMonth</code>) verin: sunucu kullanıcının tarihini
-            bilemez. Bu prop verilince sunucu HTML’i ile hydration sonucu aynı olur. Verilmezse sunucu boş bir yer tutucu render eder, ayları tarayıcı doldurur.
+            Paketi içe aktarmak hiçbir global nesneyi değiştirmez ve render sırasında <code>window</code> veya <code>document</code> okunmaz; bu yüzden
+            sunucuda çalışır.
           </li>
-          <li>Yerel ayar varsayılanları (hafta başlangıcı, yön) statik tablolardan gelir; bu yüzden sunucu ve tarayıcı aynı sonucu verir.</li>
-          <li>Yerleşim kapsayıcının genişliğine bağlıdır ve bu genişlik yalnızca tarayıcıda bilinir; bu yüzden ilk istemci render’ı sütun sayısını değiştirebilir.</li>
+          <li>
+            Sunucu kullanıcının tarihini bilmez. <code>today</code> (ya da bir <code>value</code> veya <code>defaultVisibleMonth</code>) verin; böylece
+            sunucu HTML’i doğru ayları gösterir ve React onu tarayıcıda uyuşmazlık olmadan devralır (hydration). Verilmezse sunucu boş bir yer tutucu render
+            eder; aylar sayfa tarayıcıda çalışınca görünür.
+          </li>
+          <li>Yerel ayar varsayılanları (haftanın ilk günü, metin yönü) tarayıcıdan değil paketteki tablolardan gelir; bu yüzden sunucu ve tarayıcı aynı sonucu verir.</li>
+          <li>
+            Yerleşim kapsayıcının genişliğine bağlıdır ve bu genişliği yalnızca tarayıcı bilir. Bu yüzden takvim hydration’dan sonra daha az veya daha çok
+            sütunla ay gösterebilir.
+          </li>
         </ul>
         <Snippet files={ssr} label="Sunucuda render etme" />
       </Section>

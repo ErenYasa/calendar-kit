@@ -6,7 +6,8 @@ import './Recipes.css';
 // sonraki bir güne tıklamak seçimi çok günlük bir karta (en fazla 4 gün) genişletir.
 // Biletleri tükenen günler kapalıdır; azalan kontenjan günün etiketinde görünür.
 const PRICE = 45;
-const ticketsLeft = (d: CalendarDate) => (Number(d.slice(8)) * 7) % 40;
+// Her ayın 9’u, 18’i ve 27’si tükenmiştir (0 bilet); diğer günlerde 1–39 bilet kalır.
+const ticketsLeft = (d: CalendarDate) => (Number(d.slice(8)) % 9 === 0 ? 0 : (Number(d.slice(8)) * 7) % 40);
 const rules = dayRangeRules({
   disablePast: true,
   singleDayFirst: true,

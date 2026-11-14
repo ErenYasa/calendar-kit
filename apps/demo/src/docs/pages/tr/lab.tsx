@@ -15,7 +15,7 @@ export function LayoutLab() {
         </>
       }
     >
-      <Section title="Laboratuvar">
+      <Section title="Laboratuvar nasıl kullanılır?">
         <p>
           Takvim, alt köşesini sürükleyerek daraltabileceğiniz bir kutunun içindedir. Yerleşim pencereyi değil bu kutuyu izler; böylece masaüstü ekranda
           telefon genişliğini deneyebilirsiniz. Kutu ilk açıldığında örnek alanının tamamını kaplar. Takvimin altındaki React Profiler ölçümleri ve {c('onEvent')} akışı,
@@ -40,7 +40,7 @@ export function LayoutLab() {
                 {c('paged')} önceki/sonraki oklarıyla sabit sayıda ay gösterir; {c('continuous')} ile aylar arasında kaydırırsınız ve kenara gelince yeni aylar
                 yüklenir (takvim kutunun içinde kaysın diye laboratuvar {c('maxBlockSize={480}')} ve {c('loadDirections="both"')} kullanır).
               </>,
-              <a href="#/load-more">Kademeli ay yükleme</a>,
+              <a href="#/load-more">Daha fazla ay yükleme</a>,
             ],
             [
               'overflow',
@@ -49,7 +49,7 @@ export function LayoutLab() {
                 İstenen aylar genişliğe sığmadığında ne olacağı: {c('wrap')} ile aylar alt satıra geçer, {c('scroll')} ile takvimin içinde kaydırılır,{' '}
                 {c('reduce-months')} ile daha az ay gösterilir. Sürüklerken {c('layoutChange')}’i izleyin.
               </>,
-              <a href="#/responsive">Duyarlı yerleşim</a>,
+              <a href="#/responsive">Responsive yerleşim</a>,
             ],
             ['numberOfMonths', c('numberOfMonths'), 'Kaç ay istendiği (yer yoksa yerleşim daha azını gösterebilir).', <a href="#/orientation">Yön ve ay sayısı</a>],
             ['monthPosition', c('monthPosition'), 'Referans ayın, gösterilen aylar arasında kaçıncı sırada durduğu.', <a href="#/month-position">Referans ayın konumu</a>],
@@ -132,15 +132,15 @@ export function LayoutLab() {
         </p>
         <ul>
           <li>
-            Takvim mount edildiğinde {c('ready')} ve türetilmiş olaylar ({c('layoutChange')}, {c('visibleMonthsChange')}, {c('validationChange')}, …) yayılır.
+            Takvim ilk render edildiğinde {c('ready')} ve türetilmiş olaylar ({c('layoutChange')}, {c('visibleMonthsChange')}, {c('validationChange')}, …) yayılır.
             Geliştirme modunda StrictMode altında bunların bazıları iki kez görünür.
           </li>
           <li>
             Kutuyu sürüklemek {c('resize')} yayar; {c('layoutChange')} ise yalnızca sütun sayısı, etkin ay sayısı veya taşma gerçekten değiştiğinde gelir.
           </li>
           <li>
-            Bir güne tıklamak önce {c('dateClick')} (seçilemeyen bir günde de), ardından {c('change')} ve {c('activeEndpointChange')} yayar; aralığı
-            tamamlayan tıklamada bunlara {c('selectionComplete')} eklenir. Odağı başka bir güne taşımak {c('dayFocusChange')} yayar; React render ettikten
+            Bir güne tıklamak {c('dateClick')} yayar. Gün seçilemiyorsa ardından {c('invalidSelection')} gelir ve seçim değişmez. Seçilebiliyorsa{' '}
+            {c('change')} ve {c('activeEndpointChange')} gelir; aralığı tamamlayan tıklamada bunlara {c('selectionComplete')} eklenir. Odağı başka bir güne taşımak {c('dayFocusChange')} yayar; React render ettikten
             sonra, doğrulama sonucu değiştiyse {c('validationChange')} gelir.
           </li>
         </ul>
