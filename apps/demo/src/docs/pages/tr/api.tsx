@@ -22,9 +22,10 @@ export function PropsReference() {
       title="Calendar prop’ları"
       lead={
         <>
-          <code>{'<Calendar>'}</code>’ın tüm prop’ları, konuya göre gruplanmış. Yalnızca <code>mode</code> zorunludur. controlled prop’lar (değeri siz
-          tutarsınız — örneğin value ve onChange verirsiniz) uncontrolled karşılıklarının (değeri takvim tutar; yalnızca başlangıç değerini verirsiniz)
-          yanında listelenir; her satır, prop’u canlı bir örnekte kullanan sayfaya bağlantı verir.
+          <code>{'<Calendar>'}</code>’ın tüm prop’ları, konuya göre gruplanmış. Yalnızca <code>mode</code> zorunludur. Her satır önce prop’un ekranda
+          neyi değiştirdiğini, sonra varsayılan değerini ve özel durumlarını anlatır; prop’u canlı bir örnekte kullanan sayfaya bağlantı verir. Controlled
+          prop’lar (değeri kendi state’inizde tutarsınız, örneğin <code>value</code> + <code>onChange</code>) uncontrolled karşılıklarının (değeri takvim
+          tutar; yalnızca başlangıç değerini verirsiniz, örneğin <code>defaultValue</code>) yanında listelenir.
         </>
       }
     >
@@ -37,11 +38,11 @@ export function PropsReference() {
         <p>Diğer örneklerin kullanmadığı biçimlendirme, yerleşim ve kimlik prop’ları ile kalan controller metotları:</p>
         <Snippet files={more} label="Biçimlendirme, yerleşim ve kimlik" />
         <Note>
-          <strong>controlled veya uncontrolled.</strong> Üç durum parçası çift prop olarak gelir: <code>value</code> / <code>defaultValue</code>,{' '}
-          <code>activeEndpoint</code> / <code>defaultActiveEndpoint</code> ve <code>visibleMonth</code> / <code>defaultVisibleMonth</code>. controlled
+          <strong>Controlled mı, uncontrolled mı?</strong> Üç durum parçası çift prop olarak gelir: <code>value</code> / <code>defaultValue</code>,{' '}
+          <code>activeEndpoint</code> / <code>defaultActiveEndpoint</code> ve <code>visibleMonth</code> / <code>defaultVisibleMonth</code>. Controlled
           prop’u verdiğinizde (<code>undefined</code> dışında herhangi bir değer) değeri siz tutarsınız: takvim değişiklik isteğini callback ile bildirir ve
-          sizin geri verdiğiniz değeri gösterir. <code>default…</code> prop’u (uncontrolled) yalnızca mount sırasında okunur; sonraki değişiklikleri yok
-          sayılır. controlled bir prop’u siz değiştirdiğinizde ilgili callback çağrılmaz.
+          sizin geri verdiğiniz değeri gösterir. <code>default…</code> prop’u (uncontrolled) yalnızca ilk render’da okunur; sonraki değişiklikleri yok
+          sayılır. Controlled bir prop’u siz değiştirdiğinizde ilgili callback çağrılmaz.
         </Note>
       </Section>
 
@@ -62,7 +63,7 @@ export function PropsReference() {
                 <>
                   Bir tıklamanın ne yaptığı: tek bir tarih seçmek, bir başlangıç ve bitiş seçmek, tarihleri tek tek seçip kaldırmak ya da hiçbir şey
                   ({c('readonly')} müsaitliği “Yalnızca görüntüleme” notuyla gösterir, değer prop’u yoktur ve controller’ın {c('select()')} metodu geçersiz
-                  sonuç döndürür). uncontrolled bir takvimde mod sonradan değiştirilirse seçim, {c('onChange')} çağrılmadan yeni modun boş değeriyle
+                  sonuç döndürür). Uncontrolled bir takvimde mod sonradan değiştirilirse seçim, {c('onChange')} çağrılmadan yeni modun boş değeriyle
                   başlar.{' '}
                   {to('selection-modes', 'Seçim modları')}.
                 </>
@@ -73,7 +74,7 @@ export function PropsReference() {
               type: 'single: CalendarDate | null · range: DateRange · multiple: readonly CalendarDate[]',
               description: (
                 <>
-                  <strong>controlled</strong> seçim: değeri siz tutarsınız (çifti: {c('defaultValue')}). {c('undefined')} dışındaki her değer takvimi controlled
+                  Takvimin gösterdiği seçili tarih(ler); değeri kendi state’inizde tutarsınız: <strong>controlled</strong> (çifti: {c('defaultValue')}). {c('undefined')} dışındaki her değer takvimi controlled
                   yapar; bu nedenle {c('null')} veya {c("{ start: null, end: null }")} controlled ama boş bir seçimdir. {c('onChange')}’in verdiği değeri
                   saklayın; saklamazsanız tıklamalar ekranda hiçbir şeyi değiştirmez. {c('visibleMonth')}/{c('defaultVisibleMonth')} yoksa başlangıç ayı seçimin ayıdır (tek tarih,
                   aralık başlangıcı veya çoklu seçimdeki en erken tarih). {to('core-concepts', 'Temel kavramlar → controlled')}.
@@ -85,7 +86,8 @@ export function PropsReference() {
               type: <><code>value</code> ile aynı</>,
               description: (
                 <>
-                  <strong>uncontrolled</strong> başlangıç seçimi: değeri takvim tutar (çifti: {c('value')}); yalnızca mount sırasında okunur, sonraki
+                  Takvim ilk göründüğünde gösterilen seçim; sonrasında seçimi takvim kendisi tutar (<strong>uncontrolled</strong>, çifti: {c('value')}).
+                  Yalnızca ilk render’da okunur, sonraki
                   değişiklikler yok sayılır. {c('ref.reset()')} bu değere döner. {c('value')} verildiğinde yok sayılır.{' '}
                   {to('core-concepts', 'Temel kavramlar → uncontrolled')}.
                 </>
@@ -108,7 +110,8 @@ export function PropsReference() {
               type: "'start' | 'end'",
               description: (
                 <>
-                  Yalnızca aralık modunda. Sonraki tıklamanın belirleyeceği uç, <strong>controlled</strong> olarak (çifti: {c('defaultActiveEndpoint')});{' '}
+                  Yalnızca aralık modunda. Sonraki tıklamanın aralığın hangi ucunu belirleyeceği; değeri kendi state’inizde tutarsınız (<strong>controlled</strong>,
+                  çifti: {c('defaultActiveEndpoint')});{' '}
                   {c('onActiveEndpointChange')} ile birlikte kullanın. Aynı aralığı düzenleyen takvimler arasında {c('value')} ile birlikte paylaşın; böylece
                   birinde başlangıç seçilince diğeri bitişi bekler. Verilmezse değere göre belirlenir (yalnızca başlangıç seçiliyken {c('end')}).{' '}
                   {to('synced', 'Senkron takvimler')}, {to('recipe-three-calendars', 'Üç senkron takvim')}.
@@ -121,8 +124,8 @@ export function PropsReference() {
               default: <>değerden türetilir</>,
               description: (
                 <>
-                  Yalnızca aralık modunda. <strong>uncontrolled</strong> başlangıç ucu; örneğin önceden doldurulmuş bir aralıkta kullanıcı yalnızca bitişi
-                  değiştirebilsin diye {c("'end'")}. Seçim başlangıç değerindeyken geçerlidir; seçim değişince uç yeniden seçime göre belirlenir.{' '}
+                  Yalnızca aralık modunda. İlk tıklamanın hangi ucu belirleyeceği (<strong>uncontrolled</strong>); örneğin {c("'end'")} verirseniz önceden
+                  doldurulmuş bir aralıkta ilk tıklama yeni bir aralık başlatmaz, bitişi taşır. Seçim başlangıç değerindeyken geçerlidir; seçim değişince uç yeniden seçime göre belirlenir.{' '}
                   {c('activeEndpoint')} verildiğinde yok sayılır. {to('selection-modes', 'Seçim modları → Başlangıç değerleri')}.
                 </>
               ),
@@ -146,7 +149,8 @@ export function PropsReference() {
               type: 'SelectionRules<TContext> | readonly (SelectionRules<TContext> | null | undefined | false)[]',
               description: (
                 <>
-                  Sınırlar, uzunluklar, hafta günleri, gün başına müsaitlik ve özel doğrulama. Dizi verildiğinde seçim her kümeden geçmelidir; falsy öğeler atlanır,
+                  Kullanıcının hangi günleri ve aralıkları seçebileceği: sınırlar, uzunluklar, hafta günleri, gün başına müsaitlik ve özel doğrulama. Kurala
+                  uymayan günler devre dışı çizilir. Dizi verildiğinde seçim her kümeden geçmelidir; falsy öğeler atlanır,
                   böylece {c('[stayRules(…), closed && closedDates(closed)]')} yazabilirsiniz. Nesneyi sabit tutun (modül kapsamı veya {c('useMemo')}): her
                   render’da yeni bir nesne kuralların yeniden birleştirilmesine ve seçimin yeniden doğrulanmasına yol açar. {to('length-rules', 'Uzunluk kuralları')},{' '}
                   {to('day-rules', 'Başlangıç/bitiş günleri')}, {to('api-rules', 'Kurallar ve adaptörler')}.
@@ -158,7 +162,7 @@ export function PropsReference() {
               type: 'CalendarDate | null',
               description: (
                 <>
-                  Seçilebilir ilk/son gün (dahil); {c('null')} sınır yok demektir. {c('disablePast')}’ın aksine gezinmeyi de sınırlar: oklar, klavye,{' '}
+                  Kullanıcının seçebileceği ilk / son gün (dahil); dışındaki günler devre dışıdır. {c('null')} sınır yok demektir. {c('disablePast')}’ın aksine gezinmeyi de sınırlar: oklar, klavye,{' '}
                   {c('goToMonth()')} ve daha fazla ay yükleme bu ayların ötesine geçmez (istekler sınıra çekilir). {c('rules')} içindeki{' '}
                   {c('minDate')}/{c('maxDate')} ile birleştirilir; daha dar olan aralık geçerli olur. {to('date-limits', 'Tarih sınırları')}.
                 </>
@@ -180,9 +184,9 @@ export function PropsReference() {
               type: 'TContext',
               description: (
                 <>
-                  Kural callback’lerinizin ihtiyaç duyduğu uygulama verileri (seçilen saatler, kişi sayısı); callback’lere {c('ctx.context')} olarak
-                  gelir. Yeni bir değer verildiğinde seçim ve her gün yeniden doğrulanır, bu yüzden nesneleri memoize edin.{' '}
-                  {to('recipe-home-rental', 'Ev kiralama tarifi')}.
+                  Kural callback’lerinizin hangi günlerin seçilebileceğine karar verirken ihtiyaç duyduğu uygulama durumu (seçilen saatler, kişi sayısı). Her
+                  kural callback’i ikinci argüman olarak {c('ctx')} alır (bugün, mevcut seçim, …); bu değer onun {c('ctx.context')} alanıdır. Yeni bir değer
+                  verildiğinde seçim ve her gün yeniden doğrulanır, bu yüzden nesneleri memoize edin. {to('recipe-home-rental', 'Ev kiralama uygulama örneği')}.
                 </>
               ),
             },
@@ -192,11 +196,12 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  “Özel tarihler” anahtarı: takvim düzeni (schedule) kurallarını devre dışı bırakır: {c('startWeekdays')}/{c('endWeekdays')}/{c('availableWeekdays')},{' '}
+                  Kullanıcının normal takvim düzeninin dışındaki tarihleri de seçebilmesini sağlar; örneğin bir “Özel tarihler” anahtarının arkasında. Takvim
+                  düzeni (schedule) kurallarını yok sayar: {c('startWeekdays')}/{c('endWeekdays')}/{c('availableWeekdays')},{' '}
                   {c('schedule: true')} olarak işaretlenmiş müsaitlik ({c('weekdays')}) ve {c('minLength')}/{c('maxLength')}/{c('fixedLength')}{' '}
                   ({c('length')}). Gerçek müsaitlik, sınırlar, geçmiş/gelecek, veri durumu ve doğrulayıcılar ise geçerli kalır. {c('true')} veya{' '}
                   {c('{}')} iki grubu da kaldırır; {c('{ weekdays: false }')} yalnızca uzunluk kurallarını kaldırır.{' '}
-                  {to('recipe-boat-rental', 'Tekne kiralama tarifi')}, {to('api-rules', 'relaxRules')}.
+                  {to('recipe-boat-rental', 'Tekne kiralama uygulama örneği')}, {to('api-rules', 'relaxRules')}.
                 </>
               ),
             },
@@ -206,8 +211,8 @@ export function PropsReference() {
               default: <>istemcide hesaplanır</>,
               description: (
                 <>
-                  {c('disablePast')}/{c('disableFuture')}, bugün işareti, {c('day.past')}/{c('day.future')} ve varsayılan ay için “bugün”ü sabitler. SSR
-                  ve testler için verin: verilmezse sunucu bugünün tarihini bilemez ve {c('value')} veya {c('defaultVisibleMonth')} bir ay belirtmedikçe
+                  Takvimin “bugün” saydığı tarih: bugün işaretinin nerede çizileceğini, {c('disablePast')}/{c('disableFuture')}’ın hangi günleri devre dışı
+                  bırakacağını, {c('day.past')}/{c('day.future')} değerlerini ve ilk gösterilen ayı belirler. SSR ve testler için verin: verilmezse sunucu bugünün tarihini bilemez ve {c('value')} veya {c('defaultVisibleMonth')} bir ay belirtmedikçe
                   boş bir yer tutucu render eder; ayları tarayıcı doldurur. Verildiğinde {c('timeZone')} yok sayılır ve bugün kendiliğinden güncellenmez.{' '}
                   {to('react-nextjs', 'React ve Next.js')}.
                 </>
@@ -219,7 +224,7 @@ export function PropsReference() {
               default: <>tarayıcının saat dilimi</>,
               description: (
                 <>
-                  {c('today')} verilmediğinde bugünü hesaplamak için kullanılan saat dilimi; örneğin bir mekânın yerel tarihi için{' '}
+                  {c('today')} verilmediğinde takvim tarihi “bugün” sayılan saat dilimi; örneğin bir mekânın yerel tarihi için{' '}
                   {c("'Europe/Istanbul'")}. Hesaplanan bugün gece yarısından sonra (en az saatte bir kontrol edilir) ve sekme yeniden görünür olduğunda
                   güncellenir. {to('date-limits', 'Tarih sınırları → Bugün')}.
                 </>
@@ -243,7 +248,7 @@ export function PropsReference() {
       <Section title="Veri ve yükleme">
         <p>
           Takvim kendisi veri çekmez. Render ettiği ayların verisini siz yüklersiniz (<code>onRenderedMonthsChange</code>’ten başlayın) ve bu
-          prop’larla takvime verirsiniz. Bkz. {to('loading', 'Yükleme ve hatalar')} ve {to('day-content', 'Gün içeriği')}.
+          prop’larla takvime verirsiniz. Bkz. {to('loading', 'Yükleme ve hatalar')} ve {to('day-content', 'Günlerde etiket, badge ve simge')}.
         </p>
         <PropsTable
           caption="Veri prop’ları"
@@ -253,10 +258,11 @@ export function PropsReference() {
               type: '(date: CalendarDate) => TDayData | undefined',
               description: (
                 <>
-                  Günde gösterilecek veriler (fiyatlar, rozetler); seçilebilirliği etkilemez. {c('DefaultDayData')} biçimi ({c('label')}, {c('badge')},{' '}
+                  Her günün numarasının altında gösterilenler (fiyat, badge, simge veya noktalar); hangi günlerin seçilebileceğini etkilemez.{' '}
+                  {c('DefaultDayData')} biçimi ({c('label')}, {c('badge')},{' '}
                   {c('icon')}, {c('markers')}, {c('description')}) varsayılan gün içeriği tarafından çizilir; başka her biçim render prop’larınıza{' '}
                   {c('data')} olarak gelir. Her render’da her gün için çağrılır: hızlı çalışmalı ve değişmeyen günler için aynı nesneyi döndürmelidir,
-                  yoksa o günler gereksiz yere yeniden render edilir. {to('day-content', 'Gün içeriği')}.
+                  yoksa o günler gereksiz yere yeniden render edilir. {to('day-content', 'Günlerde etiket, badge ve simge')}.
                 </>
               ),
             },
@@ -266,8 +272,8 @@ export function PropsReference() {
               default: <>her ay <code>'loaded'</code></>,
               description: (
                 <>
-                  Her ayın verisinin durumu. {c("'loading'")} ve {c("'unknown'")} aylarda gün numaraları yerine tarihler yüklenirken gösterilen boş yer
-                  tutucular çizilir (tooltip yok); {c("'error'")} aylar hata kutusunu gösterir. Seçimi de etkiler: {c("'loaded'")} olmayan bir ayın günleri,
+                  Takvime her ayın verisinin hazır olup olmadığını bildirir. {c("'loading'")} ve {c("'unknown'")} aylarda günler, tarihler yüklenirken
+                  gösterilen boş yer tutucular olarak çizilir (tooltip yok); {c("'error'")} aylarda bir hata kutusu gösterilir. Seçimi de etkiler: {c("'loaded'")} olmayan bir ayın günleri,
                   kurallarda {c("unknownDataPolicy: 'allow'")} verilmedikçe seçilemez (sebepler {c('data-loading')}, {c('data-unknown')}, {c('data-error')}). {c('rules')} içindeki bir{' '}
                   {c('getDataStatus')} ile birleştirilir (daha kötü olan durum geçerli olur). {to('loading', 'Yükleme ve hatalar')}.
                 </>
@@ -279,10 +285,11 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  Tüm takvim için yükleme bayrağı. Takvim ilk render’ından beri bu bayrakla gösteriliyorsa <em>ilk yükleme</em>dir: günler numarasız yer tutucu
-                  olarak çizilir, seçim her ayın verisi yükleniyormuş gibi doğrulanır (varsayılan unknownDataPolicy değeri block ile hiçbir gün seçilemez) ve{' '}
+                  Takvimin tamamını yükleniyor olarak gösterir. Takvim ilk render’ından beri bu bayrakla gösteriliyorsa <em>ilk yükleme</em>dir: günler boş yer
+                  tutucu olarak çizilir, hiçbir gün seçilemez (seçim her ayın verisi yükleniyormuş gibi doğrulanır; varsayılan{' '}
+                  {c("unknownDataPolicy: 'block'")} ile) ve{' '}
                   {c("renderLoading({ scope: 'initial' })")} kullanılır. Takvim bir kez yüklemesiz gösterildikten sonra açılırsa <em>arka plan yenilemesi</em>dir:
-                  günler numaralarıyla kalır, seçim ve odak korunur, seçim engellenmez; yalnızca {c('aria-busy')} ve {c('LoadingSnapshot.refreshing')} değişir.
+                  günler, seçim ve odak olduğu gibi kalır ve günler seçilebilir kalır; yalnızca {c('aria-busy')} ve {c('LoadingSnapshot.refreshing')} değişir.
                   Ay bazında yükleme için {c('getDataStatus')}’u kullanın. {to('loading', 'Yükleme ve hatalar → İlk yükleme')}.
                 </>
               ),
@@ -292,8 +299,8 @@ export function PropsReference() {
               type: '(months: readonly CalendarMonth[]) => void',
               description: (
                 <>
-                  Varsayılan hata kutusundaki Yeniden dene düğmesi ve {c('renderError')} içindeki {c('retry()')} tarafından {c('[month]')} ile çağrılır.
-                  Varsayılan Yeniden dene düğmesi yalnızca bu prop verildiğinde gösterilir. {to('loading', 'Yükleme ve hatalar')}.
+                  Hata veren her ayın varsayılan hata kutusuna bir Yeniden dene düğmesi ekler; kullanıcı düğmeye bastığında veya {c('renderError')}’ınız{' '}
+                  {c('retry()')}’ı çağırdığında {c('[month]')} ile çağrılır. Bu prop yoksa varsayılan hata kutusunda Yeniden dene düğmesi olmaz. {to('loading', 'Yükleme ve hatalar')}.
                 </>
               ),
             },
@@ -302,7 +309,7 @@ export function PropsReference() {
               type: 'Record<string, (day: DayState) => boolean>',
               description: (
                 <>
-                  Stil için kendi gün işaretleriniz: her fonksiyon render edilen her gün için çağrılır; {c('true')} döndüren adlar {c('day.modifiers')}{' '}
+                  Stil için kendi gün işaretleriniz (örneğin tatil günleri): her fonksiyon render edilen her gün için çağrılır; {c('true')} döndüren adlar {c('day.modifiers')}{' '}
                   içine ve gün hücresiyle düğmesine {c('data-mod-<name>')} olarak eklenir. Seçimi etkilemezler (bunun için {c('rules')} kullanın). Küçük
                   harfli, tireli adlar seçin: HTML öznitelik adlarını küçük harfe çevirir.{' '}
                   {to('styling', 'Stil → Durum nitelikleri ve modifier’lar')}.
@@ -317,7 +324,7 @@ export function PropsReference() {
         <p>
           Yerleşim pencereye değil, takvimin kendi kapsayıcısının genişliğine (ResizeObserver ile) göre belirlenir. Bir ay en az{' '}
           <code>7 × minDaySize.width + 16</code> px gerektirir; istenen aylar yan yana sığmadığında ne olacağını <code>overflow</code> belirler ve{' '}
-          <code>onLayoutChange</code> sonucu bildirir. Bkz. {to('orientation', 'Yön ve ay sayısı')} ve {to('responsive', 'Duyarlı yerleşim')}.
+          <code>onLayoutChange</code> sonucu bildirir. Bkz. {to('orientation', 'Yön ve ay sayısı')} ve {to('responsive', 'Responsive yerleşim')}.
         </p>
         <PropsTable
           caption="Yerleşim prop’ları"
@@ -340,7 +347,7 @@ export function PropsReference() {
               default: '1',
               description: (
                 <>
-                  Aynı anda gösterilen (sayfalı) veya başlangıçta render edilen (sürekli) ay sayısı. Takvim bunu kendiliğinden azaltmaz; daha az ayı yalnızca{' '}
+                  Takvimin aynı anda gösterdiği (sayfalı) veya ilk render ettiği (sürekli) ay sayısı. Takvim bunu kendiliğinden azaltmaz; daha az ayı yalnızca{' '}
                   {c("overflow='reduce-months'")} gösterir. Ondalıklar aşağı yuvarlanır; 1’den küçük veya sonlu olmayan değerler 1 sayılır.
                   Aynı zamanda {c('monthsPerLoad')}’un varsayılanıdır. {to('orientation', 'Yön ve ay sayısı')}.
                 </>
@@ -352,8 +359,8 @@ export function PropsReference() {
               default: '1',
               description: (
                 <>
-                  Referans ayın ({c('visibleMonth')}, seçimin ayı veya bugünün ayı) gösterilen aylar arasındaki sırası (1’den başlar). Referans ayı değiştirmez,
-                  yalnızca yanında hangi ayların görüneceğini belirler: referans ay Kasım ve üç ay gösteriliyorsa {c('3')} Eylül, Ekim, Kasım’ı gösterir.
+                  Referans ayın ({c('visibleMonth')}, seçimin ayı veya bugünün ayı) gösterilen aylar arasında kaçıncı sırada görüneceği (1’den başlar). Referans ayı değiştirmez,
+                  yalnızca yanında hangi ayların görüneceğini belirler: referans ay Kasım ve üç ay gösteriliyorsa değer {c('3')} olduğunda Eylül, Ekim ve Kasım gösterilir.
                   1 ile etkin ay sayısı arasına çekilir; {c('minDate')}/{c('maxDate')} yakınında, ulaşılamayan aylar yerine gösterilen aylar kaydırılır. {to('month-position', 'Referans ayın konumu')}.
                 </>
               ),
@@ -366,7 +373,7 @@ export function PropsReference() {
                 <>
                   Yalnızca yatayda ve aylar sığmadığında: {c('wrap')} ayları alt satırlara geçirir, {c('scroll')} tek satırı korur ve takvimin içinde yatay
                   kaydırma çubuğu gösterir, {c('reduce-months')} daha az ay gösterir (oklar yine {c('stepMonths')} kadar ilerler). Tek bir ay bile
-                  sığmıyorsa her seçenekte takvimin içi kaydırılır. {to('responsive', 'Duyarlı yerleşim')}.
+                  sığmıyorsa her seçenekte takvimin içi kaydırılır. {to('responsive', 'Responsive yerleşim')}.
                 </>
               ),
             },
@@ -411,8 +418,8 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  Her ayda her zaman 6 hafta satırı render eder (gerekirse sonda boş satırlar); böylece takvimin yüksekliği aydan aya değişmez (açılır
-                  pencerelerde ve yan yana aylarda kullanışlıdır). Gösterilen ay sayısını değiştirmez. {to('orientation', 'Yön ve ay sayısı')}.
+                  Takvim her ayı 6 hafta satırıyla gösterir; 5 satıra sığan aylarda da takvimin yüksekliği değişmez (popover’larda ve yan yana aylarda
+                  kullanışlıdır). Gösterilen ay sayısını değiştirmez. {to('orientation', 'Yön ve ay sayısı')}.
                 </>
               ),
             },
@@ -423,7 +430,7 @@ export function PropsReference() {
                 <>
                   Aylar alanının en büyük yüksekliği (px sayısı veya herhangi bir CSS uzunluğu, örneğin {c("'60vh'")}). İçerik daha uzunsa aylar takvimin
                   içinde kayar, header ve footer görünür kalır; sürekli modda otomatik yükleme ve görünen ayların takibi de bu iç kaydırma alanına göre çalışır.{' '}
-                  {to('day-size', 'Gün boyutu ve iç kaydırma')}, {to('load-more', 'Kademeli ay yükleme')}.
+                  {to('day-size', 'Gün boyutu ve iç kaydırma')}, {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -446,7 +453,7 @@ export function PropsReference() {
         <p>
           <strong>Referans ay</strong>, gösterilen ayların kendisine göre belirlendiği aydır: <code>visibleMonth</code>, yoksa <code>defaultVisibleMonth</code>,
           yoksa seçimin ayı, yoksa bugünün ayı. Kullanıcının oklarla sayfa mı değiştireceğini yoksa büyüyen bir listeyi mi kaydıracağını{' '}
-          <code>navigation</code> belirler. Bkz. {to('load-more', 'Kademeli ay yükleme')} ve {to('go-to-month', 'Programla gezinme')}.
+          <code>navigation</code> belirler. Bkz. {to('load-more', 'Daha fazla ay yükleme')} ve {to('go-to-month', 'Ayı koddan değiştirme')}.
         </p>
         <PropsTable
           caption="Gezinme prop’ları"
@@ -456,7 +463,7 @@ export function PropsReference() {
               type: 'CalendarMonth ("YYYY-MM")',
               description: (
                 <>
-                  <strong>controlled</strong> referans ay: ayı siz tutarsınız (çifti: {c('defaultVisibleMonth')}); {c('onVisibleMonthChange')} ile birlikte
+                  Takvimin gösterdiği ay (referans ay); değeri kendi state’inizde tutarsınız: <strong>controlled</strong> (çifti: {c('defaultVisibleMonth')}); {c('onVisibleMonthChange')} ile birlikte
                   kullanın. Bu durumda oklar, klavyeyle sayfa değiştirme, {c('ref.next()')} ve {c('goToMonth()')} yalnızca yeni bir ay ister; ayın
                   değişmesi için onu saklayın. Ayı URL’de tutmak veya takvimleri senkron tutmak için kullanın. Geçerli bir ay olmayan değer yok sayılır.
                   Sürekli modda prop değişikliği {c('goToMonth()')} gibi çalışır: render edilmiş bir aya kaydırır (liste korunur) veya render edilmemiş bir
@@ -471,9 +478,9 @@ export function PropsReference() {
               default: <>seçimin ayı, yoksa bugünün ayı</>,
               description: (
                 <>
-                  <strong>uncontrolled</strong> başlangıç referans ayı; yalnızca mount sırasında okunur. Ayrıca {c('today')} verilmese de sunucu HTML’inin
-                  aylarla birlikte render edilmesini sağlar. {c('visibleMonth')} verildiğinde yok sayılır. {to('core-concepts', 'Temel kavramlar → Başlangıç ayı')},{' '}
-                  {to('load-more', 'Kademeli ay yükleme')}.
+                  İlk gösterilen ay; sonrasında ayı takvim kendisi tutar (<strong>uncontrolled</strong>). Yalnızca ilk render’da okunur. Ayrıca{' '}
+                  {c('today')} verilmese de sunucunun ayları render etmesini sağlar. {c('visibleMonth')} verildiğinde yok sayılır. {to('core-concepts', 'Temel kavramlar → Başlangıç ayı')},{' '}
+                  {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -485,7 +492,7 @@ export function PropsReference() {
                 <>
                   {c('paged')}: önceki/sonraki oklarıyla değişen {c('numberOfMonths')} ay. {c('continuous')}: yeni aylar yüklendikçe büyüyen
                   bir liste (ok yok; {c('renderNavigation')} ve {c('stepMonths')} kullanılmaz); dikey ve mobil yerleşimlere uygundur.{' '}
-                  {to('load-more', 'Kademeli ay yükleme')}.
+                  {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -509,7 +516,7 @@ export function PropsReference() {
                 <>
                   Yalnızca sürekli modda: ayların nasıl ekleneceği. {c('button')} “Daha fazla tarih göster” düğmeleri gösterir; {c('auto')} listenin sonu
                   ekranın (veya {c('maxBlockSize')} alanının) 200 px yakınına gelince yeni ay yükler; {c('manual')} hiçbir düğme render etmez, örneğin{' '}
-                  {c('renderFooter')} içinden {c("ref.loadMore('next')")}’i siz çağırırsınız. {to('load-more', 'Kademeli ay yükleme')}.
+                  {c('renderFooter')} içinden {c("ref.loadMore('next')")}’i siz çağırırsınız. {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -522,7 +529,7 @@ export function PropsReference() {
                   Yalnızca sürekli modda: listenin hangi uçlarında yerleşik yükleme arayüzü olacağı (daha fazla ay yükleme düğmeleri veya{' '}
                   {c('renderLoadMore')} içeriği ve {c("loadMore='auto'")} gözcüleri). Yükleme {c('minDate')}/{c('maxDate')} aylarında durur. Controller bu
                   prop’la sınırlı değildir: {c('ref.loadMore(direction)')} iki yöne de ay ekler (yalnızca sürekli modda ve yine sınırlarda durarak).{' '}
-                  {to('load-more', 'Kademeli ay yükleme')}.
+                  {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -533,7 +540,7 @@ export function PropsReference() {
               description: (
                 <>
                   Yalnızca sürekli modda: her yüklemede eklenen ay sayısı (min/max sınırında daha az). Klavye odağı listenin sonundan en fazla bu kadar ay
-                  öteye giderse liste genişletilir. Geçersiz değerlerde varsayılan kullanılır. {to('load-more', 'Kademeli ay yükleme')}.
+                  öteye giderse liste genişletilir. Geçersiz değerlerde varsayılan kullanılır. {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -543,9 +550,9 @@ export function PropsReference() {
               default: '24',
               description: (
                 <>
-                  Yalnızca sürekli modda: DOM’da aynı anda tutulan en fazla ay sayısı. Bu sayı aşılınca her yüklemede listenin karşı ucundan aylar kaldırılır
+                  Yalnızca sürekli modda: sayfada (DOM’da) aynı anda tutulan en fazla ay sayısı. Bu sayı aşılınca her yükleme listenin karşı ucundan ay kaldırır
                   (odaktaki günün ayı hiçbir zaman); sınır hiçbir zaman {c('numberOfMonths')}’un altına inmez. Yavaş cihazlardaki uzun listeler için düşürün. Canlı örneği yok; bkz.{' '}
-                  {to('load-more', 'Kademeli ay yükleme')}.
+                  {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),
             },
@@ -555,8 +562,8 @@ export function PropsReference() {
               default: 'messages.loadNext / loadPrevious',
               description: (
                 <>
-                  Her yön için varsayılan daha fazla ay yükleme düğmesinin içeriği; düğmenin kendisi, davranışı ve erişilebilirliği aynı kalır. Ayrıca{' '}
-                  {c('renderLoadMore')}’a {c('label')} olarak gelir. {to('load-more', 'Kademeli ay yükleme → loadMoreLabels')}.
+                  Her yön için varsayılan daha fazla ay yükleme düğmesinin metni (veya başka içeriği); düğmenin kendisi, davranışı ve erişilebilirliği aynı kalır. Ayrıca{' '}
+                  {c('renderLoadMore')}’a {c('label')} olarak gelir. {to('load-more', 'Daha fazla ay yükleme → loadMoreLabels')}.
                 </>
               ),
             },
@@ -592,10 +599,10 @@ export function PropsReference() {
               default: 'messagesEn',
               description: (
                 <>
-                  İngilizce metinlerin üzerine birleştirilir: hazır bir paket ({c('messagesTr')}, {c('messagesDe')}, …) ya da yalnızca değiştirmek istediğiniz
+                  Takvimin kendi metinleri (düğme etiketleri, sebepler, duyurular). İngilizce metinlerin üzerine birleştirilir: hazır bir paket ({c('messagesTr')}, {c('messagesDe')}, …) ya da yalnızca değiştirmek istediğiniz
                   anahtarları verin; eksik kalan her anahtar İngilizceden gelir. İç içe {c('reasons')} ve {c('dayReasons')} anahtar anahtar birleştirilir,
                   böylece kendi {c('DayAvailability.reason')} etiketleriniz için metin ekleyebilirsiniz. Başka bir dilde birkaç anahtarı değiştirecekseniz
-                  mergeMessages ile o dilin paketini temel alın. Nesneyi memoize edin. {to('api-messages', 'Mesajlar ve biçimlendirme')}.
+                  o dilin paketinden başlayın. Nesneyi memoize edin. {to('api-messages', 'Mesajlar ve biçimlendirme')}.
                 </>
               ),
             },
@@ -736,10 +743,10 @@ export function PropsReference() {
               type: 'TooltipOptions',
               description: (
                 <>
-                  {c('placement')} (tercih edilen taraf, varsayılan {c("'top'")}; sığmazsa diğer taraflar denenir), {c('boundary')} (varsayılan{' '}
+                  Gün tooltip’lerinin nerede ve nasıl açılacağı: {c('placement')} (tercih edilen taraf, varsayılan {c("'top'")}; sığmazsa diğer taraflar denenir), {c('boundary')} (varsayılan{' '}
                   {c("'calendar'")} veya {c("'viewport'")}), {c('offset')} (varsayılan 8 px), {c('className')}, {c('container')} (portal hedefi,
                   varsayılan {c('document.body')}; modal içinde dialog öğesini verin) ve {c('openDate')} (controlled açık gün: hangi günün tooltip’inin açık
-                  olduğunu siz belirlersiniz, {c('null')} = kapalı; yalnızca içeriği olan günler açılır). {to('tooltip', 'Tooltip')}, {to('placement', 'Satır içi, modal ve portal')}.
+                  olduğunu siz belirlersiniz, {c('null')} = kapalı; yalnızca içeriği olan günler açılır). {to('tooltip', 'Tooltip')}, {to('placement', 'Satır içinde, diyalogda veya popover’da')}.
                 </>
               ),
             },
@@ -811,7 +818,7 @@ export function PropsReference() {
                   {c("loadMore='button'")} ile sürekli modda: {c('loadDirections')} içindeki her yön için varsayılan daha fazla ay yükleme düğmesinin
                   yerine kendi içeriğiniz. {c('minDate')}/{c('maxDate')} sınırında da {c('canLoad: false')} ile çağrılır (orada varsayılan düğme
                   gösterilmez ve {c('loadMore()')} hiçbir şey yapmaz); böylece devre dışı bir düğme veya bir mesaj gösterebilirsiniz.{' '}
-                  {to('load-more', 'Kademeli ay yükleme → renderLoadMore')}.
+                  {to('load-more', 'Daha fazla ay yükleme → renderLoadMore')}.
                 </>
               ),
             },
@@ -828,7 +835,7 @@ export function PropsReference() {
               type: 'string / CSSProperties',
               description: (
                 <>
-                  Kök öğeye, varsayılan {c('cal-root')} sınıfından sonra eklenir. Tema değişkenlerini ({c('--cal-accent')}, …) burada veya CSS’te ayarlayın;
+                  Takvimin kök öğesinin sınıfı ve satır içi stili; sınıf, varsayılan {c('cal-root')} sınıfından sonra eklenir. Tema değişkenlerini ({c('--cal-accent')}, …) burada veya CSS’te ayarlayın;
                   boyut değişkenleri {c('--cal-day-min-w/h')}, {c('--cal-day-max')} ve {c('--cal-month-gap')} ise her zaman prop’lardan hesaplanan
                   değerle yazılır. {to('styling', 'Stil → CSS değişkenleri')}.
                 </>
@@ -863,7 +870,7 @@ export function PropsReference() {
               default: <>otomatik üretilir (<code>useId</code>)</>,
               description: (
                 <>
-                  Kök öğenin id’si; olaylarda, controller’da ve {c('ctx')}’te {c('instanceId')} olarak da bulunur. İç id’ler bundan türetilir:{' '}
+                  Kök öğenin id’si; olaylarda, controller’da ve slot bağlamı {c('ctx')}’te {c('instanceId')} olarak da bulunur. İç id’ler bundan türetilir:{' '}
                   {c('<id>-tooltip')} (günün {c('aria-describedby')}’ı), {c('<id>-months')}, {c('<id>-day-<date>')}. Testlerde sabit id’ler için veya
                   ortak bir işleyicide takvimleri ayırt etmek için verin; sayfada benzersiz olmalıdır. {to('api-controller', 'Controller → instanceId')}.
                 </>
@@ -885,9 +892,9 @@ export function PropsReference() {
               type: 'Ref<CalendarController>',
               description: (
                 <>
-                  Takvimi koddan yöneten controller (imperative API): {c('goToMonth')}, {c('next')}/{c('previous')}, {c('loadMore')}, {c('clear')}, {c('reset')},{' '}
+                  Takvimi kendi kodunuzdan yöneten controller (imperative API); örneğin takvimin dışındaki bir “Tarihleri temizle” düğmesi için: {c('goToMonth')}, {c('next')}/{c('previous')}, {c('loadMore')}, {c('clear')}, {c('reset')},{' '}
                   {c('select')}, {c('setActiveEndpoint')}, {c('focusDate')}, {c('getSnapshot')}. Slotların içinde aynı nesne {c('ctx.actions')} olarak gelir.{' '}
-                  {to('api-controller', 'Controller (ref)')}, {to('go-to-month', 'Programla gezinme')}.
+                  {to('api-controller', 'Controller (ref)')}, {to('go-to-month', 'Ayı koddan değiştirme')}.
                 </>
               ),
             },
@@ -919,7 +926,7 @@ export function PropsReference() {
             ev('onLayoutChange', '(e: LayoutChangeEvent) => void', 'Sütunlar, etkin ay sayısı, etkin taşma stratejisi veya en küçük boyut durumu değişti.'),
             ev('onDayFocusChange', '(e: DayFocusChangeEvent) => void', 'Odaklanan gün değişti (klavye, tıklama veya focusDate()).'),
             ev('onTooltipOpenChange', '(e: TooltipOpenChangeEvent) => void', 'Bir günün tooltip’i açıldı, kapandı veya başka bir güne geçti; tooltip’i neyin açtığıyla birlikte.'),
-            ev('onOutsideClick', '(e: OutsideClickEvent) => void', 'Takvimin ve portal’larının (tooltip, slotlardaki açılır pencereler) dışında bir pointerdown: açılır pencereyi burada kapatın.'),
+            ev('onOutsideClick', '(e: OutsideClickEvent) => void', 'Takvimin ve portal’larının (tooltip, slotlarınızdaki popover’lar) dışında bir pointerdown: takvimi gösteren popover’ı burada kapatın.'),
             ev('onScroll', '(e: ScrollEvent) => void', 'Aylar alanı kaydırıldı; animasyon karesi başına en fazla bir kez.'),
             ev('onEvent', '(e: CalendarEvent) => void', 'Change dahil her olay, kendi callback’inden sonra.'),
           ]}
@@ -931,18 +938,18 @@ export function PropsReference() {
 
 const typeLinks: readonly (readonly [string, ReactNode, string, string])[] = [
   ['CalendarDate, CalendarMonth, Weekday, DateParts', 'Çalışma anında “YYYY-MM-DD” / “YYYY-MM” biçiminde düz string’ler; TypeScript’te branded type’tır, yani ayrı tipler oldukları için tarih beklenen yere sıradan bir string verilemez. Weekday’de 0 = pazar; DateParts { year, month, day }.', 'api-dates', 'Tarih yardımcıları'],
-  ['SelectionRules, DayAvailability, RuleContext', 'Kural kümesi, gün başına sonuç ve kural callback’lerinin aldığı ctx.', 'api-rules', 'Kurallar ve adaptörler'],
+  ['SelectionRules, DayAvailability, RuleContext', 'Kural kümesi, gün başına sonuç ve ctx: kural callback’lerinin ikinci argümanı (bugün, mevcut seçim, ruleContext değeriniz).', 'api-rules', 'Kurallar ve adaptörler'],
   ['StayRulesOptions, StayDayStatus, StayReason', 'stayRules() seçenekleri, gece başına durumları ve sebep etiketleri.', 'api-rules', 'Kurallar ve adaptörler'],
   ['DayRangeRulesOptions, DayRangeStatus', 'dayRangeRules() seçenekleri ve gün başına durumları.', 'api-rules', 'Kurallar ve adaptörler'],
   ['RelaxScheduleOptions', '{ weekdays?: boolean; length?: boolean }, ikisinin de varsayılanı true (bkz. relaxSchedule).', 'api-rules', 'Kurallar ve adaptörler'],
-  ['SelectionEngine, SelectionEngineInput, ActivationPlan', 'Takvimin arkasındaki arayüzsüz (headless) seçim motoru ve plan(date)’in döndürdüğü değer.', 'api-rules', 'Kurallar ve adaptörler'],
+  ['SelectionEngine, SelectionEngineInput, ActivationPlan', 'Takvimin arkasındaki, React olmadan da kullanılabilen (headless) seçim motoru ve plan(date)’in döndürdüğü değer.', 'api-rules', 'Kurallar ve adaptörler'],
   ['CalendarMessages, CalendarMessagesInput, ReasonMessage, MessageFormatHelpers', 'Metin paketi, kısmi değişiklikler (İngilizceyle tamamlanır) ve sebep fonksiyonları.', 'api-messages', 'Mesajlar ve biçimlendirme'],
-  ['CalendarController, GoToMonthOptions, GoToMonthResult, CalendarSnapshot', 'Ref API’si ve anlık durumu.', 'api-controller', 'Controller (ref)'],
+  ['CalendarController, GoToMonthOptions, GoToMonthResult, CalendarSnapshot', 'Ref API’si (takvimi koddan yöneten metotlar) ve mevcut durumun anlık görüntüsü (snapshot).', 'api-controller', 'Controller (ref)'],
   ['CalendarEvent, CalendarEventType, EventSource, ReadyEvent … ScrollEvent', 'Tüm olay nesneleri, birleşim tipi ve kaynak değerleri.', 'api-events', 'Callback’ler ve olaylar'],
   ['CalendarLayout, LoadingSnapshot', 'onLayoutChange / onReady ve onLoadingChange olaylarının içerdiği nesneler.', 'api-events', 'Callback’ler ve olaylar'],
   ['CalendarPart, ClassNameValue', 'classNames anahtarları ve değer tipleri.', 'styling-reference', 'Stil başvurusu'],
   ['MonthHeaderRenderProps, NavigationRenderProps, LoadingRenderProps, ErrorRenderProps, LoadMoreRenderProps, DayTooltipRenderProps', 'Slotların prop’ları.', 'styling-reference', 'Stil başvurusu'],
-  ['DefaultDayData', 'Varsayılan gün içeriğinin çizdiği biçim.', 'day-content', 'Gün içeriği'],
+  ['DefaultDayData', 'getDayData’nın döndürebileceği, varsayılan gün içeriğinin çizdiği biçim (etiket, badge, simge, noktalar).', 'day-content', 'Günlerde etiket, badge ve simge'],
 ];
 
 export function TypesReference() {
@@ -1174,9 +1181,10 @@ type CalendarClassNames =
   }
 type ClassNameValue = string | ((day: DayState) => string | undefined)`}</pre>
         <p>
-          <code>SlotContext</code> her slotun ikinci argümanıdır ({c('renderHeader')}, {c('renderFooter')}, {c('renderMonthHeader')},{' '}
-          {c('renderNavigation')}, {c('renderLoading')}, {c('renderError')}, {c('renderLoadMore')}). <code>formatDate</code> varsayılan olarak takvimin
-          yerel ayarında uzun biçimli bir tarih üretir (ör. “13 Kasım 2026”). <code>CalendarClassNames</code>, <code>classNames</code>’in tipidir; anahtarları{' '}
+          <code>SlotContext</code> (slot bağlamı, genellikle <code>ctx</code> diye adlandırılır) slotlara mevcut durumu ve controller’ı verir:{' '}
+          {c('renderHeader')} ve {c('renderFooter')}’ın tek argümanı, {c('renderMonthHeader')}, {c('renderNavigation')}, {c('renderLoading')},{' '}
+          {c('renderError')} ve {c('renderLoadMore')}’un ikinci argümanıdır. <code>formatDate</code> varsayılan olarak takvimin yerel ayarında uzun
+          biçimli bir tarih üretir ({c('en-US')}’de “November 13, 2026”, tr-TR’de “13 Kasım 2026”). <code>CalendarClassNames</code>, <code>classNames</code>’in tipidir; anahtarları{' '}
           {to('styling-reference', 'Stil başvurusu')} sayfasında listelenen <code>CalendarPart</code> adlarıdır.
         </p>
       </Section>

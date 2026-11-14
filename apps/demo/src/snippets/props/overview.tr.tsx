@@ -8,6 +8,7 @@ import { Calendar, type CalendarController, type CalendarDate, type DateRange, t
 // yeniden birleştirilmez; aynı veri nesnesini döndürmek de değişmeyen günlerin
 // yeniden render edilmesini önler.
 const rules = stayRules({ minNights: 2, maxNights: 14 });
+// Her günün numarasının altında gösterilen fiyat: cuma ve cumartesi geceleri daha pahalıdır.
 const weekend: DefaultDayData = { label: '€140' };
 const weekday: DefaultDayData = { label: '€110' };
 const getDayData = (date: CalendarDate) => (getWeekday(date) >= 5 ? weekend : weekday);

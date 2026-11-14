@@ -22,8 +22,10 @@ export function PropsReference() {
       title="Calendar props"
       lead={
         <>
-          Every prop of <code>{'<Calendar>'}</code>, grouped by topic. Only <code>mode</code> is required. Controlled props are listed next to their
-          uncontrolled counterpart; each row links to the page whose live example uses the prop.
+          Every prop of <code>{'<Calendar>'}</code>, grouped by topic. Only <code>mode</code> is required. Each row first says what the prop changes on
+          screen, then its default and edge cases, and links to the page whose live example uses it. Controlled props (you keep the value in your state,
+          e.g. <code>value</code> + <code>onChange</code>) are listed next to their uncontrolled counterpart (the calendar keeps the value; you only pass
+          the starting value, e.g. <code>defaultValue</code>).
         </>
       }
     >
@@ -70,7 +72,8 @@ export function PropsReference() {
               type: 'single: CalendarDate | null · range: DateRange · multiple: readonly CalendarDate[]',
               description: (
                 <>
-                  <strong>Controlled</strong> selection (pair: {c('defaultValue')}). Any value other than {c('undefined')} makes the calendar controlled, so{' '}
+                  The selected date(s) the calendar shows, kept in your state: <strong>controlled</strong> (pair: {c('defaultValue')}). Any value other than{' '}
+                  {c('undefined')} makes the calendar controlled, so{' '}
                   {c('null')} or {c("{ start: null, end: null }")} is a controlled empty selection. Store what {c('onChange')} gives you, otherwise clicks have
                   no visible effect. Without {c('visibleMonth')}/{c('defaultVisibleMonth')}, the selection&apos;s month (single date, range start or
                   earliest multiple date) is the initial month. {to('core-concepts', 'Core concepts → Controlled')}.
@@ -82,7 +85,8 @@ export function PropsReference() {
               type: <>same as <code>value</code></>,
               description: (
                 <>
-                  <strong>Uncontrolled</strong> initial selection (pair: {c('value')}), read once on mount; later changes are ignored. {c('ref.reset()')}{' '}
+                  The selection shown when the calendar first appears; after that the calendar keeps the selection itself (<strong>uncontrolled</strong>,
+                  pair: {c('value')}). Read once on mount; later changes are ignored. {c('ref.reset()')}{' '}
                   restores it. Ignored when {c('value')} is given. {to('core-concepts', 'Core concepts → Uncontrolled')}.
                 </>
               ),
@@ -104,7 +108,8 @@ export function PropsReference() {
               type: "'start' | 'end'",
               description: (
                 <>
-                  Range only. <strong>Controlled</strong> endpoint the next click sets (pair: {c('defaultActiveEndpoint')}); pair it with{' '}
+                  Range only. Which end of the range the next click sets, kept in your state (<strong>controlled</strong>, pair:{' '}
+                  {c('defaultActiveEndpoint')}); pair it with{' '}
                   {c('onActiveEndpointChange')}. Share it, together with {c('value')}, between calendars that edit one range so a start picked in one makes
                   the other expect the end. When omitted it is derived from the value ({c('end')} while only a start is set).{' '}
                   {to('synced', 'Synced calendars')}, {to('recipe-three-calendars', 'Three synced calendars')}.
@@ -117,7 +122,8 @@ export function PropsReference() {
               default: <>derived from the value</>,
               description: (
                 <>
-                  Range only. <strong>Uncontrolled</strong> initial endpoint, e.g. {c("'end'")} to let the user change only the end of a pre-filled range. It
+                  Range only. Which end the first click sets (<strong>uncontrolled</strong>), e.g. {c("'end'")} so that the first click on a pre-filled range
+                  moves its end instead of starting a new range. It
                   applies while the selection is still the initial one; after a change the endpoint follows the selection. Ignored when{' '}
                   {c('activeEndpoint')} is given. {to('selection-modes', 'Selection modes → Initial values')}.
                 </>
@@ -142,7 +148,8 @@ export function PropsReference() {
               type: 'SelectionRules<TContext> | readonly (SelectionRules<TContext> | null | undefined | false)[]',
               description: (
                 <>
-                  Bounds, lengths, weekdays, per-day availability and custom validation. In an array every set must pass and falsy entries are skipped, so{' '}
+                  Which days and ranges the user can pick: bounds, lengths, weekdays, per-day availability and custom validation. Days that fail are drawn
+                  disabled. In an array every set must pass and falsy entries are skipped, so{' '}
                   {c('[stayRules(…), closed && closedDates(closed)]')} works. Keep the object stable (module scope or {c('useMemo')}): a new identity
                   recombines the rules and revalidates. {to('length-rules', 'Length rules')}, {to('day-rules', 'Start/end days')},{' '}
                   {to('api-rules', 'Rules & adapters')}.
@@ -154,7 +161,7 @@ export function PropsReference() {
               type: 'CalendarDate | null',
               description: (
                 <>
-                  Inclusive first/last selectable day; {c('null')} means no limit. Unlike {c('disablePast')}, they also limit navigation: the arrows,
+                  First / last day the user can pick (inclusive); days outside are disabled. {c('null')} means no limit. Unlike {c('disablePast')}, they also limit navigation: the arrows,
                   keyboard, {c('goToMonth()')} and load-more stop at their months (requests are clamped). Merged with any {c('minDate')}/{c('maxDate')} in{' '}
                   {c('rules')}; the narrower range wins. {to('date-limits', 'Date limits')}.
                 </>
@@ -176,8 +183,9 @@ export function PropsReference() {
               type: 'TContext',
               description: (
                 <>
-                  Any app data your rule callbacks need (chosen times, party size), passed to them as {c('ctx.context')}. A new value revalidates the
-                  selection and every day, so memoise objects. {to('recipe-home-rental', 'Home rental recipe')}.
+                  App state that your rule callbacks need to decide which days are selectable (chosen times, party size). Each rule callback receives a
+                  second argument {c('ctx')} (today, the current selection, …); this value is its {c('ctx.context')}. A new value revalidates the selection
+                  and every day, so memoise objects. {to('recipe-home-rental', 'Home rental example')}.
                 </>
               ),
             },
@@ -187,10 +195,10 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  “Custom dates” switch: ignores schedule rules — {c('startWeekdays')}/{c('endWeekdays')}/{c('availableWeekdays')}, availability marked{' '}
+                  Lets the user pick dates outside the regular schedule, e.g. behind a “Custom dates” switch. It ignores schedule rules — {c('startWeekdays')}/{c('endWeekdays')}/{c('availableWeekdays')}, availability marked{' '}
                   {c('schedule: true')} ({c('weekdays')}) and {c('minLength')}/{c('maxLength')}/{c('fixedLength')} ({c('length')}) — while real
                   availability, bounds, past/future, data status and validators still apply. {c('true')} or {c('{}')} relaxes both groups;{' '}
-                  {c('{ weekdays: false }')} relaxes only lengths. {to('recipe-boat-rental', 'Boat rental recipe')}, {to('api-rules', 'relaxRules')}.
+                  {c('{ weekdays: false }')} relaxes only lengths. {to('recipe-boat-rental', 'Boat rental example')}, {to('api-rules', 'relaxRules')}.
                 </>
               ),
             },
@@ -200,8 +208,8 @@ export function PropsReference() {
               default: <>computed on the client</>,
               description: (
                 <>
-                  Fixes “today” for {c('disablePast')}/{c('disableFuture')}, the today marker, {c('day.past')}/{c('day.future')} and the default month. Pass
-                  it for SSR and tests: without it the server knows no today and, unless {c('value')} or {c('defaultVisibleMonth')} names a month, renders a
+                  The date the calendar treats as today: it decides where the today marker is drawn, which days {c('disablePast')}/{c('disableFuture')}{' '}
+                  disable, {c('day.past')}/{c('day.future')} and the month shown first. Pass it for SSR and tests: without it the server knows no today and, unless {c('value')} or {c('defaultVisibleMonth')} names a month, renders a
                   loading placeholder that the client completes. When given, {c('timeZone')} is ignored and today never refreshes.{' '}
                   {to('react-nextjs', 'React & Next.js')}.
                 </>
@@ -213,7 +221,7 @@ export function PropsReference() {
               default: <>the browser’s zone</>,
               description: (
                 <>
-                  Zone used to compute today when {c('today')} is not given, e.g. {c("'Europe/Istanbul'")} for a venue&apos;s local date. The computed
+                  Time zone whose calendar date counts as today when {c('today')} is not given, e.g. {c("'Europe/Istanbul'")} for a venue&apos;s local date. The computed
                   today refreshes after midnight (checked at least hourly) and when the tab becomes visible again. {to('date-limits', 'Date limits → Today')}.
                 </>
               ),
@@ -236,7 +244,7 @@ export function PropsReference() {
       <Section title="Data and loading">
         <p>
           The calendar never fetches. You load data for the months it renders (start from <code>onRenderedMonthsChange</code>) and describe it with
-          these props. See {to('loading', 'Loading & errors')} and {to('day-content', 'Day content')}.
+          these props. See {to('loading', 'Loading & errors')} and {to('day-content', 'Labels, badges & icons on days')}.
         </p>
         <PropsTable
           caption="Data props"
@@ -246,10 +254,11 @@ export function PropsReference() {
               type: '(date: CalendarDate) => TDayData | undefined',
               description: (
                 <>
-                  Per-day display data (prices, badges), separate from selectability. A {c('DefaultDayData')} shape ({c('label')}, {c('badge')},{' '}
+                  What each day shows under its number (a price, badge, icon or dots); it does not affect which days can be picked. A{' '}
+                  {c('DefaultDayData')} shape ({c('label')}, {c('badge')},{' '}
                   {c('icon')}, {c('markers')}, {c('description')}) is drawn by the default day content; any other shape reaches your render props as{' '}
                   {c('data')}. Called for every rendered day on every render: keep it cheap and return the same object for unchanged days so they skip
-                  re-rendering. {to('day-content', 'Day content')}.
+                  re-rendering. {to('day-content', 'Labels, badges & icons on days')}.
                 </>
               ),
             },
@@ -259,8 +268,8 @@ export function PropsReference() {
               default: <>every month <code>'loaded'</code></>,
               description: (
                 <>
-                  Status of each month&apos;s data. {c("'loading'")} and {c("'unknown'")} months draw day skeletons without tooltips;{' '}
-                  {c("'error'")} months show the error UI. It also feeds the rules: days of a month that is not {c("'loaded'")} cannot be picked
+                  Tells the calendar whether each month&apos;s data is ready. In {c("'loading'")} and {c("'unknown'")} months the days are drawn as empty
+                  placeholders without tooltips; {c("'error'")} months show an error box. It also feeds the rules: days of a month that is not {c("'loaded'")} cannot be picked
                   (reasons {c('data-loading')}, {c('data-unknown')}, {c('data-error')}) unless the rules set {c("unknownDataPolicy: 'allow'")}. Combined
                   with a {c('getDataStatus')} in {c('rules')} (the worse status wins). {to('loading', 'Loading & errors')}.
                 </>
@@ -272,9 +281,10 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  Calendar-wide flag. Before the calendar has ever rendered without it, it is the <em>initial load</em>: every day is a skeleton, selection
-                  is validated as if all data were loading, and {c("renderLoading({ scope: 'initial' })")} is used. Set again later, it is a{' '}
-                  <em>background refresh</em>: days, selection and focus stay, only {c('aria-busy')} and {c('LoadingSnapshot.refreshing')} change. Per-month
+                  Shows the whole calendar as loading. Before the calendar has ever rendered without it, it is the <em>initial load</em>: every day is an
+                  empty placeholder, no day can be picked (selection is validated as if all data were loading; with the default{' '}
+                  {c("unknownDataPolicy: 'block'")}), and {c("renderLoading({ scope: 'initial' })")} is used. Set again later, it is a{' '}
+                  <em>background refresh</em>: days, selection and focus stay and days remain selectable; only {c('aria-busy')} and {c('LoadingSnapshot.refreshing')} change. Per-month
                   loading belongs in {c('getDataStatus')}. {to('loading', 'Loading & errors → Initial load')}.
                 </>
               ),
@@ -284,8 +294,8 @@ export function PropsReference() {
               type: '(months: readonly CalendarMonth[]) => void',
               description: (
                 <>
-                  Called with {c('[month]')} by the default error UI&apos;s Retry button and by {c('retry()')} in {c('renderError')}. The default Retry
-                  button is only shown when this prop is set. {to('loading', 'Loading & errors')}.
+                  Adds a Retry button to the default error box of each failed month; it is called with {c('[month]')} when the user presses it, or when your{' '}
+                  {c('renderError')} calls {c('retry()')}. Without this prop the default error box has no Retry button. {to('loading', 'Loading & errors')}.
                 </>
               ),
             },
@@ -294,7 +304,7 @@ export function PropsReference() {
               type: 'Record<string, (day: DayState) => boolean>',
               description: (
                 <>
-                  Your own day flags for styling: each function runs for every rendered day; the names that return {c('true')} land in{' '}
+                  Your own day flags for styling (e.g. holidays): each function runs for every rendered day; the names that return {c('true')} land in{' '}
                   {c('day.modifiers')} and as {c('data-mod-<name>')} on the day cell and button. They do not affect selection (use {c('rules')} for that). Use
                   lowercase, hyphenated names: HTML lowercases attribute names. {to('styling', 'Styling → State attributes and modifiers')}.
                 </>
@@ -331,7 +341,7 @@ export function PropsReference() {
               default: '1',
               description: (
                 <>
-                  Months in the window (paged) or rendered initially (continuous). Never changed silently: only {c("overflow='reduce-months'")} shows fewer.
+                  How many months the calendar shows at once (paged) or renders first (continuous). The calendar never lowers it on its own: only {c("overflow='reduce-months'")} shows fewer.
                   Decimals are floored; values below 1 or not finite fall back to 1. Also the default of {c('monthsPerLoad')}.{' '}
                   {to('orientation', 'Orientation & months')}.
                 </>
@@ -343,8 +353,9 @@ export function PropsReference() {
               default: '1',
               description: (
                 <>
-                  1-based slot of the reference month (the {c('visibleMonth')}, selection month or today&apos;s month) in the window: {c('3')} with three
-                  months shows the two months before it. Clamped to 1…effective months; near {c('minDate')}/{c('maxDate')} the window shifts instead of
+                  Where the reference month (the {c('visibleMonth')}, selection month or today&apos;s month) appears among the visible months, counted from 1.
+                  It does not change the reference month, only which months appear next to it: with three months and November as reference month,{' '}
+                  a value of {c('3')} shows September, October and November. Clamped to 1…effective months; near {c('minDate')}/{c('maxDate')} the window shifts instead of
                   showing unreachable months. {to('month-position', 'Reference month position')}.
                 </>
               ),
@@ -400,7 +411,8 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  Always render 6 week rows, so the height does not change between 4-, 5- and 6-week months (useful in popovers and side-by-side months).{' '}
+                  The calendar shows every month with 6 week rows, so its height does not change for months that fit in 5 (useful in popovers and with
+                  months side by side). It does not change the number of months.{' '}
                   {to('orientation', 'Orientation & months')}.
                 </>
               ),
@@ -410,9 +422,9 @@ export function PropsReference() {
               type: 'number | string',
               description: (
                 <>
-                  Maximum height of the months area (px number or any CSS length, e.g. {c("'60vh'")}). Above it the months scroll inside the calendar
+                  Maximum height of the months area (px number or any CSS length, e.g. {c("'60vh'")}). When the months are taller, they scroll inside the calendar
                   while header and footer stay visible; in continuous mode auto-loading and visible-month tracking then observe that inner scroll area.{' '}
-                  {to('day-size', 'Day size & inner scroll')}, {to('load-more', 'Progressive months')}.
+                  {to('day-size', 'Day size & inner scroll')}, {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -435,7 +447,7 @@ export function PropsReference() {
         <p>
           The <strong>reference month</strong> anchors the window: <code>visibleMonth</code>, else <code>defaultVisibleMonth</code>, else the
           selection&apos;s month, else today&apos;s month. <code>navigation</code> decides whether the user pages through windows or scrolls a growing list.
-          See {to('load-more', 'Progressive months')} and {to('go-to-month', 'Programmatic navigation')}.
+          See {to('load-more', 'Loading more months')} and {to('go-to-month', 'Changing the month from code')}.
         </p>
         <PropsTable
           caption="Navigation props"
@@ -445,7 +457,8 @@ export function PropsReference() {
               type: 'CalendarMonth ("YYYY-MM")',
               description: (
                 <>
-                  <strong>Controlled</strong> reference month (pair: {c('defaultVisibleMonth')}); pair it with {c('onVisibleMonthChange')}. Arrows,
+                  The month the calendar shows (the reference month), kept in your state: <strong>controlled</strong> (pair:{' '}
+                  {c('defaultVisibleMonth')}); pair it with {c('onVisibleMonthChange')}. Arrows,
                   keyboard paging, {c('ref.next()')} and {c('goToMonth()')} then only request a month; store it to move. Use it to keep the month in the URL
                   or to sync calendars. An unparsable value is ignored. In continuous mode a prop change works like {c('goToMonth()')}: scrolls to a
                   rendered month (list kept) or rebuilds the list around an unrendered one, without smooth scrolling, focus moves or a{' '}
@@ -460,8 +473,9 @@ export function PropsReference() {
               default: <>the selection’s month, else today’s</>,
               description: (
                 <>
-                  <strong>Uncontrolled</strong> initial reference month, read once on mount. Also makes server HTML complete without {c('today')}.
-                  Ignored when {c('visibleMonth')} is given. {to('core-concepts', 'Core concepts → Start month')}, {to('load-more', 'Progressive months')}.
+                  The month shown first; after that the calendar keeps it itself (<strong>uncontrolled</strong>). Read once on mount. Also lets the
+                  server render the months without {c('today')}.
+                  Ignored when {c('visibleMonth')} is given. {to('core-concepts', 'Core concepts → Start month')}, {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -473,7 +487,7 @@ export function PropsReference() {
                 <>
                   {c('paged')}: a window of {c('numberOfMonths')} months with previous/next arrows. {c('continuous')}: a list that grows with load-more
                   (no arrows; {c('renderNavigation')} and {c('stepMonths')} do not apply), suited to vertical and mobile layouts.{' '}
-                  {to('load-more', 'Progressive months')}.
+                  {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -497,7 +511,7 @@ export function PropsReference() {
                 <>
                   Continuous only: how months are added. {c('button')} shows “Show more dates” buttons; {c('auto')} loads when the end of the list comes
                   within 200 px of the viewport (or of the {c('maxBlockSize')} area); {c('manual')} renders no control, you call{' '}
-                  {c("ref.loadMore('next')")}, e.g. from {c('renderFooter')}. {to('load-more', 'Progressive months')}.
+                  {c("ref.loadMore('next')")}, e.g. from {c('renderFooter')}. {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -509,7 +523,7 @@ export function PropsReference() {
                 <>
                   Continuous only: which ends of the list get the built-in UI (load-more buttons or {c('renderLoadMore')} controls, and the{' '}
                   {c("loadMore='auto'")} sentinels). Loading stops at the months of {c('minDate')}/{c('maxDate')}. The controller is not limited by
-                  this prop: {c('ref.loadMore(direction)')} adds months in either direction (continuous only, still stopping at the limits). {to('load-more', 'Progressive months')}.
+                  this prop: {c('ref.loadMore(direction)')} adds months in either direction (continuous only, still stopping at the limits). {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -519,8 +533,8 @@ export function PropsReference() {
               default: 'numberOfMonths',
               description: (
                 <>
-                  Continuous only: months added per load (clipped at min/max). Keyboard focus moving at most this many months past the list also extends
-                  it. Invalid values fall back to the default. {to('load-more', 'Progressive months')}.
+                  Continuous only: how many months each load adds (fewer at min/max). Keyboard focus moving at most this many months past the list also extends
+                  it. Invalid values fall back to the default. {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -530,8 +544,8 @@ export function PropsReference() {
               default: '24',
               description: (
                 <>
-                  Continuous only: DOM bound. Above it, months are dropped from the opposite end of each load (never the month holding keyboard focus);
-                  never below {c('numberOfMonths')}. Lower it for long lists on slow devices. No live example; see {to('load-more', 'Progressive months')}.
+                  Continuous only: the most months kept in the page at once. Above it, each load removes months from the opposite end of the list (never the
+                  month holding keyboard focus); never below {c('numberOfMonths')}. Lower it for long lists on slow devices. No live example; see {to('load-more', 'Loading more months')}.
                 </>
               ),
             },
@@ -541,8 +555,8 @@ export function PropsReference() {
               default: 'messages.loadNext / loadPrevious',
               description: (
                 <>
-                  Content of the default load-more buttons per direction; the button, its behaviour and accessibility stay. Also passed as{' '}
-                  {c('label')} to {c('renderLoadMore')}. {to('load-more', 'Progressive months → loadMoreLabels')}.
+                  Text (or other content) of the default load-more buttons, per direction; the button, its behaviour and accessibility stay. Also passed as{' '}
+                  {c('label')} to {c('renderLoadMore')}. {to('load-more', 'Loading more months → loadMoreLabels')}.
                 </>
               ),
             },
@@ -577,9 +591,10 @@ export function PropsReference() {
               default: 'messagesEn',
               description: (
                 <>
-                  Partial overrides merged over English: pass a ready bundle ({c('messagesTr')}, {c('messagesDe')}, …) or single keys; nested{' '}
+                  The calendar&apos;s own texts (button labels, reasons, announcements). Merged over English: pass a ready bundle ({c('messagesTr')},{' '}
+                  {c('messagesDe')}, …) or only the keys you change; every missing key stays English. Nested{' '}
                   {c('reasons')} and {c('dayReasons')} are merged key by key, so you can add texts for your own {c('DayAvailability.reason')} tags. Memoise
-                  it. {to('api-messages', 'Messages & formatting')}.
+                  it. To change a few keys in another language, start from that language&apos;s bundle. {to('api-messages', 'Messages & formatting')}.
                 </>
               ),
             },
@@ -718,10 +733,9 @@ export function PropsReference() {
               type: 'TooltipOptions',
               description: (
                 <>
-                  {c('placement')} (preferred side, default {c("'top'")}; others are tried when it does not fit), {c('boundary')} ({c("'calendar'")}{' '}
+                  Where and how day tooltips open: {c('placement')} (preferred side, default {c("'top'")}; others are tried when it does not fit), {c('boundary')} ({c("'calendar'")}{' '}
                   default, or {c("'viewport'")}), {c('offset')} (default 8 px), {c('className')}, {c('container')} (portal target, default{' '}
-                  {c('document.body')}; use the dialog in a modal) and {c('openDate')} (controlled open day, {c('null')} = closed; only days with content
-                  open). {to('tooltip', 'Tooltip')}, {to('placement', 'Inline, modal & portal')}.
+                  {c('document.body')}; use the dialog in a modal) and {c('openDate')} (controlled open day: you decide which day&apos;s tooltip is open, {c('null')} = closed; only days with content open). {to('tooltip', 'Tooltip')}, {to('placement', 'Inline, in a dialog or a popover')}.
                 </>
               ),
             },
@@ -791,7 +805,7 @@ export function PropsReference() {
                 <>
                   Continuous with {c("loadMore='button'")}: a different control in place of each default load-more button, for each direction in{' '}
                   {c('loadDirections')}. Also called at {c('minDate')}/{c('maxDate')} with {c('canLoad: false')} (where the default button is removed
-                  and {c('loadMore()')} does nothing) so it can show a disabled control or a message. {to('load-more', 'Progressive months → renderLoadMore')}.
+                  and {c('loadMore()')} does nothing) so it can show a disabled control or a message. {to('load-more', 'Loading more months → renderLoadMore')}.
                 </>
               ),
             },
@@ -808,7 +822,7 @@ export function PropsReference() {
               type: 'string / CSSProperties',
               description: (
                 <>
-                  On the root element, after the default {c('cal-root')} class. Set theme variables ({c('--cal-accent')}, …) here or in CSS; the size
+                  Class and inline style of the calendar&apos;s root element; the class is added after the default {c('cal-root')} class. Set theme variables ({c('--cal-accent')}, …) here or in CSS; the size
                   variables {c('--cal-day-min-w/h')}, {c('--cal-day-max')} and {c('--cal-month-gap')} are always overwritten from the props.{' '}
                   {to('styling', 'Styling → CSS variables')}.
                 </>
@@ -842,7 +856,7 @@ export function PropsReference() {
               default: <>generated (<code>useId</code>)</>,
               description: (
                 <>
-                  Root element id and the {c('instanceId')} in events, the controller and {c('ctx')}. Inner ids derive from it:{' '}
+                  Root element id, also reported as {c('instanceId')} in events, the controller and the slot context {c('ctx')}. Inner ids derive from it:{' '}
                   {c('<id>-tooltip')} (the day&apos;s {c('aria-describedby')}), {c('<id>-months')}, {c('<id>-day-<date>')}. Set it for stable ids in tests or
                   to tell calendars apart in shared handlers; it must be unique on the page. {to('api-controller', 'Controller → instanceId')}.
                 </>
@@ -864,9 +878,9 @@ export function PropsReference() {
               type: 'Ref<CalendarController>',
               description: (
                 <>
-                  Imperative controller: {c('goToMonth')}, {c('next')}/{c('previous')}, {c('loadMore')}, {c('clear')}, {c('reset')}, {c('select')},{' '}
+                  Controller to drive the calendar from your code (imperative API), e.g. a “Clear dates” button outside it: {c('goToMonth')}, {c('next')}/{c('previous')}, {c('loadMore')}, {c('clear')}, {c('reset')}, {c('select')},{' '}
                   {c('setActiveEndpoint')}, {c('focusDate')}, {c('getSnapshot')}. Inside slots the same object is {c('ctx.actions')}.{' '}
-                  {to('api-controller', 'Controller (ref)')}, {to('go-to-month', 'Programmatic navigation')}.
+                  {to('api-controller', 'Controller (ref)')}, {to('go-to-month', 'Changing the month from code')}.
                 </>
               ),
             },
@@ -883,10 +897,10 @@ export function PropsReference() {
           caption="Event callbacks"
           rows={[
             ev('onReady', '(e: ReadyEvent) => void', 'Once per mount, after the first measurement, with the layout.'),
-            ev('onDateClick', '(e: DateClickEvent) => void', 'Every day activation (pointer or keyboard), accepted or rejected, with the day state and issue.'),
+            ev('onDateClick', '(e: DateClickEvent) => void', 'Every click on a day or Enter/Space on it, whether the day could be picked or not, with the day state and the issue if any.'),
             ev('onSelectionComplete', '(e: SelectionCompleteEvent) => void', 'A valid selection became complete: a single pick (also re-picking the selected date), both range ends, multiple reaching maxSelections, or a valid select() of a new value.'),
             ev('onSelectionClear', '(e: SelectionClearEvent) => void', 'The selection became empty (clear(), reset() to empty, toggling the last date off, …).'),
-            ev('onInvalidSelection', '(e: InvalidSelectionEvent) => void', 'A click or select() was rejected (every time, never deduplicated); carries the issue and its localised message. e.date is CalendarDate | null: null when a rejected select() has no day.'),
+            ev('onInvalidSelection', '(e: InvalidSelectionEvent) => void', 'A click on a day that cannot be picked, or a select() with an invalid value (the selection does not change; reported every time, also for repeats); carries the issue and its localised message. e.date is CalendarDate | null: null when a rejected select() has no day.'),
             ev('onValidationChange', '(e: ValidationChangeEvent) => void', 'The validity of the current selection changed; also on mount and when rules, data or today change.'),
             ev('onActiveEndpointChange', '(endpoint: RangeEndpoint, e: ActiveEndpointChangeEvent) => void', 'Range: the endpoint for the next click changed (a request when activeEndpoint is controlled).'),
             ev('onVisibleMonthChange', '(month: CalendarMonth, e: VisibleMonthChangeEvent) => void', 'The reference month was asked to change (arrows, keyboard, goToMonth()); never for prop changes or when the month stays the same (e.g. next() at maxDate).'),
@@ -909,19 +923,19 @@ export function PropsReference() {
 }
 
 const typeLinks: readonly (readonly [string, ReactNode, string, string])[] = [
-  ['CalendarDate, CalendarMonth, Weekday, DateParts', 'Branded “YYYY-MM-DD” / “YYYY-MM” strings, 0 = Sunday, and { year, month, day }.', 'api-dates', 'Date helpers'],
-  ['SelectionRules, DayAvailability, RuleContext', 'Rule set, per-day result and the ctx of rule callbacks.', 'api-rules', 'Rules & adapters'],
+  ['CalendarDate, CalendarMonth, Weekday, DateParts', 'Plain “YYYY-MM-DD” / “YYYY-MM” strings at runtime; in TypeScript they are branded types, i.e. separate types, so an ordinary string cannot be passed where a date is expected by mistake. Weekday: 0 = Sunday; DateParts: { year, month, day }.', 'api-dates', 'Date helpers'],
+  ['SelectionRules, DayAvailability, RuleContext', 'Rule set, per-day result, and ctx: the second argument of rule callbacks (today, current selection, your ruleContext).', 'api-rules', 'Rules & adapters'],
   ['StayRulesOptions, StayDayStatus, StayReason', 'Options, per-night statuses and reason tags of stayRules().', 'api-rules', 'Rules & adapters'],
   ['DayRangeRulesOptions, DayRangeStatus', 'Options and per-day statuses of dayRangeRules().', 'api-rules', 'Rules & adapters'],
   ['RelaxScheduleOptions', '{ weekdays?: boolean; length?: boolean }, both default true (see relaxSchedule).', 'api-rules', 'Rules & adapters'],
-  ['SelectionEngine, SelectionEngineInput, ActivationPlan', 'The headless engine behind the calendar and what plan(date) returns.', 'api-rules', 'Rules & adapters'],
-  ['CalendarMessages, CalendarMessagesInput, ReasonMessage, MessageFormatHelpers', 'Text bundle, partial overrides and reason functions.', 'api-messages', 'Messages & formatting'],
-  ['CalendarController, GoToMonthOptions, GoToMonthResult, CalendarSnapshot', 'The ref API and its snapshot.', 'api-controller', 'Controller (ref)'],
+  ['SelectionEngine, SelectionEngineInput, ActivationPlan', 'The selection engine behind the calendar, usable without React (headless), and what plan(date) returns.', 'api-rules', 'Rules & adapters'],
+  ['CalendarMessages, CalendarMessagesInput, ReasonMessage, MessageFormatHelpers', 'Text bundle, partial overrides (completed with English) and reason functions.', 'api-messages', 'Messages & formatting'],
+  ['CalendarController, GoToMonthOptions, GoToMonthResult, CalendarSnapshot', 'The ref API (methods to drive the calendar from code) and its snapshot of the current state.', 'api-controller', 'Controller (ref)'],
   ['CalendarEvent, CalendarEventType, EventSource, ReadyEvent … ScrollEvent', 'Every event payload, the union and the source values.', 'api-events', 'Callbacks & events'],
-  ['CalendarLayout, LoadingSnapshot', 'Payloads of onLayoutChange / onReady and onLoadingChange.', 'api-events', 'Callbacks & events'],
+  ['CalendarLayout, LoadingSnapshot', 'Objects carried by onLayoutChange / onReady and onLoadingChange.', 'api-events', 'Callbacks & events'],
   ['CalendarPart, ClassNameValue', 'classNames keys and their value type.', 'styling-reference', 'Styling reference'],
   ['MonthHeaderRenderProps, NavigationRenderProps, LoadingRenderProps, ErrorRenderProps, LoadMoreRenderProps, DayTooltipRenderProps', 'Props of the slots.', 'styling-reference', 'Styling reference'],
-  ['DefaultDayData', 'Shape drawn by the default day content.', 'day-content', 'Day content'],
+  ['DefaultDayData', 'Shape getDayData can return that the default day content draws (label, badge, icon, dots).', 'day-content', 'Labels, badges & icons on days'],
 ];
 
 export function TypesReference() {
@@ -1152,9 +1166,10 @@ type CalendarClassNames =
   }
 type ClassNameValue = string | ((day: DayState) => string | undefined)`}</pre>
         <p>
-          <code>SlotContext</code> is the second argument of every slot ({c('renderHeader')}, {c('renderFooter')}, {c('renderMonthHeader')},{' '}
-          {c('renderNavigation')}, {c('renderLoading')}, {c('renderError')}, {c('renderLoadMore')}). <code>formatDate</code> defaults to a long date
-          (“13 November 2026”) in the calendar&apos;s locale. <code>CalendarClassNames</code> is the type of <code>classNames</code>; its keys are the{' '}
+          <code>SlotContext</code> (the slot context, usually named <code>ctx</code>) gives slots the current state and the controller: it is the only
+          argument of {c('renderHeader')} and {c('renderFooter')} and the second argument of {c('renderMonthHeader')}, {c('renderNavigation')},{' '}
+          {c('renderLoading')}, {c('renderError')} and {c('renderLoadMore')}. <code>formatDate</code> defaults to a long date in the calendar&apos;s
+          locale (“November 13, 2026” in {c('en-US')}). <code>CalendarClassNames</code> is the type of <code>classNames</code>; its keys are the{' '}
           <code>CalendarPart</code> names listed on {to('styling-reference', 'Styling reference')}.
         </p>
       </Section>
