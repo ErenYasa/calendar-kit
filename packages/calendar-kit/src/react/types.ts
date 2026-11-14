@@ -328,7 +328,7 @@ export interface DefaultDayData {
   icon?: ReactNode;
   /** Small markers (dots) — each is announced through `description`/`label`. */
   markers?: readonly { color?: string; label?: string; className?: string }[];
-  /** Accessible description appended to the day's label. */
+  /** The day's accessible description (aria-describedby): screen readers read it after the label. */
   description?: string;
 }
 
