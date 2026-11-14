@@ -181,7 +181,7 @@ body {
 
 /* Content --------------------------------------------------------------- */
 .docs-page {
-  /* Examples, code and tables use this width; prose is capped at 80ch below. */
+  /* The main content column: prose, examples, code and tables use its full width. */
   max-width: 1200px;
 }
 .docs-page h1 {
@@ -208,24 +208,6 @@ body {
   margin: 24px 0 8px;
   font-size: 16px;
 }
-/* Running prose keeps a readable line length (about 80 characters). Callouts,
-   tables and the example previews (an example's own UI) are not prose columns:
-   they use the available width. */
-.docs-page h1,
-.docs-section h2,
-.docs-section h3,
-.docs-page p,
-.docs-page li {
-  max-width: 80ch;
-}
-.docs-note p,
-.docs-note li,
-.docs-table p,
-.docs-table li,
-.docs-preview p,
-.docs-preview li {
-  max-width: none;
-}
 .docs-page :not(pre) > code {
   padding: 1px 5px;
   border-radius: 5px;
@@ -234,9 +216,6 @@ body {
   font-size: 0.88em;
 }
 .docs-note {
-  /* Wider than prose (80ch), still a readable box. */
-  max-width: 100ch;
-  box-sizing: border-box;
   margin: 16px 0;
   padding: 10px 14px;
   border: 1px solid var(--docs-border);
