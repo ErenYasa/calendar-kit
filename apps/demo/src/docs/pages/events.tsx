@@ -790,8 +790,10 @@ export function ControllerReference() {
         <p>
           Slots are the render props that let you draw parts of the calendar yourself (<code>renderHeader</code>, <code>renderFooter</code>,{' '}
           <code>renderMonthHeader</code>, <code>renderNavigation</code>, <code>renderLoading</code>, <code>renderError</code>,{' '}
-          <code>renderLoadMore</code>). Each receives the slot context <code>ctx</code>: the current state (<code>ctx.phase</code>,{' '}
-          <code>ctx.visibleMonths</code>, … the same fields as <code>getSnapshot()</code>) and the same controller as <code>ctx.actions</code>. So a
+          <code>renderLoadMore</code>). Each receives the slot context <code>ctx</code>, as the only argument of <code>renderHeader</code> and{' '}
+          <code>renderFooter</code> and as the second argument of the others: the current state (<code>ctx.phase</code>, <code>ctx.visibleMonths</code>,
+          … the same fields as <code>getSnapshot()</code>, plus <code>messages</code>, <code>locale</code> and <code>formatDate</code>) and the same
+          controller as <code>ctx.actions</code>. So a
           button you render inside the calendar needs no ref.
         </p>
         <p>

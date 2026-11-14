@@ -127,8 +127,11 @@ export function CoreConcepts() {
       <Section title="Slot bağlamı">
         <p>
           Slot, takvimin bir alanını render eden fonksiyon tipinde bir prop’tur; örneğin <code>renderHeader</code> (ayların üstü) veya{' '}
-          <code>renderFooter</code> (ayların altı). Takvim bu fonksiyonu genellikle <code>ctx</code> diye adlandırılan tek bir argümanla çağırır (tipi{' '}
-          <code>SlotContext</code>): takvimin o anki durumu ve eylemleri. En çok kullanılan alanlar:
+          <code>renderFooter</code> (ayların altı). Her slot, genellikle <code>ctx</code> diye adlandırılan slot bağlamını alır (tipi{' '}
+          <code>SlotContext</code>): takvimin o anki durumu ve eylemleri. Hangi argüman olduğu slota göre değişir: <code>renderHeader(ctx)</code> ve{' '}
+          <code>renderFooter(ctx)</code> onu tek argüman olarak alır; <code>renderNavigation</code>, <code>renderMonthHeader</code>,{' '}
+          <code>renderLoading</code>, <code>renderError</code> ve <code>renderLoadMore</code> önce kendi prop’larını, ikinci argüman olarak da{' '}
+          <code>ctx</code>’i alır; örneğin <code>renderNavigation(props, ctx)</code>. En çok kullanılan alanlar:
         </p>
         <ul>
           <li>

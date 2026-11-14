@@ -373,8 +373,10 @@ export function StylingReference() {
 
       <Section title="Slots and render callbacks">
         <p>
-          A slot is a render prop: a function you pass that returns the content for one region of the calendar (header, footer, month header, …). Most
-          receive the slot&apos;s own props and a <code>SlotContext</code>, written <code>ctx</code> in the table below. It gives the current calendar
+          A slot is a render prop: a function you pass that returns the content for one region of the calendar (header, footer, month header, …). Each
+          slot receives a <code>SlotContext</code>, written <code>ctx</code> in the table below: <code>renderHeader</code> and <code>renderFooter</code>{' '}
+          receive only <code>ctx</code>; the other slots receive their own props first and <code>ctx</code> second. <code>renderDayTooltip</code> and the
+          day render props (<code>renderDay</code>, <code>renderDayContent</code>) receive no <code>SlotContext</code>. It gives the current calendar
           state (
           <code>selection</code>, <code>activeEndpoint</code>, <code>phase</code>, <code>validation</code>, <code>referenceMonth</code>,{' '}
           <code>visibleMonths</code>, <code>renderedMonths</code>, <code>layout</code>, <code>focusedDate</code>, <code>today</code>) plus{' '}

@@ -376,8 +376,11 @@ export function StylingReference() {
 
       <Section title="Slotlar ve render callback’leri">
         <p>
-          Slot bir render prop’tur: takvimin bir bölgesinin (header, footer, ay başlığı, …) içeriğini döndüren, sizin verdiğiniz bir fonksiyon. Çoğu,
-          slota özgü prop’ları ve aşağıdaki tabloda <code>ctx</code> olarak yazılan bir <code>SlotContext</code> alır. Bu nesne takvimin güncel durumunu
+          Slot bir render prop’tur: takvimin bir bölgesinin (header, footer, ay başlığı, …) içeriğini döndüren, sizin verdiğiniz bir fonksiyon. Her
+          slot, aşağıdaki tabloda <code>ctx</code> olarak yazılan bir <code>SlotContext</code> alır: <code>renderHeader</code> ve <code>renderFooter</code>{' '}
+          yalnızca <code>ctx</code>’i alır; diğer slotlar önce kendi prop’larını, ikinci argüman olarak <code>ctx</code>’i alır.{' '}
+          <code>renderDayTooltip</code> ve gün render prop’ları (<code>renderDay</code>, <code>renderDayContent</code>) <code>SlotContext</code> almaz.
+          Bu nesne takvimin güncel durumunu
           (<code>selection</code>, <code>activeEndpoint</code>, <code>phase</code>, <code>validation</code>, <code>referenceMonth</code>,{' '}
           <code>visibleMonths</code>, <code>renderedMonths</code>, <code>layout</code>, <code>focusedDate</code>, <code>today</code>), ayrıca{' '}
           <code>instanceId</code>, <code>actions</code> (takvimin ref’indeki controller yöntemlerinin aynısı, örneğin{' '}

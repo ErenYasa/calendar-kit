@@ -117,8 +117,11 @@ export function CoreConcepts() {
       <Section title="Slot context">
         <p>
           A slot is a function prop that renders one area of the calendar, such as <code>renderHeader</code> (above the months) or <code>renderFooter</code>{' '}
-          (below them). The calendar calls it with one argument, usually named <code>ctx</code> (type <code>SlotContext</code>): the calendar&apos;s current
-          state plus its actions. The most used fields:
+          (below them). Every slot receives the slot context, usually named <code>ctx</code> (type <code>SlotContext</code>): the calendar&apos;s
+          current state plus its actions. Where it arrives depends on the slot: <code>renderHeader(ctx)</code> and <code>renderFooter(ctx)</code> get it
+          as their only argument; <code>renderNavigation</code>, <code>renderMonthHeader</code>, <code>renderLoading</code>, <code>renderError</code> and{' '}
+          <code>renderLoadMore</code> get their own props first and <code>ctx</code> second, for example{' '}
+          <code>renderNavigation(props, ctx)</code>. The most used fields:
         </p>
         <ul>
           <li>

@@ -798,8 +798,10 @@ export function ControllerReference() {
         <p>
           Slotlar, takvimin bazı bölümlerini kendiniz çizmenizi sağlayan render prop’lardır (<code>renderHeader</code>, <code>renderFooter</code>,{' '}
           <code>renderMonthHeader</code>, <code>renderNavigation</code>, <code>renderLoading</code>, <code>renderError</code>,{' '}
-          <code>renderLoadMore</code>). Her biri slot bağlamı <code>ctx</code>’i alır: mevcut durum (<code>ctx.phase</code>,{' '}
-          <code>ctx.visibleMonths</code>, … yani <code>getSnapshot()</code> ile aynı alanlar) ve <code>ctx.actions</code> olarak aynı controller. Böylece
+          <code>renderLoadMore</code>). Her biri slot bağlamı <code>ctx</code>’i alır; <code>renderHeader</code> ve <code>renderFooter</code>’da tek
+          argüman, diğerlerinde ikinci argümandır. İçinde mevcut durum (<code>ctx.phase</code>, <code>ctx.visibleMonths</code>, … yani{' '}
+          <code>getSnapshot()</code> ile aynı alanlar, ayrıca <code>messages</code>, <code>locale</code> ve <code>formatDate</code>) ve{' '}
+          <code>ctx.actions</code> olarak aynı controller bulunur. Böylece
           takvimin içine koyduğunuz bir düğme için ref gerekmez.
         </p>
         <p>
