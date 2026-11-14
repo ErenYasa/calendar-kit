@@ -31,7 +31,7 @@ export function FormattingAndLayout({ weeksOnly = false }: { weeksOnly?: boolean
         numberOfMonths={2}
         monthGap={16} // px between months
         maxDaySize={48} // cap the cell height on wide screens
-        fixedWeeks // every month has 6 week rows, so the height does not change between months
+        fixedWeeks // every month has 6 week rows, so the row count does not change between months
         navigation="continuous"
         maxRenderedMonths={12} // continuous: at most 12 months in the page at once
       />

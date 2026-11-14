@@ -411,8 +411,8 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  The calendar shows every month with 6 week rows, so its height does not change for months that fit in 5 (useful in popovers and with
-                  months side by side). It does not change the number of months.{' '}
+                  Every month is drawn with 6 week rows; months that need 4 or 5 get empty rows at the end, so the number of week rows does not change
+                  between months (useful in popovers and with months side by side). It does not change the number of months.{' '}
                   {to('orientation', 'Orientation & months')}.
                 </>
               ),
@@ -544,8 +544,9 @@ export function PropsReference() {
               default: '24',
               description: (
                 <>
-                  Continuous only: the most months kept in the page at once. Above it, each load removes months from the opposite end of the list (never the
-                  month holding keyboard focus); never below {c('numberOfMonths')}. Lower it for long lists on slow devices. No live example; see {to('load-more', 'Loading more months')}.
+                  Continuous only: how many months the list is trimmed to. Above it, each load removes months from the opposite end of the list, except a
+                  month holding keyboard focus (while it keeps focus the list can be longer; it is trimmed at the next load after focus has left); never
+                  below {c('numberOfMonths')}. Lower it for long lists on slow devices. No live example; see {to('load-more', 'Loading more months')}.
                 </>
               ),
             },

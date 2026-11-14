@@ -19,8 +19,8 @@ function firstFiveRowMonth(from: CalendarMonth): CalendarMonth {
 }
 
 // Beş satıra sığan aynı ay iki kez. fixedWeeks={false}: beş satır. fixedWeeks={true}:
-// altıncı, boş bir satır eklenir (burada çerçeveli), böylece her ay altı satır
-// yüksekliğinde olur ve kullanıcı ay değiştirdiğinde takvimin altındaki içerik kaymaz.
+// altıncı, boş bir satır eklenir (burada çerçeveli), böylece her ayın altı hafta
+// satırı olur ve kullanıcı ay değiştirdiğinde satır sayısı değişmez.
 // Gösterilen ay sayısı değişmez.
 export default function FixedWeeks() {
   const [month] = useState(() => firstFiveRowMonth(getMonth(getToday())));

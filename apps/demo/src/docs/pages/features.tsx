@@ -219,8 +219,9 @@ export function Orientation() {
       </Section>
       <Section title="Fixed number of week rows">
         <p>
-          With <code>fixedWeeks</code> the calendar shows every month with 6 week rows, so its height does not change for months that fit in 5 (or 4). The
-          content below the calendar does not jump when the user changes month. The extra rows stay empty; the number of months shown does not change.
+          With <code>fixedWeeks</code> the calendar draws every month with 6 week rows: a month that needs only 5 (or 4) gets empty rows at the end. So the
+          number of week rows stays the same when the user changes month, and the layout below does not shift because one month has fewer rows. The
+          number of months shown does not change.
         </p>
         <p>
           Without it, each month gets only the rows it needs: four, five or six, depending on its length and on which weekday it starts. The example shows
@@ -242,7 +243,7 @@ export function Orientation() {
           { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: 'Months side by side or stacked.' },
           { name: 'stepMonths', type: 'number', default: '1', description: 'How many months one arrow click moves (paged navigation).' },
           { name: 'monthGap', type: 'number', default: '32', description: 'Space between months in px.' },
-          { name: 'fixedWeeks', type: 'boolean', default: 'false', description: 'Every month gets 6 week rows, so the calendar keeps the same height.' },
+          { name: 'fixedWeeks', type: 'boolean', default: 'false', description: 'Every month is drawn with 6 week rows (empty rows at the end), so the row count does not change between months.' },
         ]}
       />
     </Page>
@@ -334,8 +335,9 @@ export function LoadMore() {
           added, the scroll position is kept, so the dates under the user&apos;s finger do not jump.
         </p>
         <p>
-          To keep the page light, at most <code>maxRenderedMonths</code> (default 24) months stay rendered: the months farthest from the last addition are
-          removed, never the one with keyboard focus. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
+          To keep the page light, the list is trimmed to <code>maxRenderedMonths</code> (default 24) months: after each addition the months farthest from
+          it are removed. A month that holds keyboard focus is not removed; while it keeps focus the list can grow past that number, and it is trimmed at
+          the next addition after focus has left. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
           <code>onLoadMore</code> and <code>onRenderedMonthsChange</code> (load your data there). The reference month does not change, so{' '}
           <code>onVisibleMonthChange</code> is not called. Paged navigation (the default) works differently: the arrows replace the months shown — see{' '}
           <a href="#/orientation">Orientation &amp; months</a>.
@@ -402,7 +404,7 @@ export function LoadMore() {
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons at the list ends, automatic loading when an end scrolls into view, or only from your code.' },
           { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'List ends that get built-in controls or automatic loading. ref.loadMore(direction) works in both directions regardless.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Months added per load.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Most months kept rendered (never fewer than numberOfMonths); the farthest are removed.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Months kept rendered (never fewer than numberOfMonths); the farthest are removed, except a month holding keyboard focus.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Content of the default buttons.' },
           { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Your own control for each direction.' },
         ]}

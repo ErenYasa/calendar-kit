@@ -222,8 +222,9 @@ export function Orientation() {
       </Section>
       <Section title="Sabit hafta satırı sayısı">
         <p>
-          <code>fixedWeeks</code> ile takvim her ayı 6 hafta satırıyla gösterir; 5 (veya 4) satıra sığan aylarda da takvimin yüksekliği değişmez. Kullanıcı
-          ay değiştirdiğinde takvimin altındaki içerik kaymaz. Fazladan eklenen satırlar boş kalır; gösterilen ay sayısı değişmez.
+          <code>fixedWeeks</code> ile takvim her ayı 6 hafta satırıyla çizer: yalnızca 5 (veya 4) satıra ihtiyaç duyan bir aya sonda boş satırlar eklenir.
+          Böylece kullanıcı ay değiştirdiğinde hafta satırı sayısı aynı kalır ve bir ayın daha az satırı olduğu için alttaki yerleşim kaymaz. Gösterilen
+          ay sayısı değişmez.
         </p>
         <p>
           Bu prop olmadan her ay yalnızca ihtiyaç duyduğu satırları alır: uzunluğuna ve haftanın hangi gününde başladığına göre dört, beş ya da altı. Örnek
@@ -246,7 +247,7 @@ export function Orientation() {
           { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: 'Aylar yan yana veya alt alta.' },
           { name: 'stepMonths', type: 'number', default: '1', description: 'Bir ok tıklamasının kaç ay kaydıracağı (sayfalı gezinme).' },
           { name: 'monthGap', type: 'number', default: '32', description: 'Aylar arasındaki boşluk (px).' },
-          { name: 'fixedWeeks', type: 'boolean', default: 'false', description: 'Her ay 6 hafta satırı alır; takvimin yüksekliği hep aynı kalır.' },
+          { name: 'fixedWeeks', type: 'boolean', default: 'false', description: 'Her ay 6 hafta satırıyla çizilir (sonda boş satırlar); ay değiştikçe satır sayısı değişmez.' },
         ]}
       />
     </Page>
@@ -337,8 +338,9 @@ export function LoadMore() {
           korunur; böylece kullanıcının parmağının altındaki tarihler zıplamaz.
         </p>
         <p>
-          Sayfayı hafif tutmak için en fazla <code>maxRenderedMonths</code> (varsayılan 24) ay render edilmiş kalır: son eklemeden en uzaktaki aylar
-          kaldırılır, klavye odağını tutan ay asla kaldırılmaz. Her ekleme — klavye odağı listenin sonunu geçtiğinde yapılanlar da —{' '}
+          Sayfayı hafif tutmak için liste <code>maxRenderedMonths</code> (varsayılan 24) aya indirilir: her eklemeden sonra eklenen yere en uzak aylar
+          kaldırılır. Klavye odağını tutan ay kaldırılmaz; odak orada kaldığı sürece liste bu sayıyı aşabilir ve odak ayrıldıktan sonraki ilk eklemede
+          kırpılır. Her ekleme — klavye odağı listenin sonunu geçtiğinde yapılanlar da —{' '}
           <code>onLoadMore</code> ve <code>onRenderedMonthsChange</code>’i çağırır (verinizi orada yükleyin). Referans ay değişmez, bu yüzden{' '}
           <code>onVisibleMonthChange</code> çağrılmaz. Sayfalı gezinme (varsayılan) farklı çalışır: oklar gösterilen ayları değiştirir — bkz.{' '}
           <a href="#/orientation">Yön ve ay sayısı</a>.
@@ -405,7 +407,7 @@ export function LoadMore() {
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Liste uçlarında düğmeler, bir uç görünür alana girince otomatik yükleme ya da yalnızca kodunuzdan.' },
           { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Yerleşik kontrol veya otomatik yükleme alan liste uçları. ref.loadMore(direction) her durumda iki yönde de çalışır.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Her yüklemede eklenen ay sayısı.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Render edilmiş kalan en fazla ay sayısı (asla numberOfMonths’tan az değil); en uzaktakiler kaldırılır.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Render edilmiş tutulan ay sayısı (asla numberOfMonths’tan az değil); en uzaktakiler kaldırılır, klavye odağını tutan ay hariç.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Varsayılan düğmelerin içeriği.' },
           { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Her yön için kendi kontrolünüz.' },
         ]}

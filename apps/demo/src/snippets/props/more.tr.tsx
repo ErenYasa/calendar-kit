@@ -31,7 +31,7 @@ export function FormattingAndLayout({ weeksOnly = false }: { weeksOnly?: boolean
         numberOfMonths={2}
         monthGap={16} // aylar arası px
         maxDaySize={48} // geniş ekranlarda hücre yüksekliğini sınırlar
-        fixedWeeks // her ay 6 hafta satırıyla gösterilir; yükseklik aydan aya değişmez
+        fixedWeeks // her ay 6 hafta satırıyla gösterilir; satır sayısı aydan aya değişmez
         navigation="continuous"
         maxRenderedMonths={12} // sürekli: sayfada aynı anda en fazla 12 ay
       />

@@ -418,8 +418,8 @@ export function PropsReference() {
               default: 'false',
               description: (
                 <>
-                  Takvim her ayı 6 hafta satırıyla gösterir; 5 satıra sığan aylarda da takvimin yüksekliği değişmez (popover’larda ve yan yana aylarda
-                  kullanışlıdır). Gösterilen ay sayısını değiştirmez. {to('orientation', 'Yön ve ay sayısı')}.
+                  Her ay 6 hafta satırıyla çizilir; 4 veya 5 satıra ihtiyaç duyan aylara sonda boş satırlar eklenir, böylece hafta satırı sayısı aydan aya
+                  değişmez (popover’larda ve yan yana aylarda kullanışlıdır). Gösterilen ay sayısını değiştirmez. {to('orientation', 'Yön ve ay sayısı')}.
                 </>
               ),
             },
@@ -550,8 +550,8 @@ export function PropsReference() {
               default: '24',
               description: (
                 <>
-                  Yalnızca sürekli modda: sayfada (DOM’da) aynı anda tutulan en fazla ay sayısı. Bu sayı aşılınca her yükleme listenin karşı ucundan ay kaldırır
-                  (odaktaki günün ayı hiçbir zaman); sınır hiçbir zaman {c('numberOfMonths')}’un altına inmez. Yavaş cihazlardaki uzun listeler için düşürün. Canlı örneği yok; bkz.{' '}
+                  Yalnızca sürekli modda: listenin indirildiği ay sayısı. Bu sayı aşılınca her yükleme listenin karşı ucundan ay kaldırır, klavye odağını tutan
+                  ay hariç (odak orada kaldığı sürece liste daha uzun olabilir; odak ayrıldıktan sonraki ilk yüklemede kırpılır); sınır hiçbir zaman {c('numberOfMonths')}’un altına inmez. Yavaş cihazlardaki uzun listeler için düşürün. Canlı örneği yok; bkz.{' '}
                   {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),

@@ -19,8 +19,8 @@ function firstFiveRowMonth(from: CalendarMonth): CalendarMonth {
 }
 
 // The same five-row month twice. fixedWeeks={false}: five rows. fixedWeeks={true}:
-// a sixth, empty row is added (outlined here), so every month is six rows tall
-// and the content below the calendar does not move when the user changes month.
+// a sixth, empty row is added (outlined here), so every month has six week rows
+// and the row count does not change when the user changes month.
 // The number of months shown stays the same.
 export default function FixedWeeks() {
   const [month] = useState(() => firstFiveRowMonth(getMonth(getToday())));
