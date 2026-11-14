@@ -7,7 +7,7 @@ const boat = dayRangeRules({
   minDays: 8,
   getDayStatus: (date) => (date === '2026-11-18' ? 'closed' : undefined),
 });
-// Kendi takvim düzeni kısıtlamanız: 11’inde kalkış yok.
+// Kendi takvim düzeni kısıtlamanız: 11’i (çarşamba) kapalı, schedule: true ile işaretli.
 const noWednesday: SelectionRules = {
   getDayAvailability: (date) => (date === '2026-11-11' ? { closed: true, reason: 'out-of-schedule', schedule: true } : undefined),
 };

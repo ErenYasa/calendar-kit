@@ -20,20 +20,23 @@ export function RulesReference() {
       title="Kurallar ve adaptörler"
       lead={
         <>
-          React’ten bağımsız seçim modeli: <code>SelectionRules</code> nesnesi, bu nesneyi konaklamalar ve gün aralıkları için oluşturan adaptörler, kural
-          setlerini birleştiren ve gevşeten fonksiyonlar ve bunları değerlendiren arayüzsüz (headless) motor. Buradaki her şey <code>calendar-kit/core</code>’dan
-          (ve <code>calendar-kit</code>’ten) dışa aktarılır; böylece aynı kuralları sunucuda da çalıştırabilirsiniz.
+          Kurallar hangi günlerin seçilebileceğini ve hangi seçimlerin geçerli olduğunu belirler. Bu sayfa bunların tam başvuru kaynağıdır:{' '}
+          <code>SelectionRules</code> nesnesi, bu nesneyi gecelik konaklamalar ve gün bazlı rezervasyonlar için oluşturan adaptörler, kural setlerini
+          birleştiren ve gevşeten fonksiyonlar ve bir tarihi ya da aralığı React olmadan kontrol eden motor. Buradaki her şey{' '}
+          <code>calendar-kit/core</code>’dan (ve <code>calendar-kit</code>’ten) dışa aktarılır; böylece sunucunuz bir rezervasyon isteğini takvimle aynı
+          kurallarla kontrol edebilir.
         </>
       }
     >
-      <Section title="SelectionRules">
+      <Section title="SelectionRules: kural nesnesi">
         <p>
-          Takvimin <code>rules</code> prop’u tek bir kural seti veya bir kural seti dizisi alır. Dizi <code>combineRules</code> ile birleştirilir;{' '}
-          <code>minDate</code>, <code>maxDate</code>, <code>disablePast</code>, <code>disableFuture</code> ve <code>getDataStatus</code> prop’ları bu listenin
-          sonuna bir set daha olarak eklenir. Her alan isteğe bağlıdır; boş bir nesneyle her gün seçilebilir.
+          Kural seti düz bir nesnedir; her alanı isteğe bağlıdır ve boş bir nesneyle her gün seçilebilir. Takvimin <code>rules</code> prop’u tek bir kural
+          seti veya bir kural seti dizisi alır, örneğin <code>{'rules={[stayRules({ minNights: 2 }), closedDates(holidays)]}'}</code>. Dizi{' '}
+          <code>combineRules</code> ile birleştirilir; yani bir gün her setten geçmelidir. Takvimin <code>minDate</code>, <code>maxDate</code>,{' '}
+          <code>disablePast</code>, <code>disableFuture</code> ve <code>getDataStatus</code> prop’ları bu listenin sonuna bir set daha olarak eklenir.
         </p>
 
-        <h3>Sınırlar</h3>
+        <h3>Sınırlar: en erken ve en geç gün</h3>
         <PropsTable
           caption="Sınırlar"
           rows={[
@@ -42,7 +45,7 @@ export function RulesReference() {
               type: 'CalendarDate | null',
               description: (
                 <>
-                  Seçilebilen en erken gün (dahil). Daha erken günler seçilemez (sebep <code>before-min</code>). Takvim ayrıca bu günün ayından öncesine
+                  Seçilebilen en erken gün (dahil). Daha erken günler seçilemez (sebep <code>before-min</code>) ve takvim bu günün ayından önceki aylara
                   gitmez.
                 </>
               ),
@@ -52,7 +55,7 @@ export function RulesReference() {
               type: 'CalendarDate | null',
               description: (
                 <>
-                  Seçilebilen en geç gün (dahil); daha sonraki günler seçilemez (sebep <code>after-max</code>). Gezinme bu günün ayında durur.
+                  Seçilebilen en geç gün (dahil). Daha sonraki günler seçilemez (sebep <code>after-max</code>) ve gezinme bu günün ayında durur.
                 </>
               ),
             },
@@ -63,7 +66,7 @@ export function RulesReference() {
               description: (
                 <>
                   <em>Bugünden</em> önceki günler seçilemez (sebep <code>past</code>). Bugünün tarihi bilinmiyorsa (motorda <code>today: null</code>) etkisi yoktur.
-                  Gezinmeyi sınırlamaz.
+                  Geçmiş aylara yine de gidilebilir.
                 </>
               ),
             },
@@ -73,20 +76,20 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  Bugünden sonraki günler seçilemez (sebep <code>future</code>). Diğer koşullar <code>disablePast</code> ile aynıdır.
+                  Bugünden sonraki günler seçilemez (sebep <code>future</code>). Bunun dışında <code>disablePast</code> gibi çalışır.
                 </>
               ),
             },
           ]}
         />
         <p>
-          Sınırlar seçimin kapsadığı her güne uygulanır: başlangıç, bitiş ve aradaki her gün. Aralığın içindeki bir gün sınırın dışındaysa sorun{' '}
-          <code>blocked-in-range</code> olarak bildirilir.
+          Sınırlar seçimin kapsadığı her güne uygulanır: başlangıç, bitiş ve aradaki her gün. Aralığın içindeki bir gün sınırların dışındaysa aralık{' '}
+          <code>blocked-in-range</code> sebebiyle reddedilir.
         </p>
 
-        <h3>Aralık biçimi</h3>
+        <h3>Aralık uzunluğu ve bitiş günü</h3>
         <PropsTable
-          caption="Aralık biçimi"
+          caption="Aralık uzunluğu ve bitiş günü"
           rows={[
             {
               name: 'rangeSemantics',
@@ -94,11 +97,12 @@ export function RulesReference() {
               default: "'inclusive'",
               description: (
                 <>
-                  Bitişin nasıl sayıldığı. <code>inclusive</code>: <code>[start, end]</code>, bitiş günü rezervasyona dahildir (13 → 20 = 8 gün).{' '}
-                  <code>exclusive</code>: <code>[start, end)</code>, bitiş bir sınırdır, örneğin çıkış günü (13 → 20 = 7 gece). Her iki durumda da başlangıç
-                  günü başlangıç, bitiş günü bitiş olabilmeli ve aradaki (uçlar hariç) her günün içinden geçilebilmelidir; bu ayar (semantics) uzunluk birimini,{' '}
-                  <code>allowSameDay</code>’in varsayılan değerini ve hangi günlerin dahil olarak bildirildiğini (<code>getIncludedDays</code>,{' '}
-                  <code>DayState.included</code>) değiştirir.
+                  Bitiş gününün rezervasyona dahil olup olmadığı. <code>inclusive</code> (dahil bitiş), <code>[start, end]</code>: bitiş günü de rezerve
+                  edilir, yani 13 → 20 = 8 gün (tekne kiralama, etkinlik). <code>exclusive</code> (hariç bitiş), <code>[start, end)</code>: bitiş yalnızca bir
+                  sınırdır, örneğin çıkış günü; yani 13 → 20 = 7 gece (otel konaklaması). Bu ayar uzunluk birimini (gün veya gece),{' '}
+                  <code>allowSameDay</code>’in varsayılan değerini ve hangi günlerin dahil sayıldığını (<code>getIncludedDays</code>,{' '}
+                  <code>DayState.included</code>) değiştirir. Kontroller aynıdır: başlangıç günü başlangıç, bitiş günü bitiş olabilmeli ve aradaki (uçlar hariç)
+                  her günün içinden geçilebilmelidir.
                 </>
               ),
             },
@@ -108,8 +112,8 @@ export function RulesReference() {
               default: 'inclusive: true · exclusive: false',
               description: (
                 <>
-                  <code>start === end</code>’in geçerli bir aralık olup olmadığı. Değilse, bitişi olmayan başlangıca yeniden tıklamak seçimi temizler ve böyle bir
-                  aralık <code>same-day</code> sebebiyle geçersizdir. Aynı gün aralığı için gün hem başlangıç hem bitiş olabilmelidir{' '}
+                  Bir aralığın aynı gün başlayıp bitebilmesi (<code>start === end</code>). İzin verilmiyorsa, bitiş seçilmeden başlangıca yeniden tıklamak
+                  seçimi temizler ve böyle bir aralık <code>same-day</code> sebebiyle geçersizdir. Aynı gün aralığı için gün hem başlangıç hem bitiş olabilmelidir{' '}
                   (<code>canStart</code>, <code>canEnd</code>, <code>startWeekdays</code>, <code>endWeekdays</code>). Hariç bitişte aynı gün aralığının uzunluğu
                   0’dır; bu yüzden yalnızca <code>minLength</code> tanımsız veya 0 olduğunda geçerlidir.
                 </>
@@ -120,7 +124,7 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  En kısa aralık. Hariç bitişli aralıklarda gece (<code>end − start</code>), dahil bitişli aralıklarda gün (<code>end − start + 1</code>) olarak
+                  İzin verilen en kısa aralık. Hariç bitişli aralıklarda gece (<code>end − start</code>), dahil bitişli aralıklarda gün (<code>end − start + 1</code>) olarak
                   ölçülür. Daha kısa aralıklar geçersizdir (sebep <code>min-length</code>, parametreler <code>{'{ min, actual, unit }'}</code>).
                 </>
               ),
@@ -130,8 +134,8 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  En uzun aralık, aynı birimle. Daha uzun aralıklar geçersizdir (sebep <code>max-length</code>, parametreler{' '}
-                  <code>{'{ max, actual, unit }'}</code>). Ulaşılabilir bitiş aramasını da sınırlar.
+                  İzin verilen en uzun aralık, aynı birimle. Daha uzun aralıklar geçersizdir (sebep <code>max-length</code>, parametreler{' '}
+                  <code>{'{ max, actual, unit }'}</code>). Ulaşılabilir bitiş aramasının ne kadar ileriye bakacağını da belirler.
                 </>
               ),
             },
@@ -153,9 +157,9 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  İlk tıklama o günü tek günlük, tamamlanmış bir aralık olarak seçer (<code>start === end</code>, sonraki uç <code>end</code>). Sonraki bir güne
-                  tıklamak aralığı genişletir; seçili tek güne yeniden tıklamak seçimi temizler; daha önceki bir güne tıklamak yeni bir aralık
-                  başlatır. Aynı gün aralıklarına izin verilmediğinde veya <code>fixedLength</code> ayarlandığında yok sayılır. Tek günlük aralık geçerli değilse
+                  İlk tıklama o günü tek günlük, tamamlanmış bir aralık olarak seçer (<code>start === end</code>, sonraki uç <code>end</code>); böylece tek
+                  günlük bir rezervasyon tek tıklamayla yapılır. Daha sonraki bir güne tıklamak aralığı genişletir; aynı güne yeniden tıklamak seçimi temizler;
+                  daha önceki bir güne tıklamak seçime o günden yeniden başlar. Aynı gün aralıklarına izin verilmediğinde veya <code>fixedLength</code> ayarlandığında yok sayılır. Tek günlük aralık geçerli değilse
                   (örneğin <code>minLength: 2</code> ile veya bitiş olamayan bir günde) tıklama yalnızca başlangıcı seçer.
                 </>
               ),
@@ -163,7 +167,7 @@ export function RulesReference() {
           ]}
         />
 
-        <h3>Takvim düzeni (schedule)</h3>
+        <h3>Takvim düzeni (schedule): izin verilen hafta günleri</h3>
         <PropsTable
           caption="Takvim düzeni (schedule) kuralları"
           rows={[
@@ -172,8 +176,9 @@ export function RulesReference() {
               type: 'readonly Weekday[]',
               description: (
                 <>
-                  Bir aralığın, tekli seçimin veya çoklu seçimin başlayabileceği hafta günleri (0 = pazar … 6 = cumartesi). Diğer günler başlangıç{' '}
-                  olarak seçilemez (sebep <code>weekday-start</code>, parametreler <code>{'{ weekday }'}</code>). Bu günler yine de bitiş olabilir veya
+                  Bir aralığın, tekli seçimin veya çoklu seçimin başlayabileceği hafta günleri (0 = pazar … 6 = cumartesi). Diğer günler başlangıç
+                  olamaz (sebep{' '}
+                  <code>weekday-start</code>, parametreler <code>{'{ weekday }'}</code>). Bu günler yine de bitiş olabilir veya
                   aralığın içinde kalabilir.
                 </>
               ),
@@ -194,7 +199,7 @@ export function RulesReference() {
               description: (
                 <>
                   Hizmetin çalıştığı hafta günleri. Diğer her gün tamamen kapalıdır (sebep <code>out-of-schedule</code>, takvim düzeni kuralı olarak işaretli):
-                  başlangıç ya da bitiş olamaz, aralığın içinde kalamaz. O gün zaten kapalı değilse <code>getDayAvailability</code>’nin döndürdüğü sonucun
+                  başlangıç ya da bitiş olamaz ve hiçbir aralık bu günün üzerinden geçemez. O gün zaten kapalı değilse <code>getDayAvailability</code>’nin döndürdüğü sonucun
                   yerine geçer. Boş bir liste her günü kapatır.
                 </>
               ),
@@ -202,13 +207,15 @@ export function RulesReference() {
           ]}
         />
         <p>
-          Bu üç alan, uzunluk alanları ve <code>schedule: true</code> ile işaretlenmiş müsaitlik sonuçları <em>takvim düzeni kurallarıdır</em> (schedule rules): gerçek
-          bir doluluk değil, işletmenin düzenli çalışma planıdır. Takvimin <code>relaxSchedule</code> prop’u (ve <code>relaxRules</code>) bunları kaldırır
-          (aşağıdaki relaxRules bölümüne bakın). Yalnızca takvim düzeni kuralları yüzünden seçilemeyen günler üstü çizili değil, soluk görünür{' '}
+          Bu üç alan, uzunluk alanları ve <code>schedule: true</code> ile işaretlenmiş müsaitlik sonuçları <em>takvim düzeni kurallarıdır</em> (schedule
+          rules): dolu veya kapalı bir gün gibi gerçek bir engel değil, işletmenizin düzenli çalışma planıdır (yalnızca cumartesi giriş, en az 2 gece).
+          Fark, personel bir istisna yaptığında önemlidir; örneğin telefonla alınan bir rezervasyonda takvimin <code>relaxSchedule</code> prop’u (veya
+          aşağıda anlatılan <code>relaxRules</code>) takvim düzeni kurallarını kaldırır, gerçek kısıtlamaların hepsini korur. Yalnızca takvim düzeni
+          kuralları yüzünden seçilemeyen günler üstü çizili değil, soluk görünür{' '}
           (<code>data-out-of-schedule</code>).
         </p>
 
-        <h3>Müsaitlik ve veri</h3>
+        <h3>Gün müsaitliği ve yükleme durumu</h3>
         <PropsTable
           caption="Müsaitlik ve veri"
           rows={[
@@ -217,9 +224,10 @@ export function RulesReference() {
               type: '(date, ctx: RuleContext) => DayAvailability | null | undefined',
               description: (
                 <>
-                  Gün bazında seçilebilirlik. Tamamen müsait bir gün için hiçbir şey döndürmeyin. Motorun her anlık durumu (snapshot) için her günde en fazla bir
-                  kez çağrılır (takvim her render’da yeni bir motor oluşturur) ve <code>ctx</code> içinde mevcut seçimi alır; böylece müsaitlik seçilen
-                  başlangıca bağlı olabilir.
+                  Bir günde neyin mümkün olduğunu (başlangıç, bitiş, içinden geçme) ve neden olmadığını söyler; aşağıdaki DayAvailability bölümüne bakın.
+                  Tamamen müsait bir gün için hiçbir şey döndürmeyin. İkinci argüman <code>ctx</code> kural bağlamıdır (mevcut seçim, mod, bugün,{' '}
+                  <code>ruleContext</code> değeriniz; aşağıdaki RuleContext bölümüne bakın); böylece müsaitlik seçilen başlangıca bağlı olabilir. Her motor
+                  için her günde en fazla bir kez çağrılır; takvim kurallar, seçim, bugün veya <code>ruleContext</code> değiştiğinde yeni bir motor oluşturur.
                 </>
               ),
             },
@@ -229,7 +237,7 @@ export function RulesReference() {
               default: <>her ay <code>'loaded'</code></>,
               description: (
                 <>
-                  Müsaitlik verinizin ay bazında yükleme durumu. Hem kurallarda hem takvim prop’unda tanımlıysa daha kötü olan durum geçerli olur (bkz.{' '}
+                  Bir ayın müsaitlik verisinin yüklenip yüklenmediği. Hem kurallarda hem takvim prop’unda tanımlıysa daha kötü olan durum geçerli olur (bkz.{' '}
                   <code>combineRules</code>).
                 </>
               ),
@@ -248,7 +256,7 @@ export function RulesReference() {
           ]}
         />
 
-        <h3>Doğrulama</h3>
+        <h3>Özel doğrulama ve seçim sınırları</h3>
         <PropsTable
           caption="Doğrulama"
           rows={[
@@ -257,10 +265,12 @@ export function RulesReference() {
               type: '(selection, ctx: RuleContext) => ValidationIssue | null | undefined',
               description: (
                 <>
-                  Kendi kuralınız. Yerleşik kontrollerin hepsi geçtikten sonra, önerilen her seçim için çağrılır: tıklamalar ve tuşlar (aralık başlangıcı
-                  seçilirken de; bu yüzden <code>{'{ start, end: null }'}</code> de görür), <code>ref.select()</code> ve kurallar, veri veya{' '}
-                  <code>ruleContext</code> değiştiğinde yapılan yeniden doğrulama. Seçimi azaltan eylemlerde (aralığı temizleme, çoklu modda bir tarihi
-                  kaldırma) çağrılmaz. <code>code</code> içermeyen bir sorun <code>custom</code> kodunu alır; <code>message</code> değeri olduğu gibi
+                  Yukarıdaki alanlarla ifade edilemeyen kurallar için kendi kuralınız (örn. “hafta sonları en fazla 4 misafir”). Önerilen seçimi ve kural
+                  bağlamı <code>ctx</code>’i alır; seçimi reddetmek için bir sorun, kabul etmek için hiçbir şey döndürür. Yalnızca yerleşik kontrollerin hepsi
+                  geçtikten sonra çalışır: tıklamalarda ve tuşlarda (aralık başlangıcı seçilirken de; bu yüzden <code>{'{ start, end: null }'}</code> de
+                  görür), <code>ref.select()</code> çağrısında (seçimi koddan, takvimin ref’i üzerinden ayarlama) ve kurallar, veri veya{' '}
+                  <code>ruleContext</code> değiştiğinde. Takvim, hangi günlerin devre dışı olacağına karar vermek için de onu render edilen her gün için çağırır;
+                  bu yüzden hızlı ve yan etkisiz tutun. Seçimi azaltan eylemlerde (aralığı temizleme, çoklu modda bir tarihi kaldırma) çağrılmaz. <code>code</code> içermeyen bir sorun <code>custom</code> kodunu alır; <code>message</code> değeri olduğu gibi
                   gösterilir.
                 </>
               ),
@@ -270,8 +280,8 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  Yalnızca çoklu mod: farklı tarihlerin en fazla sayısı. Değer bir küme olarak ele alınır, yani tekrarlanan bir tarih bir kez sayılır. Sınıra ulaşıldıktan sonra
-                  yeni bir tarih eklenemez (sebep <code>max-selections</code>, parametreler <code>{'{ max, actual }'}</code>).
+                  Yalnızca çoklu mod: en fazla kaç farklı tarihin seçilebileceği. İki kez yer alan bir tarih bir kez sayılır. Sınıra ulaşıldıktan sonra yeni bir
+                  tarih eklenemez (sebep <code>max-selections</code>, parametreler <code>{'{ max, actual }'}</code>).
                 </>
               ),
             },
@@ -281,8 +291,8 @@ export function RulesReference() {
               default: <><code>false</code> (iki adaptörde de: <code>true</code>)</>,
               description: (
                 <>
-                  Yalnızca aralık modunda: geçerli hiçbir bitişe ulaşamayacak bir gün başlangıç olarak seçilemez; örneğin en az 2 gece gerekirken bir sonraki
-                  gece doluysa. Aramanın nasıl çalıştığı aşağıda.
+                  Yalnızca aralık modunda: ardından geçerli hiçbir bitiş gelemeyecek bir gün başlangıç olarak seçilemez; örneğin en az 2 gece gerekirken bir
+                  sonraki gece doluysa. Böylece kullanıcı hiçbir bitişi mümkün olmayan bir başlangıçta takılı kalmaz. Aramanın nasıl çalıştığı aşağıda.
                 </>
               ),
             },
@@ -290,23 +300,23 @@ export function RulesReference() {
         />
         <h3>Ulaşılabilir bitiş araması nasıl karar verir</h3>
         <p>
-          Başlangıç olarak denenen bir gün için motor, izin verilen en kısa uzunluktan başlayarak sırayla olası bitişleri dener: <code>minLength</code>{' '}
-          ya da (aynı gün aralıklarına izin verilmiyorsa) 1 gece / 1 gün. En fazla 63 olası bitişe bakar ve <code>maxLength</code>’i hiç aşmaz. Tamamen
+          Başlangıç olarak denenen bir gün için motor, izin verilen en kısa uzunluktan başlayarak sırayla olası bitişleri dener (<code>minLength</code>{' '}
+          ya da, aynı gün aralıklarına izin verilmiyorsa, 1 gece / 1 gün). En fazla 63 olası bitişe bakar ve <code>maxLength</code>’i hiç aşmaz. Tamamen
           geçerli ilk bitiş bulunduğunda başlangıç seçilebilir. Aralığın içindeki bir gün engelliyse ya da olası bitiş <code>maxDate</code>’i, gelecek
           sınırını veya verisi yüklenmemiş bir ayı aşıyorsa arama erken durur: bu durumda daha sonraki hiçbir bitiş işe yaramayacağı kesindir. Başlangıç
           yalnızca böyle kesin bir durumda veya <code>maxLength</code>’e kadar her olası bitiş geçersizse seçilemez. 63 deneme önce biterse başlangıç
           seçilebilir kalır ve doğrulama bitiş seçildiğinde yapılır.
         </p>
         <p>
-          Aramayı bir sınır veya veri sorunu durdurduysa, gün bu sebeple seçilemez. Aksi halde başlangıçta <code>min-length</code> (son başarısız
-          denemenin <code>dayReason</code>’ıyla) yalnızca engel gerçekten minimum süreyse bildirilir: doğal minimumun (1 gece / 1 gün) üstünde bir{' '}
+          Reddedilen başlangıcın gösterdiği sebep: aramayı bir sınır veya veri sorunu durdurduysa o sorun. Aksi halde başlangıçta <code>min-length</code>{' '}
+          (parametreler <code>{'{ min, unit }'}</code>, son başarısız denemenin <code>dayReason</code>’ıyla), ama yalnızca engel gerçekten minimum süreyse: doğal minimumun (1 gece / 1 gün) üstünde bir{' '}
           <code>minLength</code> vardır ve uzunluk kuralı olmasa daha kısa bir bitiş geçerli olurdu. Diğer her durumda son denenen bitişin sorunu
           bildirilir; böylece sonrasında hiç çıkış yapılamayan bir başlangıç günü “En az N” yerine örneğin <code>end-not-allowed</code> sebebini gösterir.{' '}
           <code>fixedLength</code> varsa arama yapılmaz (sabit aralık bütün olarak doğrulanır); arama <code>validate()</code>’in de parçası değildir.
         </p>
         <Snippet files={reachableEnd} label="requireReachableEnd" />
 
-        <h3>DayAvailability</h3>
+        <h3>DayAvailability: getDayAvailability’nin döndürdüğü değer</h3>
         <PropsTable
           caption="DayAvailability (getDayAvailability’nin döndürdüğü)"
           rows={[
@@ -316,8 +326,8 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  Gün tamamen kapalıdır. Aşağıdaki üç bayraktan önce gelir: kapalı bir gün, bayraklar ne olursa olsun başlangıç ya da bitiş olamaz, aralığın
-                  içinde kalamaz. Sebep <code>closed</code>.
+                  Bu günde hiçbir şey mümkün değildir. Aşağıdaki üç bayraktan önce gelir: bayraklar ne derse desin kapalı bir gün başlangıç ya da bitiş olamaz ve
+                  hiçbir aralık bu günün üzerinden geçemez. Sebep <code>closed</code>.
                 </>
               ),
             },
@@ -377,15 +387,15 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  Kısıtlama gerçek bir doluluktan değil, işletmenin düzenli çalışma planından gelir. Takvim düzeni kuralları gevşetildiğinde bu sonucun tamamı
-                  yok sayılır; bu yüzden yalnızca tamamen çalışma planından kaynaklanan sonuçları işaretleyin.
+                  Kısıtlama gerçek bir doluluktan değil, işletmenizin düzenli çalışma planından gelir. <code>relaxSchedule</code> açıkken bu sonucun tamamı yok
+                  sayılır; bu yüzden yalnızca tamamen çalışma planından kaynaklanan sonuçları işaretleyin.
                 </>
               ),
             },
           ]}
         />
 
-        <h3>RuleContext</h3>
+        <h3>RuleContext: ctx argümanının içeriği</h3>
         <PropsTable
           caption="RuleContext (getDayAvailability ve validateSelection’ın ctx’i)"
           rows={[
@@ -445,17 +455,18 @@ export function RulesReference() {
           </li>
         </ol>
         <p>
-          <code>validate()</code>’e verilen ve tarih olarak okunamayan değerler <code>invalid-date</code> verir (aralıklarda parametreler <code>{'{ field, value }'}</code>).
+          Geçerli tarih olmayan değerler <code>validate()</code> içinde <code>invalid-date</code> verir (aralıklarda parametreler <code>{'{ field, value }'}</code>).
           Her sorun <code>code</code>, sorunlu <code>date</code>, mesaj şablonları için <code>params</code>, günün <code>dayReason</code>’ı ve varsa{' '}
           <code>message</code> içerir.
         </p>
       </Section>
 
-      <Section title="stayRules">
+      <Section title="stayRules: gecelik konaklamalar">
         <p>
-          <code>stayRules(options)</code> gecelik konaklamaları tanımlar. Bir konaklama <code>[check-in, check-out)</code> biçimindedir: misafirin seçtiği bitiş
-          çıkış günüdür; aralığın parçası olarak çizilir ama gece sayılmaz. Konaklamanın her gecesi doğrulanır; çıkış gününde yalnızca çıkış yapılabilmesi
-          yeterlidir. Adaptör her zaman hariç bitişi kullanır ve <code>requireReachableEnd</code>’i açar.
+          <code>stayRules(options)</code>, gecelik konaklamalar (oteller, tatil evleri) için otelcilik terimleriyle (gece, giriş, çıkış) verilen
+          seçeneklerden bir kural seti oluşturur. Bir konaklama <code>[check-in, check-out)</code> biçimindedir: misafirin seçtiği ikinci gün çıkış günüdür;
+          aralığın parçası olarak çizilir ama gece sayılmaz. Konaklamanın her gecesi kontrol edilir; çıkış gününde yalnızca çıkış yapılabilmesi yeterlidir.
+          Adaptör her zaman hariç bitişi kullanır ve <code>requireReachableEnd</code>’i açar.
         </p>
         <Snippet files={counting} label="Gece ve gün sayma" />
         <PropsTable
@@ -466,8 +477,8 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  Gece olarak en kısa konaklama; <code>minLength</code> olur. Ulaşılabilir bitiş araması da bunu kullanır; bu yüzden mümkün olan her konaklaması çok
-                  kısa kalacak bir giriş günü seçilemez (sebep <code>min-length</code>).
+                  Gece olarak en kısa konaklama; <code>minLength</code> olur. Mümkün olan bütün konaklamaları çok kısa kalan bir giriş günü (örn. ertesi gece
+                  doluysa) seçilemez; sebep <code>min-length</code>.
                 </>
               ),
             },
@@ -543,8 +554,8 @@ export function RulesReference() {
         />
         <h3>Konaklama durumları</h3>
         <p>
-          Her durum, o tarihin müsaitliğine dönüştürülür. Tarih bir gecenin başlangıcıdır ama aynı gün önceki gecenin sabahıdır: art arda dolu gecelerin ilk
-          günü yine de başka bir misafirin çıkış günü olabilir.
+          Her durum kendi tarihinin müsaitliğine dönüştürülür. Bir tarih, bir gecenin başladığı akşamdır ama aynı zamanda önceki gecenin sabahıdır; bu
+          yüzden art arda dolu gecelerin ilki yine de başka bir misafirin çıkış günü olabilir.
         </p>
         <DataTable
           caption="Her StayDayStatus’un kendi tarihine etkisi"
@@ -589,9 +600,10 @@ export function RulesReference() {
         <Snippet files={stayWeekdays} label="availableWeekdays ve çıkış günleri" />
       </Section>
 
-      <Section title="dayRangeRules">
+      <Section title="dayRangeRules: gün olarak sayılan rezervasyonlar">
         <p>
-          <code>dayRangeRules(options)</code> gün bazlı rezervasyonları tanımlar (tekne günleri, çok günlük etkinlikler, kiralamalar): <code>[start, end]</code>;
+          <code>dayRangeRules(options)</code>, gün olarak sayılan rezervasyonlar (tekne günleri, çok günlük etkinlikler, kiralamalar) için bir kural seti
+          oluşturur: <code>[start, end]</code>;
           başlangıçtan bitişe her gün rezervasyona dahildir, yani 13 → 20 = 8 gün (<code>countDays</code>). Aynı güne iki kez tıklamak geçerli, 1 günlük bir
           aralık seçer; adaptör aynı gün aralıklarına her zaman izin verir, yasaklamak için <code>minDays: 2</code> kullanın. Dahil bitiş ve{' '}
           <code>requireReachableEnd</code> her zaman açıktır.
@@ -615,7 +627,7 @@ export function RulesReference() {
             {
               name: 'availableWeekdays',
               type: 'readonly Weekday[]',
-              description: <>Hizmet verilen hafta günleri, örn. yalnızca hafta sonları <code>[6, 0]</code>. Diğer günler kapalıdır ve rezervasyonun içinde olamaz.</>,
+              description: <>Hizmet verilen hafta günleri (takvim düzeni kuralı), örn. yalnızca hafta sonları <code>[6, 0]</code>. Diğer günler kapalıdır ve rezervasyonun içinde olamaz.</>,
             },
             {
               name: 'singleDayFirst',
@@ -623,7 +635,7 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  İlk tıklama yalnızca o günü seçer, sonraki bir güne tıklamak rezervasyonu genişletir (bkz.{' '}
+                  İlk tıklama yalnızca o günü rezerve eder; daha sonraki bir güne tıklamak rezervasyonu genişletir (bkz.{' '}
                   <code>SelectionRules.singleDayFirst</code>).
                 </>
               ),
@@ -652,15 +664,17 @@ export function RulesReference() {
         />
         <p>
           Tek günlük aralık için gün hem başlangıç hem bitiş olabilmelidir; bu yüzden <code>start-only</code> ve <code>end-only</code> günleri tek başına
-          rezerve edilemez (<code>singleDayFirst</code> ile böyle bir güne tıklamak yalnızca başlangıcı seçer).
+          rezerve edilemez. <code>singleDayFirst</code> açıkken bir start-only gününe ilk tıklama yalnızca başlangıcı seçer; bir end-only gününe ilk
+          tıklama yapılamaz. Aşağıda deneyin: bir “Başlangıç” gününde başlayın, bir “Bitiş” gününde bitirin veya bunlardan birinin üzerinden geçmeyi deneyin.
         </p>
         <Example src="rules/DayRangeStatuses" title="Yalnızca başlangıç ve yalnızca bitiş günleri" />
         <Snippet files={dayStatuses} label="Gün durumlarını motorla denetleme" />
       </Section>
 
-      <Section title="closedDates">
+      <Section title="closedDates: belirli tarihleri kapatma">
         <p>
-          <code>closedDates(dates, reason = &apos;closed&apos;)</code>, tek alanı <code>getDayAvailability</code> olan bir kural seti döndürür: listelenen her
+          <code>closedDates(dates, reason = &apos;closed&apos;)</code>, tatiller veya bakım günleri gibi sabit bir tarih listesini kapatır. Tek alanı{' '}
+          <code>getDayAvailability</code> olan bir kural seti döndürür: listelenen her
           tarih verilen sebep etiketiyle kapatılır, diğer günlere dokunulmaz. <code>dates</code>, <code>CalendarDate</code> değerlerinden oluşan herhangi bir
           yinelenebilir (iterable) değerdir; <code>Set</code> olduğu gibi kullanılır, diğerleri bir kez kümeye kopyalanır. Tarihler metin olarak birebir
           karşılaştırılır; bu yüzden tam <code>YYYY-MM-DD</code> biçiminde verin. Bir adaptörün yanında <code>rules</code> dizisinde veya{' '}
@@ -668,10 +682,11 @@ export function RulesReference() {
         </p>
       </Section>
 
-      <Section title="combineRules">
+      <Section title="combineRules: birden fazla kural setini birlikte kullanma">
         <p>
-          <code>combineRules(...sets)</code> kural setlerini tek bir sette birleştirir; seçimin <em>her</em> kuraldan geçmesi gerekir. Takvimin bir <code>rules</code>{' '}
-          dizisiyle yaptığı da budur. Falsy girdiler (<code>null</code>, <code>undefined</code>, <code>false</code>) atlanır; böylece koşullu kuralları satır içinde
+          <code>combineRules(...sets)</code> kural setlerini (örneğin ürün kuralları, kapalı tarihler ve bir satış penceresi) tek bir sette birleştirir;
+          seçimin <em>her</em> kuraldan geçmesi gerekir. Takvimin bir <code>rules</code> dizisiyle yaptığı da budur; birleşik sete takvimin dışında
+          (motor, sunucu, <code>relaxRules</code>) ihtiyacınız olduğunda kendiniz çağırın. Falsy girdiler (<code>null</code>, <code>undefined</code>, <code>false</code>) atlanır; böylece koşullu kuralları satır içinde
           yazabilirsiniz. Verilen setler hiçbir zaman değiştirilmez. Setler soldan sağa şu anlamlarla birleştirilir:
         </p>
         <DataTable
@@ -734,10 +749,11 @@ export function RulesReference() {
         </Note>
       </Section>
 
-      <Section title="relaxRules">
+      <Section title="relaxRules: takvim düzeni kurallarını kaldırma">
         <p>
-          <code>relaxRules(rules, options)</code>, takvimin <code>relaxSchedule</code> prop’unun (“özel tarihler”) saf (pure) fonksiyon halidir. Takvim düzeni kuralları
-          çıkarılmış bir kopya döndürür; gerçek doluluğu tanımlayan her şey korunur.
+          <code>relaxRules(rules, options)</code>, kuralların takvim düzeni kuralları (izin verilen hafta günleri, uzunluklar) çıkarılmış bir kopyasını
+          döndürür; gerçek doluluğu tanımlayan her şey korunur. Takvimin <code>relaxSchedule</code> prop’u aynı işi sizin yerinize yapar, örneğin personel
+          için bir “Özel tarihler” anahtarının arkasında; <code>relaxRules</code>’u doğrudan motorla veya sunucuda kullanın.
         </p>
         <DataTable
           caption="relaxRules neyi kaldırır, neyi korur"
@@ -781,11 +797,12 @@ export function RulesReference() {
         </Note>
       </Section>
 
-      <Section title="createSelectionEngine">
+      <Section title="createSelectionEngine: React olmadan tarih kontrolü">
         <p>
-          <code>createSelectionEngine(input)</code>, takvimin tıklamalarda, klavyede, fareyle üzerine gelme önizlemelerinde ve devre dışı günleri
-          belirlerken kullandığı arayüzsüz değerlendiricidir. Tek bir girdinin anlık durumudur: sonuçlar motor yaşadığı sürece gün bazında önbelleğe
-          alınır; bu yüzden kurallar, seçim, bugün veya bağlam değiştiğinde yeni bir motor oluşturun. Takvimin <code>minDate</code>/<code>disablePast</code>/…
+          <code>createSelectionEngine(input)</code>, hiçbir şey render etmeden tarihleri ve aralıkları kurallara göre kontrol eder. Takvim onu tıklamalarda,
+          klavyede, fareyle üzerine gelme önizlemelerinde ve devre dışı günleri belirlerken kullanır; siz de testlerde veya sunucuda kullanabilirsiniz. Bir
+          motor, tek bir girdi grubunun anlık durumudur (snapshot): sonuçlar motor yaşadığı sürece gün bazında önbelleğe alınır; bu yüzden kurallar, seçim,
+          bugün veya bağlam değiştiğinde yeni bir motor oluşturun. Takvimin <code>minDate</code>/<code>disablePast</code>/…
           prop’larını kendisi eklemez; bunları kurallara koyun.
         </p>
         <PropsTable
@@ -881,7 +898,7 @@ export function RulesReference() {
               type: '{ kind, date, issue, next }',
               description: (
                 <>
-                  Tarihe tıklamanın ne yapacağı: aşağıdaki <code>kind</code>, <code>rejected</code> olduğunda <code>issue</code> ve aksi halde uygulanacak{' '}
+                  Tarihe tıklamanın (veya üzerindeyken Enter’a basmanın) ne yapacağı: aşağıdaki <code>kind</code>, <code>rejected</code> olduğunda <code>issue</code> ve aksi halde uygulanacak{' '}
                   <code>next</code> durumu (seçim ve etkin uç). Reddedilen bir plan durumu değiştirmeden döndürür.
                 </>
               ),
@@ -904,13 +921,13 @@ export function RulesReference() {
         <Snippet files={enginePlan} label="Motor metotları" />
         <h3>Sunucu tarafında doğrulama</h3>
         <p>
-          Tarayıcının gönderdiği bir tarih aralığına doğrudan güvenmeyin. Aynı kuralları sunucuda da oluşturun (veya modülü paylaşın) ve isteği, bugünü
-          işletmenizin saat dilimine göre hesaplanmış bir motorla doğrulayın (<code>getToday({'{ timeZone }'})</code>).
+          Tarayıcının gönderdiği bir tarih aralığına doğrudan güvenmeyin. Aynı kuralları sunucuda da oluşturun (veya aynı modülü içe aktarın) ve isteği,
+          bugünü işletmenizin saat dilimindeki güncel tarih olan bir motorla doğrulayın (<code>getToday({'{ timeZone }'})</code>).
         </p>
         <Snippet files={serverValidation} label="Bir rezervasyon isteğini doğrulama" />
       </Section>
 
-      <Section title="Çakışmalar ve sınırlamalar">
+      <Section title="Çakışan kurallar ve sınırlamalar">
         <Note>
           <p>
             <strong>Hariç bitişte aynı gün + minimum.</strong> Aynı gün konaklama 0 gecedir. <code>stayRules({'{ allowSameDay: true, minNights: 1 }'})</code>{' '}

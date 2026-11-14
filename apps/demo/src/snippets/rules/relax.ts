@@ -7,7 +7,7 @@ const boat = dayRangeRules({
   minDays: 8,
   getDayStatus: (date) => (date === '2026-11-18' ? 'closed' : undefined),
 });
-// Your own schedule restriction: no departures on the 11th.
+// Your own schedule restriction: the 11th (a Wednesday) is closed, marked schedule: true.
 const noWednesday: SelectionRules = {
   getDayAvailability: (date) => (date === '2026-11-11' ? { closed: true, reason: 'out-of-schedule', schedule: true } : undefined),
 };
