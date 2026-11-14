@@ -4,8 +4,9 @@ import './Slots.css';
 
 // Slots replace one region and receive the calendar's state (`ctx`, a
 // SlotContext): the snapshot, the controller (`ctx.actions`), messages,
-// locale and `formatDate`. Each one is wrapped in an element that still gets
-// its default class and your `classNames` key (header, navigation, footer).
+// locale and `formatDate`. The header, navigation and footer output is
+// wrapped in an element that gets the default class and your `classNames`
+// key; renderMonthHeader has no wrapper.
 export default function Slots() {
   const [today] = useState(() => getToday());
   const [range, setRange] = useState<DateRange>({ start: addDays(today, 3), end: addDays(today, 7) });
@@ -33,17 +34,18 @@ export default function Slots() {
           </button>
         </>
       )}
-      // Replaces the month title row. Keep a heading: it names the month for screen readers.
+      // Replaces the month title row. Keep a heading so screen reader users can
+      // jump from month to month (the month itself is labelled with aria-label).
       renderMonthHeader={({ title, index }) => (
         <h3 className="sl-month-title">
           <span className="sl-index">{index + 1}</span> {title}
         </h3>
       )}
-      // Inside the default day button: no buttons or links here.
+      // Inside the default day button: no buttons or links here. A dot marks weekends.
       renderDayContent={({ day }) => (
         <span className="sl-day">
           {day.dayText}
-          {day.weekEnd && <span className="sl-dot" aria-hidden="true" />}
+          {(day.weekday === 0 || day.weekday === 6) && <span className="sl-dot" aria-hidden="true" />}
         </span>
       )}
       getDayTooltip={({ day }) => (day.selectedStart || day.selectedEnd ? day.label : null)}

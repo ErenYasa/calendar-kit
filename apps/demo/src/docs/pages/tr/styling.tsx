@@ -9,44 +9,49 @@ export function Styling() {
   return (
     <Page
       title="Stil ve özelleştirme"
-      lead="Varsayılan temayla başlayın ve yalnızca ihtiyacınız kadar ilerleyin: önce değişkenler, sonra sınıflar ve durum nitelikleri, sonra özel içerik, en son kendi HTML yapınız."
+      lead="Varsayılan temayla başlayın ve yalnızca ihtiyacınız kadar ilerleyin: önce CSS değişkenlerini değiştirin, sonra kendi sınıflarınızı ve durum seçicilerinizi ekleyin, sonra günün içindekini değiştirin; gün öğesini ancak bunlar yetmezse kendiniz render edin."
     >
       <PropsTable
         caption="Hangi yaklaşım?"
         rows={[
-          { name: <>CSS değişkenleri</>, type: <>renkler, köşe yarıçapı, boyutlar</>, description: 'Tema (marka renkleri, koyu mod). En zahmetsiz yol; HTML yapısına bağlı seçici yazmanız gerekmez.' },
-          { name: 'classNames', type: <>parçalar</>, description: 'Tasarım sisteminizin sınıflarını belirli parçalara ekler.' },
-          { name: <><code>data-*</code> öznitelikleri</>, type: <>durum</>, description: 'Durumları (seçili, aralıkta, devre dışı, kendi modifier’larınız) kendi CSS’inizle stillersiniz.' },
-          { name: 'renderDayContent', type: <>günün içi</>, description: 'Varsayılan, erişilebilir gün düğmesi kalır; yalnızca içindeki içeriği değiştirirsiniz.' },
+          { name: <>CSS değişkenleri</>, type: <>renkler, köşe yarıçapı, daire boyutu</>, description: 'Marka renkleri ya da koyu tema. En zahmetsiz yol: takvimde birkaç değer ayarlarsınız, iç öğeleri için seçici yazmazsınız.' },
+          { name: 'classNames', type: <>parçalar</>, description: 'Kendi (tasarım sisteminizin) sınıflarınızı ay başlığı ya da gün düğmesi gibi belirli parçalara ekler.' },
+          { name: <><code>data-*</code> nitelikleri</>, type: <>durum</>, description: 'Günleri durumlarına göre (seçili, aralıkta, devre dışı, kendi modifier’larınız) kendi CSS’inizle stillersiniz.' },
+          { name: 'renderDayContent', type: <>günün içi</>, description: 'Gün düğmesinin içinde gösterileni değiştirir (örneğin sayı ve altında bir nokta); düğme ve erişilebilirliği olduğu gibi kalır.' },
           { name: 'renderDay + getDayProps', type: <>günün tamamı</>, description: 'Gün öğesini kendiniz render edersiniz; klavye, odak, ARIA ve seçim davranışı korunur.' },
-          { name: 'unstyled', type: <>her şey</>, description: 'Hiçbir varsayılan sınıf eklenmez; her parçayı siz stillersiniz.' },
+          { name: 'unstyled', type: <>her şey</>, description: 'Varsayılan tema kapanır: hiçbir varsayılan sınıf eklenmez, her parçayı kendiniz stillersiniz.' },
         ]}
       />
       <Section title="Varsayılan tema">
         <p>
-          <code>calendar-kit/styles.css</code> dosyasını kendi CSS’inizden önce bir kez içe aktarın. Tüm görsel kurallar takvim kökünde tanımlanan CSS
-          değişkenlerini okur; bu yüzden temaların çoğu hiç seçici gerektirmez. Hiçbir kural <code>!important</code> kullanmaz. Bugün, hover ve tarihler
-          yüklenirken gösterilen boş yer tutucuların kuralları <code>:where()</code> içine sarılıdır ve özgüllük eklemez; seçili, devre dışı, müsait değil ve
-          aralık uçları stilleri en fazla üç sınıflık düz seçicilerdir. Bunları değiştirmek için değişkenleri (<code>--cal-accent</code>, <code>--cal-range</code>, …) ya da en
-          az aynı özgüllükte bir seçici kullanın. Her değişken, sınıf ve nitelik için <a href="#/styling-reference">Stil başvurusu</a> sayfasına bakın.
+          <code>calendar-kit/styles.css</code> dosyasını kendi CSS’inizden önce bir kez içe aktarın. Temadaki her renk ve boyut, takvim kökünde
+          tanımlanan bir CSS değişkeninden gelir; bu yüzden tema değiştirmek çoğu zaman yalnızca bu değişkenlere yeni değer vermektir. Hiçbir kural{' '}
+          <code>!important</code> kullanmaz. Gün durumu kuralları hücredeki bir sınıf, bir durum niteliği ve düğmedeki bir sınıftan oluşur; bugün, hover
+          ve tarihler yüklenirken gösterilen boş yer tutucuların koşulları ise <code>:where()</code> içindedir ve seçicinin özgüllüğünü artırmaz. Bir
+          durumun görünümünü değiştirmek için o durumun değişkenini ayarlayın (<code>--cal-accent</code>, <code>--cal-range</code>, …) ya da en az
+          varsayılan kural kadar özgül bir seçici yazın. Her değişken, sınıf ve nitelik <a href="#/styling-reference">Stil başvurusu</a> sayfasında.
         </p>
       </Section>
       <Section title="CSS değişkenleri">
         <p>
-          Değişkenleri kökte <code>className</code> ya da <code>style</code> ile ayarlayın. Kullanılabilenler: <code>--cal-color</code>,{' '}
+          Takvime bir sınıf (<code>className</code>) ya da satır içi <code>style</code> verin ve değişkenleri orada ayarlayın; takvimin tüm öğeleri yeni
+          değerleri kullanır. Kullanılabilenler: <code>--cal-color</code>,{' '}
           <code>--cal-muted</code>, <code>--cal-bg</code>, <code>--cal-accent</code>, <code>--cal-accent-contrast</code>, <code>--cal-range</code>,{' '}
           <code>--cal-preview</code>, <code>--cal-hover</code>, <code>--cal-focus</code>, <code>--cal-today</code>, <code>--cal-ring</code>,{' '}
           <code>--cal-danger</code>, <code>--cal-radius</code>, <code>--cal-circle</code>, <code>--cal-font</code> ve tooltip değişkenleri{' '}
-          <code>--cal-tooltip-bg</code>, <code>--cal-tooltip-color</code>, <code>--cal-tooltip-shadow</code>, <code>--cal-tooltip-max-width</code>{' '}
-          (bunlar portal ile render edilen tooltip’e kopyalanır).
+          <code>--cal-tooltip-bg</code>, <code>--cal-tooltip-color</code>, <code>--cal-tooltip-shadow</code>, <code>--cal-tooltip-max-width</code>.
+          Tooltip takvimin dışında (<code>document.body</code> içinde) render edilir; bu yüzden takvim, tooltip açıldığında bu dört değeri ona kopyalar.
+          Aşağıdaki örnek yalnızca değişkenlerden oluşan eksiksiz bir koyu temadır.
         </p>
         <Example src="styling/CssVariables" title="Değişkenlerle koyu tema" />
       </Section>
       <Section title="classNames">
         <p>
-          Parçalar: <code>root, header, footer, viewport, months, month, monthHeader, monthTitle, navigation, navButton, weekdays, weekday, grid, week, dayCell,
+          <code>classNames</code>, bir parçanın varsayılan sınıfının yanına sizin sınıfınızı ekler; örneğin{' '}
+          <code>classNames=&#123;&#123; monthTitle: &apos;brand-title&apos; &#125;&#125;</code>. Parçalar: <code>root, header, footer, viewport, months, month, monthHeader, monthTitle, navigation, navButton, weekdays, weekday, grid, week, dayCell,
           dayButton, dayContent, rangeBackground, tooltip, loadMore, loading, error, liveRegion, readOnlyNotice</code>. <code>dayCell</code>,{' '}
-          <code>dayButton</code> ve <code>dayContent</code>, günün durumunu parametre olarak alan bir fonksiyon da kabul eder.
+          <code>dayButton</code> ve <code>dayContent</code>, günün durumunu alıp bir sınıf (ya da <code>undefined</code>) döndüren bir fonksiyon da
+          kabul eder. Örnekte ay başlıkları büyük harfle yazılır; hafta günü adları ve hafta sonu günlerinin sayıları mordur.
         </p>
         <Example src="styling/ClassNames" title="classNames" />
       </Section>
@@ -56,24 +61,34 @@ export function Styling() {
           <code>data-selected</code>, <code>data-range-start</code>, <code>data-range-end</code>, <code>data-in-range</code>, <code>data-preview</code>,{' '}
           <code>data-focused</code>, <code>data-loading</code>, <code>data-reason</code>, <code>data-mod-*</code> ve daha fazlasını taşır; hücrelerde ayrıca{' '}
           <code>data-band=&quot;start | mid | end&quot;</code> bulunur. CSS’iniz iç sınıf adlarına bağlı kalmasın diye bunları kendi sınıflarınızla birlikte
-          seçin.
+          seçin. Modifier, günler için kendi adlandırdığınız bir durumdur: <code>modifiers</code> bir adı günü alan bir fonksiyona eşler; fonksiyon true
+          döndürdüğünde gün <code>data-mod-</code> ve ardından o adı taşıyan bir nitelik alır. Örnekte tatil günlerinin (ve her ayda bir tane görünsün diye
+          her ayın 15’inin) altı çizilidir; seçili aralığın başlangıç ve bitiş günlerinde sayı daha kalındır.
         </p>
         <Example src="styling/DataAttributes" title="Modifier’lar ve data nitelikleri" />
       </Section>
       <Section title="renderDayContent">
+        <p>
+          <code>renderDayContent</code>, gün düğmesinin içinde gösterileni (varsayılan olarak yalnızca gün numarasını) değiştirir. Düğmenin kendisi
+          takvime ait kalır: dairesi, odak halkası, klavye davranışı ve ARIA etiketi değişmez. Fiyat, nokta ya da kısa bir etiket gibi küçük eklemeler için
+          kullanın. Örnek, gelecekteki her günün altına bir nokta ekler: yeşil, cumartesileri ise turuncu (&quot;dolu&quot; günleri temsilen).
+        </p>
         <Example src="styling/DayContentRender" title="Özel gün içeriği" />
       </Section>
       <Section title="renderDay ve getDayProps">
         <p>
-          <code>getDayProps</code>; ref’i (tooltip’in bağlandığı öğe ve gezici odak için), <code>tabIndex</code>’i, ARIA niteliklerini, <code>data-*</code>
-          durumunu ve olay işleyicilerini sizinkilerle birleştirir. Bir <code>&lt;button&gt;</code> üzerinde <code>getDayProps(yourProps)</code> olarak
-          çağırın; <code>type=&quot;button&quot;</code> niteliğini kendisi ekler.
+          <code>renderDay</code> ile gün öğesinin tamamını kendiniz render edersiniz. Öğeye <code>getDayProps</code>’un sonucunu yayın (spread): günün
+          çalışmaya devam etmesi için takvimin ihtiyaç duyduğu her şeyi ekler (takvimin klavye odağını öğeye taşıyabilmesi ve tooltip’i ona bağlaması
+          için bir ref, <code>tabIndex</code>, ARIA nitelikleri, <code>data-*</code> durumu ve olay işleyicileri) ve sizin prop’larınızı bunlarla
+          birleştirir. Bir <code>&lt;button&gt;</code> üzerinde <code>getDayProps(yourProps)</code> olarak çağırın; <code>type=&quot;button&quot;</code>{' '}
+          niteliğini kendisi ekler. Gün varsayılan sınıfını korur; seçim, aralık bandı, odak halkası ve devre dışı görünümü yine temadan gelir. Örnek
+          yalnızca cumartesi ve pazar günlerinin altına bir &quot;hf sonu&quot; etiketi ekler.
         </p>
         <Example src="styling/RenderDay" title="Özel gün öğesi" />
         <p>
           Düğme olmayan bir öğe için (bir <code>&lt;div&gt;</code>, bir <code>&lt;span&gt;</code>) <code>type: null</code> verin:{' '}
           <code>getDayProps(&#123; type: null &#125;)</code> hiçbir <code>type</code> niteliği yazmaz ve kendi <code>role</code>’ünüzü vermediğiniz sürece{' '}
-          <code>role=&quot;button&quot;</code> ekler. Odak bir düğmedekiyle tamamen aynı çalışır: Tab sırasında yalnızca bir gün bulunur (roving{' '}
+          <code>role=&quot;button&quot;</code> ekler. Odak bir düğmedekiyle tamamen aynı çalışır: Tab sırasında aynı anda yalnızca bir gün bulunur (roving{' '}
           <code>tabIndex</code>) ve ok, Page ve Home/End tuşlarıyla günler arasında gezinilir. Enter ve Space odaktaki günü seçer; düğme olmayan bir öğede
           bu tuşları takvim kendisi işler, gerçek bir düğme ise onları zaten tıklamaya çevirir.
         </p>
@@ -203,8 +218,8 @@ export function StylingReference() {
             [c('--cal-color'), c('#1f2328'), 'Kökün metin rengi: gün sayıları, ay başlıkları, gezinme okları, rengi miras alan düğmeler.'],
             [c('--cal-muted'), c('#8b9198'), 'Hafta günü adları, devre dışı ve müsait olmayan gün sayıları, salt okunur bildirim metni, yükleme metni.'],
             [c('--cal-bg'), c('#fff'), 'Kökün arka planı, ortak (yapışkan) hafta günü satırının arka planı ve odaklanan gün ile odak halkası arasındaki boşluk.'],
-            [c('--cal-accent'), c('#1f2328'), 'Seçili gün dairesi, önizlenen aralık bitişinin dış çizgisi, gün rozetleri.'],
-            [c('--cal-accent-contrast'), c('#fff'), 'Seçili dairedeki sayı, rozet metni.'],
+            [c('--cal-accent'), c('#1f2328'), 'Seçili gün dairesi, önizlenen aralık bitişinin dış çizgisi, günlerin badge’leri.'],
+            [c('--cal-accent-contrast'), c('#fff'), 'Seçili dairedeki sayı, badge metni.'],
             [c('--cal-range'), c('#eef0f2'), 'Seçili aralık bandı; ayrıca gezinme ve daha fazla ay yükleme düğmelerinin hover’ı, ortak hafta günü satırının kenarlığı, footer’ın üst kenarlığı ve yükleme yer tutucularının parıltısı.'],
             [c('--cal-preview'), c('#f4f5f6'), 'Bitiş seçilirken görünen önizleme bandı; ayrıca salt okunur bildirimin arka planı ve yükleme yer tutucularının parıltısı.'],
             [c('--cal-hover'), c('#d0d4d9'), 'Üzerine gelinen günün ince dış çizgisi (devre dışı, seçili veya salt okunur değilse).'],
@@ -213,7 +228,7 @@ export function StylingReference() {
             [c('--cal-ring'), c('#c4c7cc'), 'Çok günlük bir bandın başlangıç ve bitişindeki dış yarım halka.'],
             [c('--cal-danger'), c('#b42318'), 'Ay hata mesajı: metin rengi ve arka plan olarak bunun %8’lik tonu.'],
             [c('--cal-radius'), c('12px'), 'Bandın hafta veya ay kenarında kırıldığı yerlerde yuvarlatılmış bant uçları.'],
-            [c('--cal-circle'), c('0.84'), 'Hücrenin kısa kenarına oranla daire boyutu: seçim, bugün, hover ve odak daireleri, bant yüksekliği, uçtaki yarım halkalar, etiket/rozet genişliği, yükleme yer tutucusu hapları.'],
+            [c('--cal-circle'), c('0.84'), 'Hücrenin kısa kenarına oranla daire boyutu: seçim, bugün, hover ve odak daireleri, bant yüksekliği, uçtaki yarım halkalar, etiket/badge genişliği, yükleme yer tutucusu hapları.'],
             [c('--cal-tooltip-bg'), c('#fff'), 'Tooltip’in ve okunun arka planı.'],
             [c('--cal-tooltip-color'), c('#1f2328'), 'Tooltip’in metin rengi.'],
             [c('--cal-tooltip-shadow'), c('0 4px 16px rgb(0 0 0 / 0.14)'), 'Tooltip’in box-shadow değeri.'],
@@ -239,7 +254,7 @@ export function StylingReference() {
             [c('--cal-day-min-h'), <>{c('minDaySize')} yüksekliği (varsayılan 40)</>, 'En küçük gün hücresi yüksekliği.'],
             [c('--cal-day-max'), <>{c('maxDaySize')} (varsayılan 56)</>, 'En büyük gün hücresi yüksekliği.'],
             [c('--cal-month-gap'), <>{c('monthGap')} (varsayılan 32)</>, 'Aylar arasındaki sütun boşluğu.'],
-            [c('--cal-month-padding'), 'sabit 8px', 'Her ayın yatay iç boşluğu, ortak hafta günü satırının iç boşluğu ve ay yükleme göstergesinin konumu.'],
+            [c('--cal-month-padding'), 'sabit 8px', 'Her ayın ve ortak hafta günü satırının yatay iç boşluğu.'],
             [c('--cal-month-min'), 'hesaplanan en küçük ay genişliği', 'Varsayılan tema kullanmaz.'],
             [c('--cal-columns'), 'güncel ay sütunu sayısı', 'Varsayılan tema kullanmaz.'],
             [c('--cal-tooltip-arrow'), 'tooltip konumlandırması (tooltip öğesinde)', 'Okun tooltip kenarı boyunca kayması.'],
@@ -361,11 +376,12 @@ export function StylingReference() {
 
       <Section title="Slotlar ve render callback’leri">
         <p>
-          Slotlar, takvimin bir bölgesine sizin içeriğinizi koyar. Çoğu, slota özgü prop’ları ve bir <code>SlotContext</code> alır: takvimin anlık durumu
+          Slot bir render prop’tur: takvimin bir bölgesinin (header, footer, ay başlığı, …) içeriğini döndüren, sizin verdiğiniz bir fonksiyon. Çoğu,
+          slota özgü prop’ları ve aşağıdaki tabloda <code>ctx</code> olarak yazılan bir <code>SlotContext</code> alır. Bu nesne takvimin güncel durumunu
           (<code>selection</code>, <code>activeEndpoint</code>, <code>phase</code>, <code>validation</code>, <code>referenceMonth</code>,{' '}
           <code>visibleMonths</code>, <code>renderedMonths</code>, <code>layout</code>, <code>focusedDate</code>, <code>today</code>), ayrıca{' '}
-          <code>instanceId</code>, <code>actions</code> (ref ile aynı controller), <code>messages</code>, <code>locale</code> ve{' '}
-          <code>formatDate</code>.
+          <code>instanceId</code>, <code>actions</code> (takvimin ref’indeki controller yöntemlerinin aynısı, örneğin{' '}
+          <code>ctx.actions.clear()</code>), <code>messages</code>, <code>locale</code> ve <code>formatDate</code> değerlerini verir.
         </p>
         <PropsTable
           caption="Slotlar"
@@ -374,7 +390,7 @@ export function StylingReference() {
             { name: 'renderFooter', type: '(ctx) => ReactNode', description: <>{c('div.cal-footer')} ({c('classNames.footer')}) içinde, aylardan sonra. Tema {c('--cal-range')} renginde bir üst kenarlık ekler.</> },
             { name: 'renderNavigation', type: '(NavigationRenderProps, ctx) => ReactNode', description: <>Yalnızca sayfalı gezinmede. Ayların üstündeki {c('div.cal-navigation')} içinde render edilir ve varsayılan okların yerine geçer. Prop’lar: {c('canPrevious')}, {c('canNext')}, {c('previous()')}, {c('next()')}, {c('months')}, {c('labels')}.</> },
             { name: 'renderMonthHeader', type: '(MonthHeaderRenderProps, ctx) => ReactNode', description: <>Sarmalayıcı olmadan {c('cal-month-header')} satırının tamamının yerine geçer. Prop’lar: {c('month')}, {c('title')}, {c('index')}, {c('status')} ve {c('navigation')}: bu başlığa ait varsayılan oklar ya da {c('null')} ({c('renderNavigation')} veya sürekli gezinmede her zaman null). Ay bu durumda {c('aria-label')} ile adlandırılır.</> },
-            { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>Sarmalayıcı yok. {c('scope')} {c('initial')}: ilk yükleme sırasında viewport’tan sonra; {c('month')}: yüklenen bir ayın içinde, ızgarasından sonra (yer tutucular görünmeye devam eder); {c('load-more')}: eklenen aylar yüklenirken daha fazla ay yükleme alanında (bunun varsayılanı yoktur).</> },
+            { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>Sarmalayıcı yok. {c('scope')} {c('initial')}: ilk yükleme sırasında viewport’tan sonra; {c('month')}: verisi hâlâ yüklenen bir ayın içinde, ızgarasından sonra (yer tutucular görünmeye devam eder); {c('load-more')}: eklenen aylar yüklenirken daha fazla ay yükleme alanında (bunun varsayılanı yoktur).</> },
             { name: 'renderError', type: '(ErrorRenderProps, ctx) => ReactNode', description: <>Durumu {c('error')} olan her ayda {c('div.cal-error')}’un yerine geçer. {c('retry()')}, {c('onRetry([month])')} çağırır.</> },
             { name: 'renderLoadMore', type: '(LoadMoreRenderProps, ctx) => ReactNode', description: <>Alanının içindeki varsayılan daha fazla ay yükleme düğmesinin yerine geçer (sürekli, {c('loadMore="button"')}, yönler {c('loadDirections')} içinde); {c('minDate')}/{c('maxDate')} sınırında da {c('canLoad: false')} ile çağrılır, orada {c('loadMore()')} bir şey yapmaz. Prop’lar: {c('direction')}, {c('canLoad')}, {c('loading')}, {c('loadMore()')}, {c('label')}.</> },
             { name: 'renderDayTooltip', type: '(DayTooltipRenderProps) => ReactNode', description: <>Açık tooltip’in içeriği; {c('div.cal-tooltip')} içinde, oktan önce render edilir. Prop’lar: {c('day')}, {c('content')} ({c('getDayTooltip')}’ten ya da varsayılan sebep metninden), {c('trigger')}, {c('placement')}. ctx yok.</> },
@@ -430,9 +446,11 @@ export function StylingReference() {
             <code>!important</code> kullanmaz, sizin de buna ihtiyacınız olmaz.
           </li>
           <li>
-            Durum kuralları <code>.cal-day[data-…] .cal-day-button</code>’u (ve <code>::before</code> dairesini) seçer. Bugün, hover ve yükleme yer tutucusu durumlarını{' '}
-            <code>:where()</code> içine sarar; bu yüzden bu durumlar özgüllük eklemez ve en son tanımlanan klavye odak halkası her zaman kazanır. Seçili,
-            devre dışı, müsait değil, aralık halkaları ve önizleme bitişi en fazla üç sınıflık düz seçicilerdir.
+            Durum kuralları <code>.cal-day[data-…] .cal-day-button</code>’u (ve <code>::before</code> dairesini) seçer: iki sınıf ve bir nitelik,
+            özgüllük 0,3,0. Bugün, hover ve yükleme yer tutucuları durum koşullarını <code>:where()</code> içine koyar; bu koşullar özgüllük eklemez ve
+            klavye odak halkası (<code>.cal-root .cal-day .cal-day-button:focus-visible::before</code>, en son tanımlanır) onlara karşı her zaman kazanır.
+            Seçili, devre dışı, müsait değil, aralık halkaları ve önizleme bitişi düz nitelik seçicileridir, çoğu 0,3,0; birkaçı (önizleme bitişi, RTL
+            yarım halkaları, kapalı bir günün üstü çizili sayısı) daha özgüldür.
           </li>
           <li>
             Bir özelliği geçersiz kılmak yerine bir değişkeni değiştirmeyi tercih edin: değişkenler kullanıldıkları her yerde okunur, bu yüzden{' '}
@@ -440,7 +458,8 @@ export function StylingReference() {
             renklendirir. Daire düğmenin bir <code>::before</code> öğesidir; düğmenin kendisine verilen arka plan tüm kare hücreyi doldurur.
           </li>
           <li>
-            Bir durum kuralının bir özelliğini geçersiz kılmak için en az onun kadar özgül bir seçici kullanın, örneğin <code>.my-calendar .my-cell[data-unavailable] .my-day</code>.
+            Bir durum kuralının bir özelliğini geçersiz kılmak için daha özgül bir seçici kullanın; örneğin{' '}
+            <code>.my-calendar .my-cell[data-unavailable] .my-day</code> (0,4,0), varsayılan müsait değil rengini (0,3,0) geçer.
           </li>
           <li>
             Kendi sınıflarınızı <code>classNames</code> ve data-* nitelikleriyle seçin. İç sınıf adları (<code>cal-day-number</code>,{' '}

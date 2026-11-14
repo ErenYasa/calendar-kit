@@ -12,17 +12,18 @@
   --cal-accent: #e8590c;
 }
 
-/* 3. Kendi özellikleriniz. Varsayılan :where() durumlarının (bugün, hover,
-      tarihler yüklenirken gösterilen boş yer tutucular) özgüllüğü sıfırdır;
-      sınıf + nitelik onları geçer. */
+/* 3. Kendi özellikleriniz. Varsayılan gün düğmesi metin rengini yalnızca
+      miras alır; bu yüzden burada sınıf + nitelik yeterlidir. Seçili, devre
+      dışı ve müsait olmayan günlerde varsayılan renkler (bkz. 4) daha
+      özgüldür ve yine kazanır. */
 .booking-day[data-mod-weekend] {
   color: #1971c2;
 }
 
 /* 4. Varsayılan devre dışı / müsait değil / seçili renkleri
-      `.cal-day[data-…] .cal-day-button` kullanır (üç sınıf). Bu özellikleri
-      değiştirmek için ya değişkeni ayarlayın (--cal-muted, --cal-accent-contrast)
-      ya da bir üst seçici ekleyerek aynı özgüllüğe ulaşın: */
+      `.cal-day[data-…] .cal-day-button` kullanır (iki sınıf + bir nitelik,
+      0,3,0). Bu özellikleri değiştirmek için ya değişkeni ayarlayın (--cal-muted,
+      --cal-accent-contrast) ya da bir üst sınıf ekleyerek onu geçin (0,4,0): */
 .booking .booking-cell[data-unavailable] .booking-day {
   color: #adb5bd;
 }

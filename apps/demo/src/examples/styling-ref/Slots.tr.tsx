@@ -5,7 +5,8 @@ import './Slots.css';
 // Her slot tek bir bölgenin yerine geçer ve takvimin durumunu alır (`ctx`, bir
 // SlotContext): anlık durum (snapshot), controller (`ctx.actions`), mesajlar,
 // yerel ayar ve `formatDate`. Header, navigation ve footer slotlarının çıktısı,
-// varsayılan sınıfı ve sizin `classNames` anahtarınızı alan bir öğeye sarılır.
+// varsayılan sınıfı ve sizin `classNames` anahtarınızı alan bir öğeye sarılır;
+// renderMonthHeader’ın sarmalayıcısı yoktur.
 export default function Slots() {
   const [today] = useState(() => getToday());
   const [range, setRange] = useState<DateRange>({ start: addDays(today, 3), end: addDays(today, 7) });
@@ -33,17 +34,18 @@ export default function Slots() {
           </button>
         </>
       )}
-      // Ay başlığı satırının yerine geçer. Bir başlık öğesi (h2 gibi) kullanmaya devam edin: ekran okuyucular ayın adını ondan okur.
+      // Ay başlığı satırının yerine geçer. Ekran okuyucu kullananlar aylar arasında
+      // başlıklarla atlayabilsin diye bir başlık öğesi kullanın (ayın kendisi aria-label ile adlandırılır).
       renderMonthHeader={({ title, index }) => (
         <h3 className="sl-month-title">
           <span className="sl-index">{index + 1}</span> {title}
         </h3>
       )}
-      // Varsayılan gün düğmesinin içi: burada düğme veya bağlantı olmasın.
+      // Varsayılan gün düğmesinin içi: burada düğme veya bağlantı olmasın. Nokta hafta sonlarını gösterir.
       renderDayContent={({ day }) => (
         <span className="sl-day">
           {day.dayText}
-          {day.weekEnd && <span className="sl-dot" aria-hidden="true" />}
+          {(day.weekday === 0 || day.weekday === 6) && <span className="sl-dot" aria-hidden="true" />}
         </span>
       )}
       getDayTooltip={({ day }) => (day.selectedStart || day.selectedEnd ? day.label : null)}

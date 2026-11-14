@@ -12,16 +12,18 @@
   --cal-accent: #e8590c;
 }
 
-/* 3. Your own properties. Default :where() states (today, hover, skeleton)
-      have low specificity, so a class + attribute beats them. */
+/* 3. Your own properties. The default day button only inherits its text
+      colour, so a class + attribute is enough here. On selected, disabled
+      and unavailable days the default colours (see 4) are more specific and
+      still win. */
 .booking-day[data-mod-weekend] {
   color: #1971c2;
 }
 
 /* 4. The default disabled / unavailable / selected colours use
-      `.cal-day[data-…] .cal-day-button` (three classes). To change those
-      properties, either set the variable (--cal-muted, --cal-accent-contrast)
-      or match the specificity with a parent selector: */
+      `.cal-day[data-…] .cal-day-button` (two classes + an attribute, 0,3,0).
+      To change those properties, either set the variable (--cal-muted,
+      --cal-accent-contrast) or add a parent class to beat it (0,4,0): */
 .booking .booking-cell[data-unavailable] .booking-day {
   color: #adb5bd;
 }

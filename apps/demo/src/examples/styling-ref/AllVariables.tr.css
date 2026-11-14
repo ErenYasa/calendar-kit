@@ -6,7 +6,7 @@
   --cal-color: #3b1f5c; /* gün sayıları, başlıklar */
   --cal-muted: #e599f7; /* hafta günü adları, geçmiş/müsait olmayan günler */
   --cal-bg: #fff9db; /* takvim arka planı, odak halkasının içindeki boşluk */
-  --cal-accent: #0b7285; /* seçim daireleri, önizleme bitişinin dış çizgisi, rozetler */
+  --cal-accent: #0b7285; /* seçim daireleri, önizleme bitişinin dış çizgisi, badge’ler */
   --cal-accent-contrast: #fff3bf; /* seçim dairesindeki sayı */
   --cal-range: #99e9f2; /* aralık bandı, gezinme düğmesi hover’ı, footer çizgisi */
   --cal-preview: #ffd8a8; /* bitiş seçilirken önizleme bandı */

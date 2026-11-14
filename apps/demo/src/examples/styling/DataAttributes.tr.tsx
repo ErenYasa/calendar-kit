@@ -3,6 +3,7 @@ import './DataAttributes.tr.css';
 
 // Günün durumu data-* nitelikleriyle sunulur (data-selected, data-in-range,
 // data-disabled, …). `modifiers` kendi durumlarınızı ekler: `holiday` → data-mod-holiday.
+// Her ayda en az bir tane görünsün diye her ayın 15’i de burada tatil sayılır.
 const holidays = new Set(['01-01', '05-01', '10-29', '12-25']);
 const modifiers = { holiday: (day: DayState) => holidays.has(day.date.slice(5)) || day.dayOfMonth === 15 };
 

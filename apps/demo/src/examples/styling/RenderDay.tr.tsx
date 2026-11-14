@@ -5,8 +5,9 @@ import './RenderDay.tr.css';
 // renderDay: öğeyi siz render edersiniz; getDayProps takvimin ref’ini,
 // tabIndex’ini, ARIA niteliklerini, data-* durumunu ve işleyicilerini sizin
 // prop’larınızla birleştirir. Varsayılan `cal-day-button` sınıfı korunur; bu
-// yüzden varsayılan daire, aralık bandı, odak halkası ve devre dışı görünümü
-// yine uygulanır, sizin içeriğiniz bunların üzerine çizilir.
+// yüzden varsayılan daire, odak halkası ve devre dışı görünümü yine uygulanır
+// (aralık bandını çevredeki hücre çizmeye devam eder); sizin içeriğiniz
+// bunların üzerine çizilir. "hf sonu" etiketi cumartesi ve pazarı işaretler.
 // Sizin işleyicileriniz önce çalışır; takviminkini atlamak için event.preventDefault() çağırın.
 export default function RenderDay() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
@@ -20,7 +21,7 @@ export default function RenderDay() {
       renderDay={({ day, getDayProps }) => (
         <button {...getDayProps({ className: 'rd-day' })}>
           <span>{day.dayText}</span>
-          {day.weekEnd && !day.past && <span className="rd-tag">hf sonu</span>}
+          {(day.weekday === 0 || day.weekday === 6) && !day.past && <span className="rd-tag">hf sonu</span>}
         </button>
       )}
     />
