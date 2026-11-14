@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Calendar, type CalendarDate, type DateRange, stayRules } from 'calendar-kit';
 
 // Check-in on Fridays or Saturdays, check-out on Sundays or Mondays.
-// One specific day only allows departures (`check-out-only`).
+// The 15th of every month only allows departures (`check-out-only`): it can
+// end a stay but not start one. Hover a disabled day to read why.
 const rules = stayRules({
   disablePast: true,
   checkInWeekdays: [5, 6],

@@ -16,8 +16,14 @@ export default function Synced() {
 
   return (
     <div className="synced">
-      <Calendar mode="range" {...shared} aria-label="Takvim A" />
-      <Calendar mode="range" {...shared} numberOfMonths={2} orientation="vertical" aria-label="Takvim B" />
+      <div>
+        <p className="synced-label">Takvim A</p>
+        <Calendar mode="range" {...shared} aria-label="Takvim A" />
+      </div>
+      <div>
+        <p className="synced-label">Takvim B · numberOfMonths=&#123;2&#125; orientation="vertical"</p>
+        <Calendar mode="range" {...shared} numberOfMonths={2} orientation="vertical" aria-label="Takvim B" />
+      </div>
     </div>
   );
 }

@@ -7,6 +7,10 @@ import './LoadingIndicator.css';
 // varsayılan boş yer tutuculara ek olarak görünür bir gösterge ekler:
 // verisi yüklenen bir ay için "month" kapsamı, sürekli modda yeni eklenen aylar
 // için "load-more", takvim genelindeki `loading` prop’u için "initial".
+// Burada yalnızca "month" gösterilir: verisi yüklenen her ayın altında yükleme
+// metnini ve ayı görmek için ileri düğmesine basın. Bugünden itibaren altıncı ay
+// bir kez başarısız olur; böylece varsayılan hata görünümü ve yeniden deneme
+// düğmesi de görülebilir.
 export default function LoadingIndicator() {
   const [failMonth] = useState(() => addMonthsToMonth(getMonth(getToday()), 6));
   const { getDataStatus, ensure, retry } = useAvailability({ failMonth });

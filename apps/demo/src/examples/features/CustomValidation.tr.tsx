@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Calendar, type DateRange, type SelectionRules, eachDay, getWeekday } from 'calendar-kit';
 
-// Paketin bilmediği bir kural: bir aralık en fazla bir hafta sonu içerebilir.
-// `validateSelection` önerilen her seçim için çalışır; bir sorun döndürmek
-// seçimi reddeder: seçim değişmez; takvim sorunun `message` metnini ekran
-// okuyucuya bildirir ve tooltip’te gösterir.
+// Paketin bilmediği bir kural: bir aralık en fazla bir hafta sonu içerebilir
+// (burada: en fazla bir cumartesi). `validateSelection` önerilen her seçim için
+// çalışır; bir sorun döndürmek seçimi reddeder. Bir başlangıç seçin, sonra bir
+// sonraki hafta sonundan sonraki günlere bakın: devre dışıdırlar, tooltip’leri
+// `message` metnini gösterir ve birine tıklamak seçimi değiştirmez (ekran
+// okuyucu mesajı bildirir).
 const rules: SelectionRules = {
   disablePast: true,
   validateSelection: (selection) => {

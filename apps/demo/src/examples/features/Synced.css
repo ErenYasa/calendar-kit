@@ -4,3 +4,7 @@
   align-items: start;
   gap: 24px;
 }
+.synced-label {
+  margin: 0 0 8px;
+  font-weight: 600;
+}

@@ -6,7 +6,7 @@ import './Popover.css';
 const GAP = 8;
 const MARGIN = 8;
 
-// Portal ile document.body içine render edilen bir açılır pencere (popover).
+// Portal ile document.body içine render edilen bir popover.
 // Portal yalnızca DOM’u taşır; konumlandırma uygulamanın işidir (takvim yalnızca
 // kendi tooltip’ini konumlandırır). Burada konum, kaydırmada (herhangi bir
 // kaydırma kabında) ve yeniden boyutlandırmada tetikleyiciyi izler, yukarıda daha
@@ -15,7 +15,7 @@ const MARGIN = 8;
 // ve bir seçim onu kapatır; odak ardından tetikleyiciye döner. Kapatma onChange’de
 // değil onSelectionComplete’te yapılır: zaten seçili tarihi yeniden seçmek hiçbir
 // şeyi değiştirmez (onChange çağrılmaz) ama seçimi yine de tamamlar, bu yüzden
-// açılır pencereyi de kapatır.
+// popover’ı da kapatır.
 export default function Popover() {
   const trigger = useRef<HTMLButtonElement>(null);
   const popover = useRef<HTMLDivElement>(null);

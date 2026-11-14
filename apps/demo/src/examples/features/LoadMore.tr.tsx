@@ -3,7 +3,7 @@ import { Calendar, addDays, addMonthsToMonth, getMonth, getToday } from 'calenda
 
 // `loadMoreLabels` yalnızca varsayılan düğmelerin içeriğini değiştirir; davranışları
 // ve erişilebilirlikleri aynı kalır. Liste, içinde bulunulan aydan iki ay sonra
-// başlar (örnek mount edildiğinde bir kez hesaplanır: ocakta açılırsa mart,
+// başlar (örnek ilk render edildiğinde bir kez hesaplanır: ocakta açılırsa mart,
 // kasımda açılırsa sonraki ocak gösterilir); böylece her iki yönde de yükleme
 // yapılabilir: geriye bugüne kadar, ileriye bir yıl sonrasına kadar.
 export default function LoadMore() {

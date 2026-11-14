@@ -4,7 +4,9 @@ import './Slots.css';
 
 const rules = stayRules({ minNights: 1, disablePast: true });
 
-// Header and footer slots receive the calendar's state and its actions.
+// Header and footer slots receive the slot context `ctx`: the calendar's state
+// and its actions. The header reads `ctx.phase` (which end to pick next) and
+// `ctx.visibleMonths`; the footer's Clear button calls `ctx.actions.clear()`.
 export default function Slots() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   return (

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Calendar, type CalendarController, type SelectionRules, addMonthsToMonth, getMonth, getToday } from 'calendar-kit';
 
-// Tarihler, örneğin açıldığı güne göredir (mount sırasında bir kez hesaplanır).
+// Tarihler, örneğin açıldığı güne göredir (ilk render’da bir kez hesaplanır).
 // Müsaitliğin nerede başladığını uygulama bilir (ör. kendi API’sinden); takvim
 // bunu aramaz. Burada "bu ay + 3"ten önceki her şey dolu.
 export default function GoToMonth() {

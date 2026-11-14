@@ -23,7 +23,7 @@ export default function LoadMoreRender() {
         renderLoadMore={({ direction, canLoad, loadMore }) =>
           canLoad ? (
             <button type="button" className="add-month" onClick={loadMore}>
-              {direction === 'previous' ? '← Önceki ayı ekle' : 'Sonraki ayı ekle →'}
+              {direction === 'previous' ? '↑ Önceki ayı ekle' : 'Sonraki ayı ekle ↓'}
             </button>
           ) : (
             <p className="no-more">{direction === 'previous' ? 'Daha önceki tarih yok' : 'Daha sonraki tarih yok'}</p>

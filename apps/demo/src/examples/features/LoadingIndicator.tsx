@@ -7,6 +7,9 @@ import './LoadingIndicator.css';
 // placeholders shown while dates load:
 // scope "month" for a month whose data is loading, "load-more" for months just
 // added in continuous mode, "initial" for the calendar-wide `loading` prop.
+// Here only "month" is shown: press next to see "Loading…" with the month under
+// each month that is loading. The sixth month from now fails once, so the
+// default error and its retry button can be seen too.
 export default function LoadingIndicator() {
   const [failMonth] = useState(() => addMonthsToMonth(getMonth(getToday()), 6));
   const { getDataStatus, ensure, retry } = useAvailability({ failMonth });

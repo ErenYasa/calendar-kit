@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Calendar, type CalendarDate, type DateRange, stayRules } from 'calendar-kit';
 
 // Giriş cuma veya cumartesi, çıkış pazar veya pazartesi.
-// Belirli bir gün yalnızca çıkışa izin verir (`check-out-only`).
+// Her ayın 15’i yalnızca çıkışa izin verir (`check-out-only`): konaklamayı
+// bitirebilir ama başlatamaz. Sebebi görmek için devre dışı bir günün üzerine gelin.
 const rules = stayRules({
   disablePast: true,
   checkInWeekdays: [5, 6],

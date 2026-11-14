@@ -8,7 +8,7 @@ const GAP = 8;
 const MARGIN = 8;
 
 // Üç takvim, tek seçim: sayfa içinde, modal bir <dialog> içinde ve portal ile
-// document.body içine taşınan bir açılır pencerede (popover). Gizli bir depo
+// document.body içine taşınan bir popover’da. Gizli bir depo
 // (store) yoktur; üçü de aynı prop’ları alır. `activeEndpoint` da paylaşılır;
 // böylece bir takvimde seçilen başlangıç diğerinde tamamlanabilir. Görünen ay,
 // odak ve tooltip her takvime özeldir.
@@ -22,7 +22,7 @@ export default function SyncedEverywhere() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [dialogContent, setDialogContent] = useState<HTMLDivElement | null>(null);
 
-  // Açılır pencere: konumlandırma uygulamanın işidir (Popover örneğiyle aynı yaklaşım).
+  // Popover: konumlandırma uygulamanın işidir (Popover örneğiyle aynı yaklaşım).
   const trigger = useRef<HTMLButtonElement>(null);
   const popover = useRef<HTMLDivElement>(null);
   const popoverCalendar = useRef<CalendarController>(null);
@@ -86,7 +86,7 @@ export default function SyncedEverywhere() {
           Diyalogda düzenle
         </button>
         <button ref={trigger} type="button" aria-expanded={open} aria-haspopup="dialog" onClick={() => (open ? closePopover() : setOpen(true))}>
-          Açılır pencerede düzenle
+          Popover’da düzenle
         </button>
       </div>
 
@@ -112,7 +112,7 @@ export default function SyncedEverywhere() {
               ref={popoverCalendar}
               mode="range"
               {...shared}
-              aria-label="Açılır pencerede"
+              aria-label="Popover’da"
               onOutsideClick={(e) => !trigger.current?.contains(e.nativeEvent.target as Node) && closePopover()}
               onReady={() => popoverCalendar.current?.focusDate(range.start ?? today)}
             />

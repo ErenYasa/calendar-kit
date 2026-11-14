@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Calendar, type DateRange, type SelectionRules, eachDay, getWeekday } from 'calendar-kit';
 
-// A rule the package does not know: a range may contain at most one weekend.
-// `validateSelection` runs for every proposed selection; returning an issue
-// rejects it: the selection does not change, and its `message` is read to
-// screen readers and shown in the tooltip.
+// A rule the package does not know: a range may contain at most one weekend
+// (here: at most one Saturday). `validateSelection` runs for every proposed
+// selection; returning an issue rejects it. Pick a start, then look at the
+// days after the next weekend: they are disabled, their tooltip shows the
+// `message`, and clicking one leaves the selection unchanged (screen readers
+// hear the message).
 const rules: SelectionRules = {
   disablePast: true,
   validateSelection: (selection) => {

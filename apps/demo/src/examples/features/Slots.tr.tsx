@@ -4,7 +4,9 @@ import './Slots.css';
 
 const rules = stayRules({ minNights: 1, disablePast: true });
 
-// Üst bilgi (header) ve alt bilgi (footer) slotları takvimin durumunu ve eylemlerini alır.
+// Üst bilgi (header) ve alt bilgi (footer) slotları slot bağlamını (`ctx`) alır:
+// takvimin durumu ve eylemleri. Üst bilgi `ctx.phase`’i (sırada hangi uç seçilecek)
+// ve `ctx.visibleMonths`’u okur; alt bilgideki Temizle düğmesi `ctx.actions.clear()`’ı çağırır.
 export default function Slots() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   return (

@@ -16,8 +16,14 @@ export default function Synced() {
 
   return (
     <div className="synced">
-      <Calendar mode="range" {...shared} aria-label="Calendar A" />
-      <Calendar mode="range" {...shared} numberOfMonths={2} orientation="vertical" aria-label="Calendar B" />
+      <div>
+        <p className="synced-label">Calendar A</p>
+        <Calendar mode="range" {...shared} aria-label="Calendar A" />
+      </div>
+      <div>
+        <p className="synced-label">Calendar B · numberOfMonths=&#123;2&#125; orientation="vertical"</p>
+        <Calendar mode="range" {...shared} numberOfMonths={2} orientation="vertical" aria-label="Calendar B" />
+      </div>
     </div>
   );
 }

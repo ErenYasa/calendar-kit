@@ -3,40 +3,69 @@ import { Note, Page, PropsTable, Section } from '../ui';
 
 export function SelectionModes() {
   return (
-    <Page title="Selection modes" lead="Choose what a click selects with the mode prop. Each mode has its own value type, initial value and onChange signature.">
+    <Page
+      title="Selection modes"
+      lead="The mode prop decides what a click selects: one date, a date range, several separate dates, or nothing at all (read-only). The value and the onChange callback have a different type in each mode."
+    >
       <Section title="Single date">
+        <p>
+          A click selects the date; clicking another date replaces it. The value is a <code>CalendarDate</code>, a date string such as{' '}
+          <code>&apos;2026-11-13&apos;</code>, or <code>null</code> when nothing is selected.
+        </p>
         <Example src="features/ModeSingle" title="Single date" />
       </Section>
       <Section title="Range">
-        <p>The first click sets the start, the second the end. Hovering previews the range; a click before the start begins a new range.</p>
+        <p>
+          The first click sets the start, the second click sets the end. While only the start is chosen, pointing at a later day previews the range up to
+          that day. Clicking a day before the start begins a new range from that day, and once both ends are set the next click also starts a new range.
+          The value is a <code>DateRange</code>: <code>&#123; start, end &#125;</code>, with <code>null</code> for an end that is not chosen yet.
+        </p>
         <Example src="features/ModeRange" title="Date range" />
       </Section>
       <Section title="Multiple dates">
-        <p>Clicks toggle dates. <code>rules.maxSelections</code> limits how many distinct dates can be selected.</p>
-        <Example src="features/ModeMultiple" title="Multiple dates" />
         <p>
-          Weekday rules apply to every picked date in multiple mode: <code>startWeekdays</code> limits which weekdays can be chosen. If you try to select a
-          day that is not allowed, the selection does not change. The calendar tells screen readers why, and also shows the reason in the day&apos;s tooltip.
-          The texts come from <code>messages.reasons</code>.
+          Each click adds the date to the selection; clicking a selected date removes it. The value is an array of dates.{' '}
+          <code>rules.maxSelections</code> sets how many dates can be selected; when the limit is reached, a further date is rejected until the user
+          removes one.
+        </p>
+        <Example src="features/ModeMultiple" title="Up to 5 dates" />
+        <p>
+          Rules that limit which days can start a range also limit which dates can be picked here. For example <code>startWeekdays</code> set to{' '}
+          <code>[2, 4]</code> allows only Tuesdays and Thursdays (0 = Sunday). When the user clicks a day that is not allowed, the selection does not change:
+          a screen reader announces the reason, and the day&apos;s tooltip (the small box that appears when you point at or focus the day) shows it. You can
+          change these texts through <code>messages.reasons</code>.
         </p>
         <p>
-          Exceptions: a day blocked because it is in the past or the future, outside <code>minDate</code>/<code>maxDate</code>, invalid, or still waiting for
-          its data has no default tooltip (the reason is still announced and is part of the day&apos;s label). When you pass <code>getDayTooltip</code>, your
-          content is shown instead of the default tooltip.
+          Some reasons have no tooltip by default because the day already looks unavailable: a day in the past or the future, outside{' '}
+          <code>minDate</code>/<code>maxDate</code>, an invalid date, or a day whose data has not loaded yet. Screen readers still hear the reason in the
+          day&apos;s label. If you pass <code>getDayTooltip</code>, the calendar shows your content instead of any default tooltip.
         </p>
         <Example src="features/SessionDays" title="Tuesday and Thursday sessions" />
       </Section>
       <Section title="Read-only">
-        <p>Shows availability with the same rules and data, but nothing can be selected. A notice explains this above the grid.</p>
+        <p>
+          The calendar shows the same days, rules and data (for example which dates are booked), but clicks select nothing. A notice above the grid tells
+          the user that dates cannot be selected; change or hide it with <code>messages.readOnlyNotice</code>.
+        </p>
         <Example src="features/ModeReadonly" title="Read-only availability" />
       </Section>
-      <Section title="Initial values">
+      <Section title="Value props: controlled or uncontrolled">
+        <p>
+          <strong>Controlled</strong>: your component keeps the selection in state and passes it back, e.g.{' '}
+          <code>value=&#123;range&#125; onChange=&#123;setRange&#125;</code>; the calendar always shows what you pass. <strong>Uncontrolled</strong>: you
+          pass only an initial <code>defaultValue</code>; the calendar keeps the selection itself and still reports every change through{' '}
+          <code>onChange</code>.
+        </p>
         <PropsTable
           rows={[
-            { name: 'value', type: 'CalendarDate | null · DateRange · readonly CalendarDate[]', description: 'Controlled value for the mode.' },
-            { name: 'defaultValue', type: <>same as <code>value</code></>, description: 'Uncontrolled initial value, read once on mount.' },
-            { name: 'onChange', type: '(value, event) => void', description: 'Called for user and controller changes, never for prop changes.' },
-            { name: 'activeEndpoint / defaultActiveEndpoint', type: "'start' | 'end'", description: 'Range only: which end the next click sets.' },
+            {
+              name: 'value',
+              type: 'CalendarDate | null · DateRange · readonly CalendarDate[]',
+              description: 'The selection when you control it. Single mode: a date or null; range mode: a DateRange; multiple mode: an array of dates.',
+            },
+            { name: 'defaultValue', type: <>same as <code>value</code></>, description: 'Initial selection of an uncontrolled calendar; read once when it mounts, later changes are ignored.' },
+            { name: 'onChange', type: '(value, event) => void', description: 'Called when the user or the controller (ref) changes the selection. Not called when you change value yourself.' },
+            { name: 'activeEndpoint / defaultActiveEndpoint', type: "'start' | 'end'", description: 'Range mode only: which end the next click sets. Control it to let several calendars continue the same range.' },
           ]}
         />
       </Section>
@@ -46,41 +75,44 @@ export function SelectionModes() {
 
 export function DateLimits() {
   return (
-    <Page title="Date limits" lead="Limit which days can be picked and how far the calendar can navigate.">
+    <Page title="Date limits" lead="Block days before or after a date, or before or after today, and stop the month arrows at the limits.">
       <Section title="Minimum and maximum date">
         <p>
-          <code>minDate</code> and <code>maxDate</code> disable days outside the limits and stop navigation at the months that contain them.
+          Days before <code>minDate</code> and after <code>maxDate</code> cannot be selected, and the previous/next arrows stop at the months that contain
+          these dates. Both limits are inclusive: <code>minDate</code> itself can be selected. The example allows today and the next 30 days.
         </p>
         <Example src="features/DateLimits" title="Next 30 days" />
       </Section>
       <Section title="Past and future">
         <p>
-          <code>disablePast</code> and <code>disableFuture</code> are relative to today (<code>today</code> prop, or computed in <code>timeZone</code>). Unlike
-          min/max they only restrict selection; they do not limit navigation.
+          <code>disablePast</code> blocks every day before today, <code>disableFuture</code> every day after today. Unlike <code>minDate</code>/
+          <code>maxDate</code> they do not stop the arrows: the user can still browse to any month, but cannot pick the blocked days.
         </p>
         <Example src="features/PastFuture" title="disablePast and disableFuture" />
       </Section>
-      <Section title="disableFuture with the reference month last">
+      <Section title="Picking a past date: disableFuture with this month last">
         <p>
-          For dates in the past, put the current month at the end of the window with <code>monthPosition</code>: the calendar then shows the previous month
-          and this month. <code>disableFuture</code> blocks only the days after today; it never shifts the window by itself.
+          With <code>disableFuture</code> and two months, the calendar would show this month and next month, and every day of next month would be blocked.
+          To show last month and this month instead, put the current month in second place with <code>monthPosition=&#123;2&#125;</code>.{' '}
+          <code>disableFuture</code> only blocks the days after today; it never moves the months shown by itself.
         </p>
-        <Example src="features/DisableFutureWindow" title="Past-only window" />
+        <Example src="features/DisableFutureWindow" title="Last month and this month" />
       </Section>
       <Section title="Today">
         <p>
-          Today comes from the <code>today</code> prop, or is computed in <code>timeZone</code> (default: the browser&apos;s zone) and refreshed after
-          midnight without moving the visible month. It drives <code>disablePast</code>/<code>disableFuture</code>, the marker and the label.{' '}
-          <code>highlightToday=&#123;false&#125;</code> hides the circle and the “Today” tooltip only.
+          Today is marked with a thin circle and a “Today” tooltip. The date comes from the <code>today</code> prop when you pass it; otherwise it is computed
+          in <code>timeZone</code> (default: the browser&apos;s time zone). It updates after midnight without changing the month shown.{' '}
+          <code>disablePast</code>/<code>disableFuture</code> use the same date. <code>highlightToday=&#123;false&#125;</code> removes only the circle and the
+          tooltip; screen readers still hear “today” in the day&apos;s label.
         </p>
-        <Example src="features/TodayMarker" title="Today marker and time zone" />
+        <Example src="features/TodayMarker" title="Today in another time zone, and without the marker" />
       </Section>
       <PropsTable
         rows={[
-          { name: 'minDate / maxDate', type: 'CalendarDate | null', description: 'Inclusive limits; also available as rules.' },
-          { name: 'disablePast / disableFuture', type: 'boolean', default: 'false', description: 'Relative to today.' },
-          { name: 'today', type: 'CalendarDate', description: 'Explicit today (recommended for SSR and tests).' },
-          { name: 'timeZone', type: 'string', description: 'IANA zone used to compute today when today is not given.' },
+          { name: 'minDate / maxDate', type: 'CalendarDate | null', description: 'First and last day that can be selected (both included); the arrows stop at their months. Can also be set inside rules.' },
+          { name: 'disablePast / disableFuture', type: 'boolean', default: 'false', description: 'Blocks the days before / after today; does not limit the arrows.' },
+          { name: 'today', type: 'CalendarDate', description: 'A fixed date to use as today. Recommended for server rendering and tests, so that every run sees the same today.' },
+          { name: 'timeZone', type: 'string', description: 'IANA time zone, e.g. Europe/Istanbul, used to compute today when today is not given. Default: the browser’s time zone.' },
         ]}
       />
     </Page>
@@ -89,32 +121,40 @@ export function DateLimits() {
 
 export function LengthRules() {
   return (
-    <Page title="Length rules" lead="Minimum, maximum and fixed range lengths, measured in nights for stays and in days for day ranges.">
-      <Section title="Minimum and maximum">
+    <Page title="Length rules" lead="Set how short or long a range may be, or give every range the same length. Stays are counted in nights, day ranges in days.">
+      <Section title="Minimum and maximum length">
         <p>
-          While a start is selected, ends that would break the rule are disabled; their reason is part of the day&apos;s accessible label and default
-          tooltip. With <code>requireReachableEnd</code> (on in both adapters) a start is rejected when no valid end can follow it — for example when the next
-          night is booked under a 2-night minimum.
+          Once a start is selected, ends that would make the range too short or too long are disabled, and the day&apos;s label and tooltip say why (for
+          example “Minimum 2 nights”). Both adapters, <code>stayRules</code> and <code>dayRangeRules</code>, also turn on{' '}
+          <code>requireReachableEnd</code>: a start is rejected right away when no valid end can follow it — for example with a 2-night minimum when the next
+          night is already booked. The user is never left with a start that cannot be completed.
         </p>
         <Example src="features/MinMaxLength" title="2 to 7 nights" />
       </Section>
       <Section title="Fixed length">
-        <p>With a fixed length one click creates the whole range.</p>
+        <p>
+          With a fixed length, one click selects the whole range. With <code>fixedDays: 3</code>, a click on a Friday selects Friday, Saturday and Sunday.
+        </p>
         <Example src="features/FixedLength" title="3-day pass" />
       </Section>
       <PropsTable
         caption="Options"
         rows={[
-          { name: 'stayRules({ minNights, maxNights, fixedNights })', type: 'number', description: 'Exclusive ranges, counted in nights.' },
-          { name: 'dayRangeRules({ minDays, maxDays, fixedDays })', type: 'number', description: 'Inclusive ranges, counted in days.' },
-          { name: 'rules.minLength / maxLength / fixedLength', type: 'number', description: 'The same without an adapter; the unit follows rangeSemantics.' },
-          { name: 'relaxSchedule', type: 'boolean | { weekdays?, length? }', default: 'false', description: '“Custom dates”: ignores length and weekday rules while bookings still apply.' },
+          { name: 'stayRules({ minNights, maxNights, fixedNights })', type: 'number', description: 'Overnight stays, counted in nights. The check-out day is not part of the stay (exclusive end): 13 → 20 Nov is 7 nights.' },
+          { name: 'dayRangeRules({ minDays, maxDays, fixedDays })', type: 'number', description: 'Day ranges, counted in days. The last day is included (inclusive end): 13 → 20 Nov is 8 days.' },
+          { name: 'rules.minLength / maxLength / fixedLength', type: 'number', description: 'The same without an adapter; rangeSemantics sets the unit (exclusive: nights, inclusive: days).' },
+          {
+            name: 'relaxSchedule',
+            type: 'boolean | { weekdays?, length? }',
+            default: 'false',
+            description: '“Custom dates”: ignores the length and weekday rules, while bookings, closed days and date limits still apply. Pass { length: false } to keep the length rules, { weekdays: false } to keep the weekday rules.',
+          },
         ]}
       />
       <Note>
         <p>
-          The reachable-end search checks at most 63 end candidates. A start is rejected only when it is proven that no end exists; if the search runs out of
-          candidates first, the start stays selectable and its end is validated as usual.
+          To decide whether a start has a valid end, the calendar tries at most 63 possible end days. It rejects the start only when it has proven that no
+          end works. If it runs out of candidates first, the start stays selectable and the end the user picks is checked as usual.
         </p>
       </Note>
     </Page>
@@ -123,35 +163,39 @@ export function LengthRules() {
 
 export function DayRules() {
   return (
-    <Page title="Start/end days & validation" lead="Control which days can start or end a range, which can be passed through, and add rules of your own.">
+    <Page title="Start/end days & validation" lead="Decide which days can start or end a range and which can lie inside one, and add rules of your own.">
       <Section title="Start and end days">
         <p>
-          Weekday rules (<code>checkInWeekdays</code>, <code>checkOutWeekdays</code>, <code>availableWeekdays</code>) and per-day statuses (
-          <code>check-in-only</code>, <code>check-out-only</code>, <code>booked</code>, <code>closed</code>) decide each day&apos;s <code>canStart</code>,{' '}
-          <code>canEnd</code> and <code>canPassThrough</code>. Without an adapter, return them from <code>rules.getDayAvailability(date, ctx)</code>.
+          Every day has three answers: can a range start here (<code>canStart</code>), end here (<code>canEnd</code>), and pass through it (
+          <code>canPassThrough</code>)? With <code>stayRules</code> you set them through weekday options (<code>checkInWeekdays</code>,{' '}
+          <code>checkOutWeekdays</code>, <code>availableWeekdays</code>) and a status per day (<code>check-in-only</code>, <code>check-out-only</code>,{' '}
+          <code>booked</code>, <code>closed</code>). Without an adapter, return them from <code>rules.getDayAvailability(date, ctx)</code>; <code>ctx</code>{' '}
+          is the rule context: the mode, the current selection, the end being chosen, today, and your own <code>ruleContext</code> value.
         </p>
         <Example src="features/StartEndDays" title="Friday/Saturday check-in" />
       </Section>
       <Section title="Custom validation">
         <p>
-          <code>validateSelection(selection, ctx)</code> runs for every proposed selection (clicks, keyboard and <code>ref.select()</code>). Return an issue with a{' '}
-          <code>message</code> to reject it. Rules can depend on app state through <code>ruleContext</code> (available as <code>ctx.context</code>); a change
-          revalidates.
+          For a rule the package does not know, use <code>validateSelection(selection, ctx)</code>. It runs for every selection the user or your code
+          proposes (clicks, keyboard and <code>ref.select()</code>). Return an issue with a <code>message</code> to reject it: the selection does not change
+          and the message is announced and shown in the tooltip. If the rule depends on your app&apos;s state (for example the number of guests), pass that
+          state as <code>ruleContext</code> and read it as <code>ctx.context</code>; when it changes, the current selection is checked again.
         </p>
         <Example src="features/CustomValidation" title="At most one weekend" />
       </Section>
       <PropsTable
-        caption="DayAvailability (returned per day)"
+        caption="DayAvailability (returned for each day)"
         rows={[
-          { name: 'closed', type: 'boolean', description: 'Nothing possible on this day.' },
-          { name: 'canStart / canEnd / canPassThrough', type: 'boolean', default: '!closed', description: 'Start or single pick / range end / inside a range.' },
-          { name: 'reason', type: 'string', description: 'Your tag (e.g. check-out-only); localised through messages.dayReasons.' },
-          { name: 'message', type: 'string', description: 'Ready-made text for tooltips and announcements.' },
-          { name: 'schedule', type: 'boolean', description: 'The restriction is a schedule rule, ignored by relaxSchedule.' },
+          { name: 'closed', type: 'boolean', description: 'Nothing is possible on this day: no start, no end, no range through it.' },
+          { name: 'canStart / canEnd / canPassThrough', type: 'boolean', default: '!closed', description: 'Can be a start (or a single/multiple pick) / a range end / a day inside a range.' },
+          { name: 'reason', type: 'string', description: 'Your own tag, e.g. check-out-only; its text comes from messages.dayReasons.' },
+          { name: 'message', type: 'string', description: 'A ready-made text for the tooltip and the screen-reader announcement.' },
+          { name: 'schedule', type: 'boolean', description: 'Marks the restriction as a schedule rule, so relaxSchedule ignores it (bookings should not set it).' },
         ]}
       />
       <p>
-        Several rule sets can be combined: <code>rules</code> accepts an array (falsy entries are skipped), or use <code>combineRules(...)</code>.
+        To combine several rule sets, pass an array to <code>rules</code> (entries that are <code>false</code>, <code>null</code> or{' '}
+        <code>undefined</code> are skipped, so <code>cond &amp;&amp; rules</code> works) or use <code>combineRules(...)</code>.
       </p>
     </Page>
   );
@@ -159,41 +203,46 @@ export function DayRules() {
 
 export function Orientation() {
   return (
-    <Page title="Orientation & months" lead="Show one or more months, side by side or stacked, independent of the device.">
+    <Page title="Orientation & months" lead="Show one or more months, side by side or stacked. You choose the orientation; the calendar does not switch it by screen size (what happens when months do not fit is on the Responsive layout page).">
       <Section title="Several months">
+        <p>
+          <code>numberOfMonths</code> sets how many months are shown. In the example <code>stepMonths=&#123;3&#125;</code> makes each arrow click move a
+          whole page of three months.
+        </p>
         <Example src="features/MultipleMonths" title="Three months" />
       </Section>
       <Section title="Vertical">
+        <p>
+          <code>orientation=&quot;vertical&quot;</code> stacks the months. Add <code>maxBlockSize</code> to keep the stack inside a scroll area.
+        </p>
         <Example src="features/Vertical" title="Vertical months" />
       </Section>
       <Section title="Fixed number of week rows">
         <p>
-          A month needs four, five or six week rows, depending on how many days it has and on which weekday it starts. By default each month gets only the
-          rows it needs, so the calendar gets taller or shorter when the user moves to a month with a different number of rows. <code>fixedWeeks</code>{' '}
-          always renders six rows (the unused ones stay empty): the height stays the same from month to month, so the content below the calendar does not
-          jump. It does not change how many months are shown.
+          With <code>fixedWeeks</code> the calendar shows every month with 6 week rows, so its height does not change for months that fit in 5 (or 4). The
+          content below the calendar does not jump when the user changes month. The extra rows stay empty; the number of months shown does not change.
         </p>
         <p>
-          The example shows the same month twice — the first month from now on that fits in five rows, with Monday as the first day of the week — once with{' '}
-          <code>fixedWeeks=&#123;false&#125;</code> and once with <code>fixedWeeks=&#123;true&#125;</code>. Week rows are outlined so the sixth, empty row is
-          visible.
+          Without it, each month gets only the rows it needs: four, five or six, depending on its length and on which weekday it starts. The example shows
+          the same five-row month (the first one from now, with weeks starting on Monday) twice: with <code>fixedWeeks=&#123;false&#125;</code> it has five
+          rows, with <code>fixedWeeks=&#123;true&#125;</code> a sixth, empty row is added. The rows are outlined so you can see it.
         </p>
         <Example src="features/FixedWeeks" title="Five-row month with and without fixedWeeks" />
       </Section>
       <Section title="Paged or continuous navigation">
         <p>
-          <code>navigation=&quot;paged&quot;</code> (default) shows a window of <code>numberOfMonths</code> months; the arrows replace it by{' '}
-          <code>stepMonths</code> months, which suits horizontal layouts. <code>navigation=&quot;continuous&quot;</code> keeps a growing list that the user
-          scrolls, which suits vertical and mobile layouts; see <a href="#/load-more">Progressive months</a> for its controls.
+          <code>navigation=&quot;paged&quot;</code> (default) shows <code>numberOfMonths</code> months at a time; the arrows move this window by{' '}
+          <code>stepMonths</code> months. This suits horizontal layouts. <code>navigation=&quot;continuous&quot;</code> shows a list of months that the user
+          scrolls and that grows on request, which suits vertical and mobile layouts; see <a href="#/load-more">Loading more months</a>.
         </p>
       </Section>
       <PropsTable
         rows={[
-          { name: 'numberOfMonths', type: 'number', default: '1', description: 'Months in the window, in both orientations.' },
-          { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: 'Layout direction.' },
-          { name: 'stepMonths', type: 'number', default: '1', description: 'Months moved by previous/next in paged navigation.' },
-          { name: 'monthGap', type: 'number', default: '32', description: 'Gap between months in px.' },
-          { name: 'fixedWeeks', type: 'boolean', default: 'false', description: 'Always render 6 week rows (constant height).' },
+          { name: 'numberOfMonths', type: 'number', default: '1', description: 'How many months are shown, in both orientations.' },
+          { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: 'Months side by side or stacked.' },
+          { name: 'stepMonths', type: 'number', default: '1', description: 'How many months one arrow click moves (paged navigation).' },
+          { name: 'monthGap', type: 'number', default: '32', description: 'Space between months in px.' },
+          { name: 'fixedWeeks', type: 'boolean', default: 'false', description: 'Every month gets 6 week rows, so the calendar keeps the same height.' },
         ]}
       />
     </Page>
@@ -202,16 +251,17 @@ export function Orientation() {
 
 export function MonthPosition() {
   return (
-    <Page title="Reference month position" lead="Where the reference month appears inside a window of several months.">
+    <Page title="Reference month position" lead="When several months are shown, choose whether the reference month comes first, in the middle or last.">
       <Section title="First or middle position">
         <p>
-          <code>monthPosition</code> (1-based) sets where the reference month sits among the months shown. It does not change the reference month, only its
-          place. With November as the reference month and three months, <code>monthPosition=&#123;1&#125;</code> shows November, December and January;{' '}
+          The reference month is the month the calendar opens on and moves from: the month of the selected date, otherwise the current month, unless you
+          set it with <code>defaultVisibleMonth</code> or <code>visibleMonth</code>. <code>monthPosition</code> (counted from 1) sets where it appears among the months shown; it moves the window, not the reference month. With
+          November as the reference month and three months, <code>monthPosition=&#123;1&#125;</code> shows November, December and January;{' '}
           <code>monthPosition=&#123;2&#125;</code> shows October, November and December.
         </p>
         <p>
-          The example compares both with the same reference month (the current month) and three months. The order is always chronological. When the window
-          would cross <code>minDate</code>/<code>maxDate</code> it shifts inside them.
+          The example shows both with this month as the reference month. The months are always in date order. If the window would reach past{' '}
+          <code>minDate</code>/<code>maxDate</code>, it is shifted to stay inside the limits.
         </p>
         <Example src="features/MonthPosition" title="monthPosition 1 and 2 compared" />
       </Section>
@@ -221,28 +271,32 @@ export function MonthPosition() {
 
 export function Responsive() {
   return (
-    <Page title="Responsive layout" lead="The calendar measures its own container (ResizeObserver), so it works the same in a sidebar, a modal or a full page.">
-      <Section title="Overflow strategies">
+    <Page
+      title="Responsive layout"
+      lead="The calendar measures its own container, not the window, so it adapts the same way in a sidebar, a dialog or a full page."
+    >
+      <Section title="When the months do not fit">
         <p>
-          The minimum month width is <code>7 × minDaySize</code> plus padding. When the requested months do not fit, <code>overflow</code> decides:{' '}
-          <code>wrap</code> (default) moves months to a new row, <code>scroll</code> scrolls them horizontally inside the calendar, <code>reduce-months</code>{' '}
-          shows fewer months. The requested count never changes silently: <code>onLayoutChange</code> reports the effective layout. Selection and focus survive
-          resizing.
+          A month needs at least <code>7 × minDaySize</code> plus padding in width. When the requested months do not fit side by side,{' '}
+          <code>overflow</code> decides what happens: <code>wrap</code> (default) moves months to a new row, <code>scroll</code> keeps them in one row that
+          scrolls horizontally inside the calendar, <code>reduce-months</code> shows fewer months. Your <code>numberOfMonths</code> stays as it is;{' '}
+          <code>onLayoutChange</code> reports what is actually shown. The selection and keyboard focus are kept while the size changes. Drag the corner of
+          the box in the example to resize it.
         </p>
-        <Example src="features/Responsive" title="Container-based layout" />
+        <Example src="features/Responsive" title="Layout follows the container" />
       </Section>
       <Section title="wrap">
-        <p>The default. Nothing is hidden: months that do not fit move to a new row, so the calendar gets taller. Good for pages with vertical room.</p>
+        <p>The default. Nothing is hidden: months that do not fit move to a new row and the calendar gets taller. Good for pages with vertical room.</p>
         <Example src="features/OverflowWrap" title="overflow wrap" />
       </Section>
       <Section title="scroll">
-        <p>Keeps the height of one row; the months area scrolls horizontally inside the calendar. Good for toolbars or fixed-height panels.</p>
+        <p>The calendar keeps the height of one row; the months scroll horizontally inside it. Good for toolbars or panels with a fixed height.</p>
         <Example src="features/OverflowScroll" title="overflow scroll" />
       </Section>
       <Section title="reduce-months">
         <p>
-          Shows fewer months than requested while they do not fit and returns to the requested number when there is room. The reference month stays visible
-          (its position is clamped). Read the effective layout from <code>onLayoutChange</code>.
+          Shows fewer months than requested while they do not fit and goes back to the requested number when there is room. The reference month always stays
+          visible. <code>onLayoutChange</code> tells you how many months are shown, e.g. to display it as text as the example does.
         </p>
         <Example src="features/OverflowReduce" title="overflow reduce-months" />
       </Section>
@@ -252,12 +306,13 @@ export function Responsive() {
 
 export function DaySize() {
   return (
-    <Page title="Day size & inner scroll" lead="Keep touch targets large; let the months area scroll instead of the page.">
+    <Page title="Day size & inner scroll" lead="Keep days large enough to tap; when space runs out, the months scroll inside the calendar instead of the page.">
       <Section title="Minimum day size">
         <p>
-          <code>minDaySize</code> (default 40 px) is the smallest interactive day; <code>maxDaySize</code> (default 56) caps the cell height. If even one month
-          does not fit, the months area scrolls horizontally inside the calendar — the page never overflows and the scrollbar is not hidden. Header and footer
-          slots stay outside the scroll area. <code>maxBlockSize</code> adds vertical scrolling.
+          <code>minDaySize</code> (default 40 px) is the smallest size of a day button; <code>maxDaySize</code> (default 56) is the largest height of a day
+          cell. When not even one month fits at the minimum size, the months scroll horizontally inside the calendar: the page itself never gets a
+          horizontal scrollbar, and the calendar&apos;s scrollbar stays visible. Header and footer slots stay outside this scroll area.{' '}
+          <code>maxBlockSize</code> limits the height of the months area and makes it scroll vertically.
         </p>
         <Example src="features/DaySize" title="48 px days in a narrow box" />
       </Section>
@@ -267,75 +322,89 @@ export function DaySize() {
 
 export function LoadMore() {
   return (
-    <Page title="Progressive months" lead="Continuous navigation renders a growing list of months instead of pages; months are added before or after on request.">
+    <Page
+      title="Loading more months"
+      lead="With continuous navigation the calendar shows a scrolling list of months instead of pages, and adds months before or after the list when asked."
+    >
       <Section title="How continuous navigation works">
         <p>
-          With <code>navigation=&quot;continuous&quot;</code> the calendar first renders <code>numberOfMonths</code> months around the reference month. Each
-          load adds <code>monthsPerLoad</code> months (default: <code>numberOfMonths</code>) at the start or the end of the list, in the directions allowed by{' '}
-          <code>loadDirections</code>, and stops at the months containing <code>minDate</code>/<code>maxDate</code>. Adding earlier months keeps the scroll
-          position, so the dates under the user&apos;s finger do not jump. At most <code>maxRenderedMonths</code> (default 24) stay in the DOM: months are
-          dropped at the far end, never the one holding keyboard focus. Every addition, including months added when keyboard focus moves past the end of
-          the list, calls <code>onLoadMore</code> and <code>onRenderedMonthsChange</code>{' '}
-          (load your data there); it does not change the reference month, so <code>onVisibleMonthChange</code> is not called. Paged navigation (the default)
-          instead replaces the window with previous/next arrows — see <a href="#/orientation">Orientation &amp; months</a>.
+          With <code>navigation=&quot;continuous&quot;</code> the calendar first shows <code>numberOfMonths</code> months, starting at the reference month.
+          Each load adds <code>monthsPerLoad</code> months (default: <code>numberOfMonths</code>) at the start or the end of the list, in the directions
+          allowed by <code>loadDirections</code>, and stops at the months that contain <code>minDate</code>/<code>maxDate</code>. When earlier months are
+          added, the scroll position is kept, so the dates under the user&apos;s finger do not jump.
         </p>
         <p>
-          <code>loadDirections</code> only decides which built-in UI exists: the load-more buttons (or <code>renderLoadMore</code> controls) and the{' '}
-          <code>loadMore=&quot;auto&quot;</code> sentinels, at the ends it names. It does not restrict the controller: <code>ref.loadMore(direction)</code>{' '}
-          (or <code>ctx.actions.loadMore</code>) adds months in either direction whatever <code>loadDirections</code> says, still only in continuous
-          mode and still stopping at <code>minDate</code>/<code>maxDate</code>. Moving keyboard focus past either end of the list extends it too.
+          To keep the page light, at most <code>maxRenderedMonths</code> (default 24) months stay rendered: the months farthest from the last addition are
+          removed, never the one with keyboard focus. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
+          <code>onLoadMore</code> and <code>onRenderedMonthsChange</code> (load your data there). The reference month does not change, so{' '}
+          <code>onVisibleMonthChange</code> is not called. Paged navigation (the default) works differently: the arrows replace the months shown — see{' '}
+          <a href="#/orientation">Orientation &amp; months</a>.
         </p>
         <p>
-          A controlled <code>visibleMonth</code> works here too: changing the prop behaves like <code>goToMonth()</code>. An already rendered month is
-          scrolled to and the loaded months stay; an unrendered month rebuilds the list around it (within <code>maxRenderedMonths</code>, reported by{' '}
-          <code>onRenderedMonthsChange</code> so data loading follows) and is scrolled to once rendered. The jump is instant, focus does not move and no{' '}
-          <code>onVisibleMonthChange</code> is called for your own prop change. Update the prop from <code>onVisibleMonthChange</code>, not from{' '}
-          <code>onVisibleMonthsChange</code>: the visible months follow the user&apos;s scrolling, and writing them back would make the calendar chase the
-          scroll. Details in <a href="#/api-events">Callbacks &amp; events → onVisibleMonthChange</a>.
+          <code>loadDirections</code> only decides at which ends the built-in controls appear: the load-more buttons (or your{' '}
+          <code>renderLoadMore</code> controls) and, with <code>loadMore=&quot;auto&quot;</code>, the invisible markers that load when scrolled into view.
+          It does not limit code: <code>ref.loadMore(direction)</code> (or <code>ctx.actions.loadMore</code> inside a slot) adds months in either direction,
+          still only in continuous mode and still stopping at <code>minDate</code>/<code>maxDate</code>. Moving keyboard focus past either end of the list
+          also adds months.
+        </p>
+        <p>
+          You can also set the month from your state with a controlled <code>visibleMonth</code> (you pass the month and update it yourself). Changing it
+          works like <code>goToMonth()</code>: a month that is already in the list is scrolled to and the list stays; for any other month the list is rebuilt
+          around it (within <code>maxRenderedMonths</code>, reported by <code>onRenderedMonthsChange</code> so your data loading follows) and scrolled to.
+          The jump is instant, focus does not move, and <code>onVisibleMonthChange</code> is not called for your own change. Update your state from{' '}
+          <code>onVisibleMonthChange</code>, not from <code>onVisibleMonthsChange</code>: the visible months change with every scroll, and writing them
+          back would make the calendar chase the user&apos;s scrolling. Details in{' '}
+          <a href="#/api-events">Callbacks &amp; events → onVisibleMonthChange</a>.
         </p>
       </Section>
-      <Section title="Default controls">
-        <p>Use the defaults when the localised “Show earlier dates” / “Show more dates” buttons fit your UI. Both directions are enabled here.</p>
+      <Section title="Default buttons">
+        <p>
+          The calendar adds a “Show earlier dates” button above the list and a “Show more dates” button below it (in the calendar&apos;s language). Use
+          them when they fit your UI. In the example both directions are enabled.
+        </p>
         <Example src="features/LoadMoreDefault" title="Default load-more buttons" />
       </Section>
-      <Section title="Custom content: loadMoreLabels">
+      <Section title="Your own button text: loadMoreLabels">
         <p>
-          <code>loadMoreLabels=&#123;&#123; previous, next &#125;&#125;</code> takes any <code>ReactNode</code> and changes only what is inside the default
-          buttons. Behaviour, focus handling and accessibility stay the package&apos;s; prefer this whenever only the wording or an icon differs. The example
-          starts two months after the current month so that both directions have something to load.
+          <code>loadMoreLabels=&#123;&#123; previous, next &#125;&#125;</code> replaces only what is inside the default buttons; it accepts any{' '}
+          <code>ReactNode</code> (text, an icon, both). Behaviour, focus handling and accessibility stay the package&apos;s, so prefer this when only the
+          wording or an icon differs. The example starts two months after the current month, so both directions have months to load.
         </p>
         <Example src="features/LoadMore" title="loadMoreLabels" />
       </Section>
-      <Section title="A different control: renderLoadMore">
+      <Section title="Your own control: renderLoadMore">
         <p>
-          <code>renderLoadMore(&#123; direction, canLoad, loading, loadMore, label &#125;, ctx)</code> renders your own control in place of each button. Use it
-          when the control must look or behave differently (for example a link). It is called for every direction enabled by{' '}
-          <code>loadDirections</code> (outside them there is no control at all), including at <code>minDate</code>/<code>maxDate</code>: there{' '}
-          <code>canLoad</code> is <code>false</code>, the default button would have been removed, and <code>loadMore()</code> does nothing, so your
-          renderer can show a disabled control or a text such as “No more dates” (or return <code>null</code>). You are responsible for its
-          accessibility; if keyboard focus is inside the control at the moment the boundary is reached, the calendar moves focus to the first newly added
-          day, so the user is not left on a control that no longer loads. The example stops at a <code>maxDate</code> two months ahead so the end state is
-          easy to reach.
+          <code>renderLoadMore(&#123; direction, canLoad, loading, loadMore, label &#125;, ctx)</code> renders your own control in place of each default
+          button, for example a link. <code>ctx</code> is the slot context (selection, visible months, actions, …). It is called for each direction enabled
+          by <code>loadDirections</code> (other ends get no control at all), also once the list has reached <code>minDate</code>/<code>maxDate</code>: there{' '}
+          <code>canLoad</code> is <code>false</code> and <code>loadMore()</code> does nothing, so your control can show a disabled state or a text such as
+          “No more dates” (or return <code>null</code>). The default button would simply disappear there.
+        </p>
+        <p>
+          Accessibility of your control is up to you. One thing the calendar handles: if keyboard focus is in the control when the limit is reached, focus
+          moves to the first newly added day, so the user is not left on a control that no longer does anything. The example stops at a{' '}
+          <code>maxDate</code> two months ahead so the end state is easy to reach.
         </p>
         <Example src="features/LoadMoreRender" title="renderLoadMore" />
       </Section>
       <Section title="Controls outside the list: loadMore=&quot;manual&quot;">
         <p>
-          <code>loadMore=&quot;manual&quot;</code> renders no control in the months area; months are added only when you call{' '}
-          <code>loadMore(&apos;previous&apos; | &apos;next&apos;)</code> on the controller (<code>ref</code> or <code>ctx.actions</code> in a slot). Use it to
-          put the controls in a footer, a toolbar or a sticky bar. <code>loadMore=&quot;auto&quot;</code> loads when the end of the list scrolls into view.
+          <code>loadMore=&quot;manual&quot;</code> shows no control in the months area; months are added only when you call{' '}
+          <code>loadMore(&apos;previous&apos; | &apos;next&apos;)</code> on the controller — the <code>ref</code>, or <code>ctx.actions</code> inside a slot.
+          Use it to place the buttons in a footer, a toolbar or a sticky bar. The third option, <code>loadMore=&quot;auto&quot;</code>, loads automatically
+          when the end of the list scrolls into view.
         </p>
-        <Example src="features/LoadMoreManual" title="Manual loading from the footer" />
+        <Example src="features/LoadMoreManual" title="Loading from buttons in the footer" />
       </Section>
       <PropsTable
         rows={[
-          { name: 'navigation', type: "'paged' | 'continuous'", default: "'paged'", description: 'Pages of N months with arrows, or a growing list.' },
-          { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons in the list, automatic near the list end (IntersectionObserver), or only through the controller.' },
-          { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Ends of the list that get built-in controls / auto-load sentinels. ref.loadMore(direction) works in either direction regardless.' },
+          { name: 'navigation', type: "'paged' | 'continuous'", default: "'paged'", description: 'Pages of months changed with arrows, or a growing list.' },
+          { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons at the list ends, automatic loading when an end scrolls into view, or only from your code.' },
+          { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'List ends that get built-in controls or automatic loading. ref.loadMore(direction) works in both directions regardless.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Months added per load.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'DOM bound (never below numberOfMonths); far-end months are dropped.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Most months kept rendered (never fewer than numberOfMonths); the farthest are removed.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Content of the default buttons.' },
-          { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Your own control per direction.' },
+          { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Your own control for each direction.' },
         ]}
       />
     </Page>
@@ -344,11 +413,13 @@ export function LoadMore() {
 
 export function GoToMonth() {
   return (
-    <Page title="Programmatic navigation" lead="Move the view from your own UI through the controller ref, without changing the selection.">
+    <Page title="Changing the month from code" lead="Show a given month from your own UI, for example a “First available date” button, without changing the selection.">
       <Section title="Go to the first available date">
         <p>
-          <code>ref.goToMonth(month, &#123; focus, behavior &#125;)</code> returns <code>&#123; month, clamped &#125;</code>; targets outside min/max are clamped.
-          The calendar does not search for availability: your app knows the first available month and passes it.
+          Get the controller with a <code>ref</code> (a React ref: <code>useRef</code> gives you an object whose methods act on the calendar), then call{' '}
+          <code>ref.goToMonth(month, &#123; focus, behavior &#125;)</code>. It returns <code>&#123; month, clamped &#125;</code>: a month outside{' '}
+          <code>minDate</code>/<code>maxDate</code> is replaced by the nearest allowed month and <code>clamped</code> is <code>true</code>. The calendar does
+          not search for free dates: your app knows the first available month and passes it.
         </p>
         <Example src="features/GoToMonth" title="Go to first available date" />
       </Section>
@@ -362,39 +433,41 @@ export function GoToMonth() {
 
 export function TooltipPage() {
   return (
-    <Page title="Tooltip" lead="Explain days: why a day cannot be picked, a price, or a hint while a range is being chosen.">
+    <Page title="Tooltip" lead="A tooltip is the small box shown next to a day: it can say why a day cannot be picked, show a price, or give a hint while a range is being chosen.">
       <Section title="Day tooltips">
         <p>
-          Return text or <code>&#123; content, persistent &#125;</code> from <code>getDayTooltip(&#123; day, data &#125;)</code>. Tooltips open on hover, keyboard
-          focus and tap; <code>persistent</code> ones show without interaction. By default a day that cannot be picked shows the reason (except for past/future,
-          min/max, invalid and missing-data reasons) and today shows “Today”.
+          Return a text, or <code>&#123; content, persistent &#125;</code>, from <code>getDayTooltip(&#123; day, data &#125;)</code>; return{' '}
+          <code>null</code> for no tooltip. Tooltips open when the user points at the day, focuses it with the keyboard or taps it; a{' '}
+          <code>persistent</code> one is shown without any interaction. Without <code>getDayTooltip</code>, a day that cannot be picked shows the reason
+          (except for past/future days, days outside the limits, invalid dates and days whose data has not loaded) and today shows “Today”.
         </p>
         <Example src="features/Tooltip" title="Reasons and hints" />
       </Section>
-      <Section title="Viewport boundary and placement">
+      <Section title="Where the tooltip may appear">
         <p>
-          With the default <code>boundary=&quot;calendar&quot;</code> a tooltip stays inside its month, below the month header and weekday row, so it never
-          hides navigation. <code>boundary=&quot;viewport&quot;</code> lets it extend beyond the calendar (useful in narrow calendars) while staying in the
-          window. The preferred <code>placement</code> is tried first, then the opposite side, then the remaining sides; the text wraps rather than being cut.
+          With the default <code>boundary=&quot;calendar&quot;</code> the tooltip stays inside the calendar, below the day&apos;s month title and weekday
+          row, so it never covers the navigation. <code>boundary=&quot;viewport&quot;</code> lets it extend beyond the calendar while staying inside the
+          browser window, which helps in narrow calendars. The preferred <code>placement</code> is tried first, then the opposite side, then the two remaining
+          sides; long text wraps instead of being cut.
         </p>
         <Example src="features/TooltipViewport" title="Viewport boundary, placed right" />
       </Section>
       <PropsTable
         caption="tooltip prop"
         rows={[
-          { name: 'placement', type: "'top' | 'bottom' | 'left' | 'right'", default: "'top'", description: 'Preferred side; the opposite side, then right and left are tried when it does not fit.' },
-          { name: 'boundary', type: "'calendar' | 'viewport'", default: "'calendar'", description: 'calendar: stays in the month below its header and weekday row. viewport: may extend beyond the calendar.' },
-          { name: 'offset', type: 'number', default: '8', description: 'Gap to the day in px.' },
-          { name: 'container', type: 'HTMLElement | null', default: 'document.body', description: 'Portal target (e.g. a <dialog>).' },
-          { name: 'openDate', type: 'CalendarDate | null', description: 'Controlled open day.' },
+          { name: 'placement', type: "'top' | 'bottom' | 'left' | 'right'", default: "'top'", description: 'Preferred side; when it does not fit, the opposite side, then the other two sides are tried.' },
+          { name: 'boundary', type: "'calendar' | 'viewport'", default: "'calendar'", description: 'calendar: stays in the calendar, below the month title and weekday row. viewport: may extend beyond the calendar.' },
+          { name: 'offset', type: 'number', default: '8', description: 'Distance from the day in px.' },
+          { name: 'container', type: 'HTMLElement | null', default: 'document.body', description: 'Element the tooltip is rendered into, e.g. an open <dialog>.' },
+          { name: 'openDate', type: 'CalendarDate | null', description: 'Opens the tooltip of this day from your state (controlled); null closes it.' },
           { name: 'className', type: 'string', description: 'Extra class on the tooltip.' },
         ]}
       />
       <ul>
-        <li>The tooltip is portalled with fixed positioning; the root&apos;s tooltip CSS variables and font are copied to it.</li>
-        <li>Escape closes it without moving focus; a tap outside closes a touch tooltip. Text wraps instead of being cut.</li>
-        <li>Empty placeholders shown while dates load never show tooltips. The reason is always in the day&apos;s aria-label as well.</li>
-        <li><code>renderDayTooltip(&#123; day, content, trigger, placement &#125;)</code> replaces the tooltip&apos;s content.</li>
+        <li>The tooltip is rendered into <code>document.body</code> by default, so the calendar&apos;s scroll area never cuts it off; its CSS variables and font are copied from the calendar.</li>
+        <li>Escape closes it without moving focus; tapping elsewhere closes a tooltip opened by a tap.</li>
+        <li>Days drawn as empty placeholders while their dates load show no tooltip. The reason a day cannot be picked is always in its aria-label as well.</li>
+        <li><code>renderDayTooltip(&#123; day, content, trigger, placement &#125;)</code> lets you render the tooltip&apos;s content yourself.</li>
       </ul>
     </Page>
   );
@@ -402,26 +475,27 @@ export function TooltipPage() {
 
 export function DayContent() {
   return (
-    <Page title="Day content" lead="Show your data on days — prices, badges, icons and markers — separately from whether a day can be selected.">
+    <Page title="Labels, badges & icons on days" lead="Show your own data on days — prices, badges, icons and coloured dots — independently of whether a day can be selected.">
       <Section title="Labels, badges, icons and markers">
         <p>
-          When <code>getDayData(date)</code> returns the <code>DefaultDayData</code> shape, the default day content draws it. The package does not compute prices
-          or capacity; format values yourself.
+          Return an object of the <code>DefaultDayData</code> shape from <code>getDayData(date)</code>, and the default day content draws it: a label under
+          the number, a badge, an icon and marker dots. The package does not compute prices or capacity; pass ready-formatted values. Which days can be
+          selected is still decided by the rules.
         </p>
         <Example src="features/DayContent" title="Prices, deals and markers" />
       </Section>
       <PropsTable
         caption="DefaultDayData"
         rows={[
-          { name: 'label', type: 'ReactNode', description: 'Short text under the number (e.g. a price).' },
-          { name: 'badge', type: 'ReactNode', description: 'A small badge.' },
-          { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner (the badge sits in the top end corner); it does not move the number or label.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Dots; each label is announced.' },
-          { name: 'description', type: 'string', description: 'The day’s accessible description (aria-describedby): screen readers read it after the day’s label.' },
+          { name: 'label', type: 'ReactNode', description: 'Short text under the number, e.g. a price.' },
+          { name: 'badge', type: 'ReactNode', description: 'A small badge in the top end corner.' },
+          { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner; it does not move the number or the label.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots; each label is read to screen readers.' },
+          { name: 'description', type: 'string', description: 'Extra text that screen readers read after the day’s label (aria-describedby).' },
         ]}
       />
       <p>
-        For anything else, replace the content (<code>renderDayContent</code>) or the whole day (<code>renderDay</code>) — see{' '}
+        For anything else, replace the day&apos;s content (<code>renderDayContent</code>) or the whole day (<code>renderDay</code>) — see{' '}
         <a href="#/styling">Styling</a>.
       </p>
     </Page>
@@ -430,56 +504,58 @@ export function DayContent() {
 
 export function Loading() {
   return (
-    <Page title="Loading & errors" lead="The calendar never fetches. Your app loads data and tells the calendar what is known.">
+    <Page title="Loading & errors" lead="The calendar never fetches data. Your app loads it and tells the calendar what is loading, loaded or failed.">
       <Section title="Initial load">
         <p>
-          If <code>loading</code> is on when the calendar first opens, empty placeholders shown while dates load replace the dates: the days have no numbers,
-          screen readers get a status message and the calendar sets <code>aria-busy</code>. Whether a day can be picked meanwhile depends on{' '}
+          If <code>loading</code> is on when the calendar first appears, the days are drawn as empty placeholders without numbers, screen readers get a
+          status message, and the calendar sets <code>aria-busy</code>. Whether a day can be picked meanwhile depends on the rule option{' '}
           <code>unknownDataPolicy</code>: with <code>&apos;block&apos;</code> (the default) nothing can be selected — not by pointer, keyboard or{' '}
           <code>ref.select()</code>; with <code>&apos;allow&apos;</code> selection works as usual.
         </p>
         <p>
-          In the example, “Reload (initial load)” remounts the calendar with a new <code>key</code>, so the placeholders appear again for three seconds.
+          In the example, “Reload (initial load)” mounts the calendar again with a new <code>key</code>, so the placeholders appear again for three seconds.
         </p>
-        <Example src="features/InitialLoad" title="Initial load and refresh" />
+        <Example src="features/InitialLoad" title="Initial load and background refresh" />
       </Section>
       <Section title="Background refresh">
         <p>
-          Once the dates have been shown, turning <code>loading</code> on again keeps the current view, selection and focus. The days keep their numbers and
-          only <code>aria-busy</code> is set. A background refresh never blocks selection, whatever the policy. Try “Refresh in background” in the example
-          above.
+          Once the dates have been shown, turning <code>loading</code> on again keeps the months, the selection and focus. The days keep their numbers and
+          stay selectable; only <code>aria-busy</code> is set. Try “Refresh in background” in the example above.
         </p>
       </Section>
       <Section title="Data per month, errors and retry">
         <p>
-          Start requests from <code>onRenderedMonthsChange</code> and return each month&apos;s status from <code>getDataStatus(month)</code>:{' '}
-          <code>unknown</code>, <code>loading</code>, <code>loaded</code> or <code>error</code>. Months whose data is still loading or unknown show the
-          placeholders, and with the default policy their days cannot be selected (<code>unknownDataPolicy: &apos;allow&apos;</code> changes that). An error shows a retry button that calls <code>onRetry(months)</code>.
+          When data is loaded month by month, start the requests from <code>onRenderedMonthsChange</code> (it tells you which months were added) and return
+          each month&apos;s status from <code>getDataStatus(month)</code>: <code>unknown</code>, <code>loading</code>, <code>loaded</code> or{' '}
+          <code>error</code>. Months that are loading or unknown show the placeholders, and with the default policy their days cannot be selected (
+          <code>unknownDataPolicy: &apos;allow&apos;</code> changes that). A month with an error shows a retry button that calls{' '}
+          <code>onRetry(months)</code>. In the example, the month after the two visible ones fails once: press next to see it.
         </p>
-        <Example src="features/MonthData" title="Async availability" />
+        <Example src="features/MonthData" title="Availability loaded per month" />
       </Section>
       <Section title="A visible loading indicator">
         <p>
-          The default loading view is only the placeholders plus a screen-reader status. <code>renderLoading</code> adds your own visible indicator; it is
-          called with <code>scope</code> <code>&apos;month&apos;</code>, <code>&apos;load-more&apos;</code> or <code>&apos;initial&apos;</code>, the affected{' '}
-          <code>months</code> and the localised text.
+          By default, loading is shown only by the placeholders and a status message for screen readers. To show your own spinner or text, use{' '}
+          <code>renderLoading</code>. It receives <code>scope</code> — <code>&apos;month&apos;</code> for a month whose data is loading,{' '}
+          <code>&apos;load-more&apos;</code> for months just added in continuous mode, <code>&apos;initial&apos;</code> for the calendar-wide{' '}
+          <code>loading</code> — plus the affected <code>months</code> and the translated “Loading” text.
         </p>
         <Example src="features/LoadingIndicator" title="renderLoading for months" />
       </Section>
       <PropsTable
         rows={[
-          { name: 'loading', type: 'boolean', description: 'Calendar-wide loading (initial load or background refresh, see above).' },
-          { name: 'getDataStatus', type: '(month) => DataStatus', description: 'Status of each month’s data.' },
-          { name: 'onRetry', type: '(months) => void', description: 'Called by the default error UI.' },
-          { name: 'renderLoading', type: "({ scope: 'initial' | 'month' | 'load-more', months, status }) => ReactNode", description: 'An extra visible indicator (the placeholders stay).' },
-          { name: 'renderError', type: '({ months, retry }) => ReactNode', description: 'Custom error UI.' },
-          { name: 'onLoadingChange', type: '(event) => void', description: 'Transitions only: initial, refreshing, loadingMonths, errorMonths, busy.' },
+          { name: 'loading', type: 'boolean', description: 'Loading for the whole calendar: initial load or background refresh (see above).' },
+          { name: 'getDataStatus', type: '(month) => DataStatus', description: 'Status of each month’s data: unknown, loading, loaded or error.' },
+          { name: 'onRetry', type: '(months) => void', description: 'Called by the default retry button.' },
+          { name: 'renderLoading', type: '({ scope, months, status, messages }, ctx) => ReactNode', description: 'An extra visible indicator; the placeholders stay.' },
+          { name: 'renderError', type: '({ months, retry, messages }, ctx) => ReactNode', description: 'Your own error message and retry control.' },
+          { name: 'onLoadingChange', type: '(event) => void', description: 'Called when the loading state changes (initial, refreshing, loadingMonths, errorMonths, busy).' },
         ]}
       />
       <Note>
         <p>
-          The placeholders&apos; shimmer and the spinner stop when the user prefers reduced motion. Protect against stale responses in your loader: the example aborts
-          requests for months that are no longer rendered.
+          The placeholders&apos; shimmer and the spinner stop when the user has asked the system for reduced motion. Guard against late responses in your
+          loader: the example cancels requests for months that are no longer rendered.
         </p>
       </Note>
     </Page>
@@ -488,43 +564,52 @@ export function Loading() {
 
 export function I18n() {
   return (
-    <Page title="Locales, week start & RTL" lead="Month and weekday names come from Intl; the calendar's own texts come from message packs.">
+    <Page title="Locales, week start & RTL" lead="Month and weekday names come from the browser's Intl API; the calendar's own texts (buttons, reasons, announcements) come from message packs.">
       <Note>
         <p>
-          A calendar&apos;s language comes only from its own <code>locale</code> and <code>messages</code>; the docs language switch does not change it. To
-          change the calendar&apos;s texts or add a language that has no ready pack, see the sections on customizing calendar text and adding your own
-          language pack in <a href="#/api-messages">Messages &amp; formatting</a>.
+          A calendar&apos;s language comes only from its own <code>locale</code> and <code>messages</code> props; the language switch of these docs does not
+          change it. To change single texts or add a language that has no ready pack, see{' '}
+          <a href="#/api-messages">Messages &amp; formatting</a>.
         </p>
       </Note>
       <Section title="Turkish">
+        <p>
+          <code>locale</code> sets the month and weekday names and the first day of the week (Monday for tr-TR); <code>messages</code> translates the
+          calendar&apos;s own texts.
+        </p>
         <Example src="features/LocaleTurkish" title="Turkish locale" />
       </Section>
       <Section title="Arabic, right to left">
         <p>
-          <code>direction</code> defaults from the locale (ar, he, fa, ur, … → rtl). Horizontal arrow keys are mirrored; the order of months stays chronological.
+          <code>direction</code> follows the locale by default (ar, he, fa, ur, … → right to left). The left and right arrow keys are swapped to match;
+          the months stay in date order.
         </p>
         <Example src="features/Rtl" title="Arabic (RTL)" />
       </Section>
       <Section title="Week start">
+        <p>
+          <code>firstDayOfWeek</code> overrides the locale&apos;s first day of the week (0 = Sunday … 6 = Saturday). The example uses en-US, which starts on
+          Sunday, and starts on Monday instead.
+        </p>
         <Example src="features/WeekStart" title="Monday start in en-US" />
       </Section>
       <Section title="Several languages on one page">
         <p>
-          Every instance has its own locale and messages. The French, Spanish, Italian, Dutch, German and Arabic packs are complete, like English and
-          Turkish: every text and rejection reason is translated (see <a href="#/api-messages">Messages &amp; formatting</a>). Override single texts
-          through <code>messages</code> if you need different wording.
+          Every calendar has its own locale and messages; nothing is global. The French, Spanish, Italian, Dutch, German and Arabic packs are complete,
+          like English and Turkish: every text and rejection reason is translated (see <a href="#/api-messages">Messages &amp; formatting</a>). To change
+          single texts, pass them in <code>messages</code>; the rest of the pack stays.
         </p>
         <Example src="features/MoreLocales" title="French, Spanish, Italian and Dutch" />
       </Section>
       <PropsTable
         rows={[
-          { name: 'locale', type: 'string', default: "'en-US'", description: 'BCP 47 locale for Intl formatting.' },
-          { name: 'messages', type: 'Partial<CalendarMessages>', default: 'messagesEn', description: 'Ready packs: messagesEn, messagesTr, messagesDe, messagesFr, messagesEs, messagesIt, messagesNl, messagesAr. Partial overrides are merged.' },
-          { name: 'direction', type: "'ltr' | 'rtl'", default: <>from locale</>, description: 'Layout direction.' },
-          { name: 'firstDayOfWeek', type: '0–6', default: <>from locale</>, description: '0 = Sunday.' },
-          { name: 'weekdayFormat', type: "'narrow' | 'short' | 'long'", default: "'short'", description: 'Weekday header names.' },
-          { name: 'monthTitleFormat', type: 'Intl.DateTimeFormatOptions', description: 'Month title format.' },
-          { name: 'formatMonthTitle / formatWeekday / formatDayLabel', type: 'functions', description: 'Full control over these texts.' },
+          { name: 'locale', type: 'string', default: "'en-US'", description: 'Language and region (BCP 47), e.g. tr-TR; used for names, number formats and the first day of the week.' },
+          { name: 'messages', type: 'Partial<CalendarMessages>', default: 'messagesEn', description: 'Ready packs: messagesEn, messagesTr, messagesDe, messagesFr, messagesEs, messagesIt, messagesNl, messagesAr. Texts you pass replace only those texts.' },
+          { name: 'direction', type: "'ltr' | 'rtl'", default: <>from locale</>, description: 'Left to right or right to left.' },
+          { name: 'firstDayOfWeek', type: '0–6', default: <>from locale</>, description: 'First column of the week; 0 = Sunday.' },
+          { name: 'weekdayFormat', type: "'narrow' | 'short' | 'long'", default: "'short'", description: 'Length of the weekday names in the header.' },
+          { name: 'monthTitleFormat', type: 'Intl.DateTimeFormatOptions', description: 'Format of the month title.' },
+          { name: 'formatMonthTitle / formatWeekday / formatDayLabel', type: 'functions', description: 'Build these texts yourself.' },
         ]}
       />
     </Page>
@@ -533,24 +618,30 @@ export function I18n() {
 
 export function Slots() {
   return (
-    <Page title="Slots & render props" lead="Add your own UI around and inside the calendar; slots receive its state and actions.">
+    <Page title="Slots & render props" lead="Add your own UI above, below and inside the calendar. A slot is a function prop (a render prop) that returns your JSX and receives the calendar's state and actions.">
       <Section title="Header and footer">
         <p>
-          Slots receive a context: <code>selection</code>, <code>phase</code>, <code>validation</code>, <code>activeEndpoint</code>, <code>visibleMonths</code>,{' '}
+          <code>renderHeader</code> and <code>renderFooter</code> receive the slot context <code>ctx</code>: the current <code>selection</code>, its{' '}
+          <code>phase</code> (empty, start selected, complete), <code>validation</code>, <code>activeEndpoint</code>, <code>visibleMonths</code>,{' '}
           <code>renderedMonths</code>, <code>focusedDate</code>, <code>today</code>, <code>layout</code>, <code>messages</code>, <code>locale</code>,{' '}
-          <code>formatDate</code> and <code>actions</code> (the controller).
+          <code>formatDate</code> and <code>actions</code> (the controller: the same methods as the <code>ref</code>). In the example the header reads the
+          phase to ask for check-in or check-out, and the footer&apos;s Clear button calls <code>ctx.actions.clear()</code>.
         </p>
         <Example src="features/Slots" title="Header and footer slots" />
       </Section>
       <Section title="Navigation and month headers">
+        <p>
+          <code>renderNavigation</code> replaces the previous/next arrows (here one bar for all months); <code>renderMonthHeader</code> replaces the title
+          row of each month.
+        </p>
         <Example src="features/CustomNavigation" title="Custom navigation" />
       </Section>
       <PropsTable
         rows={[
-          { name: 'renderHeader / renderFooter', type: '(ctx) => ReactNode', description: 'Above / below the months (outside the scroll area).' },
-          { name: 'renderNavigation', type: '({ canPrevious, canNext, previous, next, months, labels }, ctx)', description: 'Replaces the arrows (paged mode).' },
+          { name: 'renderHeader / renderFooter', type: '(ctx) => ReactNode', description: 'Above / below the months, outside their scroll area.' },
+          { name: 'renderNavigation', type: '({ canPrevious, canNext, previous, next, months, labels }, ctx)', description: 'Replaces the arrows (paged navigation).' },
           { name: 'renderMonthHeader', type: '({ month, title, index, navigation, status }, ctx)', description: 'Replaces a month’s title row.' },
-          { name: 'renderLoading / renderError / renderLoadMore', type: 'functions', description: 'See Loading and Progressive months.' },
+          { name: 'renderLoading / renderError / renderLoadMore', type: 'functions', description: 'See Loading & errors and Loading more months.' },
           { name: 'renderDayTooltip / renderDayContent / renderDay', type: 'functions', description: 'See Tooltip and Styling.' },
         ]}
       />
@@ -560,40 +651,44 @@ export function Slots() {
 
 export function Placement() {
   return (
-    <Page title="Inline, modal & portal" lead="The calendar is always inline content; opening, closing and focus management belong to your app.">
+    <Page
+      title="Inline, in a dialog or a popover"
+      lead="The calendar is always ordinary content on the page. Opening and closing it, and moving focus to it and back, are your app's job."
+    >
       <Section title="Inline">
         <p>
-          Every other example is inline: the calendar is part of the page. It never closes itself. <code>onOutsideClick</code> reports pointer presses outside
-          its React tree (its own portals, like the tooltip, count as inside).
+          Every other example is inline: the calendar is part of the page and never closes itself. If you need to know when the user clicks elsewhere,{' '}
+          <code>onOutsideClick</code> reports pointer presses outside the calendar (its own tooltip counts as inside).
         </p>
       </Section>
-      <Section title="Modal">
+      <Section title="In a dialog">
         <p>
-          A native <code>&lt;dialog&gt;</code> with <code>showModal()</code> traps focus, closes on Escape and returns focus. Because a modal dialog is in the
-          top layer, point the tooltip portal into it with <code>tooltip.container</code>.
+          A native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code> keeps focus inside, closes on Escape and returns focus when it closes.
+          A modal dialog is drawn in the browser&apos;s top layer, above everything else, so a tooltip rendered into the page body would sit behind it:
+          render the tooltip into the dialog with <code>tooltip.container</code>.
         </p>
         <Example src="features/Modal" title="Calendar in a dialog" />
       </Section>
-      <Section title="Popover through a portal">
+      <Section title="In a popover rendered through a portal">
         <p>
-          A portal only moves the calendar&apos;s DOM elsewhere (here into <code>document.body</code>); it does not position anything. Positioning a popover is
-          your app&apos;s responsibility — the calendar positions only its own tooltip. A popover with <code>position: fixed</code> that is placed once stays
-          where it was put while the page scrolls, so it detaches from its trigger and can hang off the screen. The example recomputes the position from the
-          trigger on every scroll (of any scroll container, captured) and resize, coalesced to one update per frame; opens above when there is more room there;
-          keeps the popover inside the viewport horizontally and limits its height to the available room; and closes when the trigger scrolls out of view.
+          A portal only moves the calendar&apos;s HTML elsewhere in the page (here into <code>document.body</code>); it does not position anything.
+          Positioning the popover is your app&apos;s job — the calendar positions only its own tooltip. A popover with <code>position: fixed</code> that is
+          placed once stays where it is while the page scrolls, so it drifts away from its button and can end up off screen. The example therefore
+          recomputes the position from the button on every scroll and resize (at most once per frame), opens above the button when there is more room there,
+          keeps the popover inside the window horizontally, limits its height to the free space, and closes it when the button scrolls out of view.
         </p>
         <p>
-          Closing is also the app&apos;s job: Escape (the calendar consumes Escape only while one of its tooltips is open), an outside click reported by{' '}
-          <code>onOutsideClick</code> (the calendar&apos;s own portals count as inside), a pick in <code>onSelectionComplete</code> (not <code>onChange</code>: re-picking the date that is already selected emits no change, but it still
-          completes the selection), or unmounting with the page. Focus
-          moves into the grid with <code>ref.focusDate()</code> on <code>onReady</code> and returns to the trigger on close with{' '}
-          <code>focus(&#123; preventScroll: true &#125;)</code>. The calendar itself never scrolls the page to focus a day inside a fixed popover.
+          Closing is also your app&apos;s job. Close on Escape (the calendar uses Escape only while one of its tooltips is open), on an outside click
+          reported by <code>onOutsideClick</code>, and after a pick in <code>onSelectionComplete</code>. Use that rather than <code>onChange</code>: picking
+          the date that is already selected changes nothing, so <code>onChange</code> is not called, but the selection is still complete. For focus, call{' '}
+          <code>ref.focusDate()</code> in <code>onReady</code> to move it into the grid, and on close return it to the button with{' '}
+          <code>focus(&#123; preventScroll: true &#125;)</code>. The calendar never scrolls the page to focus a day inside a fixed popover.
         </p>
         <Example src="features/Popover" title="Popover" />
         <Note>
           <p>
-            Need collision handling for many components? A positioning library (for example Floating UI) does the same job; the calendar works inside any
-            positioned container.
+            Need this for many components? A positioning library (for example Floating UI) does the same job; the calendar works inside any positioned
+            container.
           </p>
         </Note>
       </Section>
@@ -603,89 +698,98 @@ export function Placement() {
 
 export function Synced() {
   return (
-    <Page title="Synced calendars" lead="Several calendars can show and edit the same selection. There is no hidden store: share state through props.">
+    <Page title="Synced calendars" lead="Several calendars can show and edit the same selection. There is no hidden shared store: pass them the same state through props.">
       <Section title="Shared value and endpoint">
         <p>
-          Calendars A and B receive the same <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code> and <code>onActiveEndpointChange</code>, so
-          a start picked in A can be finished in B. B also has <code>numberOfMonths=&#123;2&#125;</code> and <code>orientation=&quot;vertical&quot;</code>:
-          its two months are stacked inside B. <code>orientation</code> only sets how a calendar lays out its own months; it does not change where A and B
-          sit on the page — that is your layout (here a CSS grid).
+          Calendars A and B receive the same <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code> and <code>onActiveEndpointChange</code>,
+          so a start picked in A can be finished in B. B also has <code>numberOfMonths=&#123;2&#125;</code> and{' '}
+          <code>orientation=&quot;vertical&quot;</code>: its two months are stacked inside B. <code>orientation</code> only arranges a calendar&apos;s own
+          months; where A and B sit on the page is up to your layout (here a CSS grid).
         </p>
         <Example src="features/Synced" title="Two calendars, one selection" />
       </Section>
       <Section title="Inline and in a dialog">
         <p>
-          A calendar in a dialog is just another instance: give it the same state. It shows the current value when it mounts and its changes appear inline
-          immediately. Its tooltip portal points into the dialog (top layer).
+          A calendar in a dialog is just another calendar: give it the same state. It shows the current value when it opens, and its changes appear in the
+          inline calendar at once. Its tooltip is rendered into the dialog (top layer).
         </p>
         <Example src="features/SyncedDialog" title="Inline and dialog in sync" />
       </Section>
-      <Section title="Inline, modal and portal">
+      <Section title="Inline, in a dialog and in a popover">
         <p>
-          The same idea works wherever a calendar is rendered. Here one range is edited by three calendars: inline in the page, inside a modal{' '}
-          <code>&lt;dialog&gt;</code> and in a popover rendered with <code>createPortal</code> into <code>document.body</code>. There is no hidden store:
-          all three receive the same <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code>, <code>onActiveEndpointChange</code> and{' '}
-          <code>rules</code>. Pick a start inline and finish it in the dialog; the popover then opens on the full range.
+          The same works wherever a calendar is rendered. Here one range is edited by three calendars: inline in the page, inside a modal{' '}
+          <code>&lt;dialog&gt;</code>, and in a popover rendered with <code>createPortal</code> into <code>document.body</code>. All three receive the same{' '}
+          <code>value</code>, <code>onChange</code>, <code>activeEndpoint</code>, <code>onActiveEndpointChange</code> and <code>rules</code>. Pick a start
+          inline and finish it in the dialog; the popover then opens on the full range.
         </p>
         <ul>
           <li>
-            <strong>Shared</strong> (because you pass it): the selection, the endpoint to fill next and the rules.
+            <strong>Shared</strong> (because you pass it): the selection, the end to set next, and the rules.
           </li>
           <li>
             <strong>Per calendar</strong>: the visible month, keyboard focus, hover and the tooltip. Each calendar keeps its own unless you control them.
           </li>
           <li>
-            The dialog is in the top layer, so its calendar gets <code>tooltip={'{{ container: dialogContentElement }}'}</code>; a tooltip portaled into{' '}
+            The dialog is in the top layer, so its calendar gets <code>tooltip={'{{ container: dialogContentElement }}'}</code>; a tooltip rendered into{' '}
             <code>document.body</code> would sit behind the dialog.
           </li>
           <li>
-            The portal only moves the DOM. Positioning the popover (following the trigger, flipping, staying in the viewport) and closing it are the
-            app&apos;s job; see <a href="#/placement">Placement</a>.
+            The portal only moves the HTML. Positioning the popover (following the button, flipping, staying in the window) and closing it are the
+            app&apos;s job; see <a href="#/placement">Inline, in a dialog or a popover</a>.
           </li>
-          <li>A calendar mounted later shows the current value, and closing or unmounting one does not reset the others.</li>
+          <li>A calendar opened later shows the current value, and closing or unmounting one does not reset the others.</li>
         </ul>
-        <Example src="features/SyncedEverywhere" title="Inline, modal and portal in sync" />
+        <Example src="features/SyncedEverywhere" title="Inline, dialog and popover in sync" />
       </Section>
       <PropsTable
         caption="What is shared"
         rows={[
           { name: <>Selection</>, type: 'value', description: 'Shared when you pass the same value.' },
-          { name: <>Rules and availability</>, type: 'rules', description: 'Shared when built from the same source.' },
-          { name: <>Visible month</>, type: 'visibleMonth', description: 'Per calendar unless you control it.' },
-          { name: <>Active endpoint</>, type: 'activeEndpoint', description: 'Shared when controlled; otherwise derived from the value (still consistent).' },
+          { name: <>Rules and availability</>, type: 'rules', description: 'Shared when built from the same data.' },
+          { name: <>Visible month</>, type: 'visibleMonth', description: 'Per calendar, unless you control it.' },
+          { name: <>End to set next</>, type: 'activeEndpoint', description: 'Shared when you control it; otherwise each calendar derives it from the value, which gives the same result.' },
           { name: <>Focus, hover, tooltip, rendered months</>, type: '—', description: 'Always per calendar.' },
         ]}
       />
-      <p>A calendar mounted later shows the current value; unmounting one does not reset the others. See also the <a href="#/recipe-three-calendars">three calendars recipe</a>.</p>
+      <p>
+        See also the <a href="#/recipe-three-calendars">Three synced calendars</a> example app.
+      </p>
     </Page>
   );
 }
 
 export function Accessibility() {
   return (
-    <Page title="Keyboard & accessibility" lead="Each month is an ARIA grid with one tab stop; days are buttons with full labels.">
+    <Page title="Keyboard & accessibility" lead="Each month is an ARIA grid and every day is a button with a full spoken label. The whole calendar is a single Tab stop; arrow keys move between days.">
       <Section title="Try it">
+        <p>Press Tab to reach the grid, then use the keys below. Days that cannot be picked can still be focused, so their reason can be read.</p>
         <Example src="features/Keyboard" title="Keyboard navigation" />
       </Section>
       <PropsTable
         caption="Keys"
         rows={[
-          { name: '← → ↑ ↓', type: 'move', description: 'Previous/next day and week. Horizontal arrows are mirrored in RTL.' },
-          { name: 'Home / End', type: 'move', description: 'Start / end of the week.' },
-          { name: 'PageUp / PageDown', type: 'move', description: 'Previous / next month (with Shift: year).' },
-          { name: 'Enter / Space', type: 'select', description: 'Activates the focused day.' },
-          { name: 'Escape', type: 'dismiss', description: 'Closes an open tooltip without moving focus (only consumed when one is open).' },
+          { name: '← → ↑ ↓', type: 'move', description: 'Previous/next day and week. Left and right are swapped in right-to-left layouts.' },
+          { name: 'Home / End', type: 'move', description: 'First / last day of the week.' },
+          { name: 'PageUp / PageDown', type: 'move', description: 'Same day in the previous / next month (with Shift: year).' },
+          { name: 'Enter / Space', type: 'select', description: 'Selects the focused day, like a click.' },
+          { name: 'Escape', type: 'dismiss', description: 'Closes an open tooltip without moving focus. When no tooltip is open, the key is left to your app (e.g. to close a dialog).' },
         ]}
       />
       <ul>
-        <li>Months are <code>role=&quot;grid&quot;</code>, days <code>gridcell</code> + <code>&lt;button&gt;</code> with a roving <code>tabIndex</code>.</li>
-        <li>Day labels contain the full date, today/start/end/in-range and the reason a day is disabled. Disabled days use <code>aria-disabled</code> and stay focusable.</li>
-        <li>A live region announces selections, rejections and loading.</li>
-        <li>Moving focus outside the visible months navigates; adding or dropping months never loses focus.</li>
-        <li>Modal focus traps and returning focus are the app&apos;s job; the calendar only manages focus inside its grid.</li>
+        <li>
+          Months are <code>role=&quot;grid&quot;</code>; each day is a <code>gridcell</code> containing a <code>&lt;button&gt;</code>. Only one day has{' '}
+          <code>tabIndex</code> 0 at a time (roving tab index), so Tab enters and leaves the calendar in one step.
+        </li>
+        <li>
+          A day&apos;s label contains the full date, whether it is today, the start, the end or selected, and why it cannot be picked. Such days use{' '}
+          <code>aria-disabled</code> and stay focusable.
+        </li>
+        <li>A live region (an invisible area that screen readers read out when it changes) announces selections, rejected picks and loading.</li>
+        <li>Moving focus past the months shown changes the month; adding or removing months never loses focus.</li>
+        <li>Trapping focus in a dialog and returning focus when it closes are the app&apos;s job; the calendar only moves focus inside its own grid.</li>
       </ul>
       <Note>
-        <p>Screen reader behaviour (VoiceOver, NVDA, TalkBack) has not been tested yet; the markup follows the ARIA grid pattern.</p>
+        <p>Behaviour with real screen readers (VoiceOver, NVDA, TalkBack) has not been tested yet; the markup follows the ARIA grid pattern.</p>
       </Note>
     </Page>
   );
