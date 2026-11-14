@@ -420,10 +420,13 @@ await check('D09', 'language switch: English first, EN/TR toggle keeps the page,
     focus: document.activeElement?.getAttribute('lang'),
     pressed: document.querySelector('.docs-lang-button[aria-pressed="true"]')?.textContent,
     nav: document.querySelector('#docs-nav a[href="#/tooltip"]')?.textContent,
+    navGroup: document.querySelector('.docs-nav-title')?.textContent,
+    menu: document.querySelector('.docs-menu-button')?.textContent,
     untranslated: document.querySelectorAll('.docs-untranslated').length,
   }));
   assert(tr.lang === 'tr' && tr.hash === '#/tooltip' && tr.pressed === 'TR' && tr.focus === 'tr', `switch: ${JSON.stringify(tr)}`);
-  assert(tr.title === `${tr.h1} — calendar-kit` && tr.h1 !== 'Tooltip' && tr.nav === tr.h1, `texts: ${JSON.stringify(tr)}`);
+  // ("Tooltip" is the page title in both languages; the UI around it is Turkish.)
+  assert(tr.title === `${tr.h1} — calendar-kit` && tr.nav === tr.h1 && tr.navGroup === 'Başlarken' && tr.menu === 'Menü', `texts: ${JSON.stringify(tr)}`);
   assert(tr.untranslated === 0, 'an example on the Turkish page has no Turkish version');
   // View code shows the Turkish example file.
   await page.click('#ex-features-tooltip .docs-example-bar button');
@@ -486,6 +489,143 @@ await check('D10', 'Turkish: every page renders its examples without errors, no 
   assert(wide.length === 0, `horizontal overflow: ${wide.join(', ')}`);
   assert(headerFits, 'header items overflow');
   return `${ROUTES.length} pages × 2 widths, ${examples} examples`;
+});
+
+// Escape with the focus on a day: an open day tooltip is closed first (focus
+// stays on the day); the next Escape closes the dialog/popover and focus
+// returns to its trigger.
+const tipState = (page) =>
+  page.evaluate(() => {
+    const tip = [...document.querySelectorAll('[role="tooltip"]')].find((t) => t.getClientRects().length && getComputedStyle(t).visibility !== 'hidden');
+    const a = document.activeElement;
+    return {
+      tooltip: tip?.textContent ?? null,
+      day: a?.dataset?.date ?? null,
+      button: a?.tagName === 'BUTTON' && !a.dataset.date ? a.textContent.trim() : null,
+      dialog: [...document.querySelectorAll('dialog')].some((d) => d.open),
+      // The popovers are portaled into <body> as role=dialog elements (not <dialog>).
+      popover: !!document.querySelector('body > [role="dialog"]:not(dialog)'),
+    };
+  });
+async function keyboardToToday(page) {
+  // Programmatic focus is not keyboard focus: step away and back with the arrows.
+  for (let i = 0; i < 6 && !(await tipState(page)).day; i++) await page.keyboard.press('Tab');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowLeft');
+  for (let i = 0; i < 45; i++) {
+    await page.waitForTimeout(60);
+    const s = await tipState(page);
+    if (s.tooltip && s.day) return s;
+    await page.keyboard.press('ArrowRight');
+  }
+  return tipState(page);
+}
+
+await check('D11', 'Escape: closes an open day tooltip first, then the modal/popover; focus returns to the trigger', async (page) => {
+  const out = [];
+  await page.goto(`${base}#/tooltip`);
+  await page.waitForSelector('#ex-features-tooltip .cal-root[data-measured]');
+  await page.focus('#ex-features-tooltip .cal-nav-button');
+  const open0 = await keyboardToToday(page);
+  await page.keyboard.press('Escape');
+  const esc0 = await tipState(page);
+  assert(open0.tooltip && !esc0.tooltip && esc0.day === open0.day, `inline tooltip: ${JSON.stringify({ open0, esc0 })}`);
+  out.push('inline');
+  for (const [route, ex, nth, kind, label] of [
+    ['placement', 'ex-features-modal', 0, 'dialog', 'modal'],
+    ['placement', 'ex-features-popover', 0, 'popover', 'popover'],
+    ['synced', 'ex-features-syncedeverywhere', 0, 'dialog', 'synced modal'],
+    ['synced', 'ex-features-syncedeverywhere', 1, 'popover', 'synced popover'],
+  ]) {
+    await page.goto(`${base}#/${route}`);
+    await page.waitForSelector(`#${ex} .docs-preview`);
+    await page.waitForTimeout(300);
+    const trigger = (await page.$$(`#${ex} .docs-preview button:not([data-date]):not(.cal-nav-button)`))[nth];
+    const triggerText = (await trigger.textContent()).trim();
+    await trigger.click();
+    await page.waitForTimeout(300);
+    const opened = await keyboardToToday(page);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(100);
+    const esc1 = await tipState(page);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(150);
+    const esc2 = await tipState(page);
+    assert(opened.tooltip && opened[kind], `${label}: no tooltip on a focused day: ${JSON.stringify(opened)}`);
+    assert(!esc1.tooltip && esc1[kind] && esc1.day === opened.day, `${label}: first Escape: ${JSON.stringify(esc1)}`);
+    assert(!esc2[kind] && esc2.button === triggerText, `${label}: second Escape: ${JSON.stringify(esc2)}`);
+    // Without an open tooltip, one Escape closes it.
+    await trigger.click();
+    await page.waitForTimeout(300);
+    await keyboardToToday(page);
+    await page.keyboard.press('ArrowRight'); // a day without a tooltip
+    await page.waitForTimeout(100);
+    const noTip = await tipState(page);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(150);
+    const esc = await tipState(page);
+    assert(!noTip.tooltip && !esc[kind] && esc.button === triggerText, `${label}: Escape without tooltip: ${JSON.stringify({ noTip, esc })}`);
+    out.push(label);
+  }
+  return out.join(', ');
+});
+
+await check('D12', 'day badge: full in wide cells, never over the icon, inside its cell at every width; full text in the accessible description and tooltip', async (page) => {
+  await page.goto(`${base}#/day-content`);
+  await page.waitForSelector('#ex-features-daycontent .cal-root[data-measured]');
+  const measure = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('#ex-features-daycontent .cal-day')]
+        .filter((c) => c.querySelector('.cal-day-badge'))
+        .map((cell) => {
+          const cr = cell.getBoundingClientRect();
+          const box = (sel) => {
+            const r = cell.querySelector(sel)?.getBoundingClientRect();
+            return r && [r.left - cr.left, r.right - cr.left, r.top - cr.top, r.bottom - cr.top];
+          };
+          const b = box('.cal-day-badge');
+          const i = box('.cal-day-icon');
+          const el = cell.querySelector('.cal-day-badge');
+          return {
+            date: cell.dataset.date,
+            width: Math.round(cr.width),
+            full: el.scrollWidth <= el.clientWidth,
+            inside: b[0] >= -0.5 && b[1] <= cr.width + 0.5,
+            overIcon: !!i && i[0] < b[1] - 0.5 && b[0] < i[1] - 0.5 && i[2] < b[3] - 0.5 && b[2] < i[3] - 0.5,
+            icon: !!i,
+          };
+        }),
+    );
+  const wide = await measure();
+  assert(wide.length && wide.some((d) => d.icon) && wide.every((d) => d.full && d.inside && !d.overIcon), `wide: ${JSON.stringify(wide)}`);
+  const narrow = [];
+  for (const w of [420, 300]) {
+    await page.$eval('#ex-features-daycontent .docs-preview', (el, px) => (el.style.width = `${px}px`), w);
+    await page.waitForTimeout(400);
+    const n = await measure();
+    assert(n.every((d) => d.inside && !d.overIcon), `${w}px: ${JSON.stringify(n)}`);
+    narrow.push(`${n[0].width}px cells ${n.every((d) => d.full) ? 'full' : 'cut'}`);
+  }
+  // Keyboard: the full badge text is in the day's label and in its tooltip.
+  const date = wide[0].date;
+  await page.focus('#ex-features-daycontent .cal-nav-button');
+  for (let i = 0; i < 4 && !(await page.evaluate(() => document.activeElement?.dataset?.date)); i++) await page.keyboard.press('Tab');
+  for (let i = 0; i < 40; i++) {
+    const cur = await page.evaluate(() => document.activeElement?.dataset?.date);
+    if (cur === date) break;
+    await page.keyboard.press(cur < date ? 'ArrowRight' : 'ArrowLeft');
+  }
+  await page.waitForTimeout(200);
+  const a11y = await page.evaluate(() => ({
+    label: document.activeElement?.getAttribute('aria-label'),
+    description: (document.activeElement?.getAttribute('aria-describedby') ?? '')
+      .split(' ')
+      .map((id) => document.getElementById(id)?.textContent ?? '')
+      .join(' '),
+    tooltip: [...document.querySelectorAll('[role="tooltip"]')].find((t) => t.getClientRects().length && getComputedStyle(t).visibility !== 'hidden')?.textContent ?? null,
+  }));
+  assert(a11y.tooltip && a11y.description.includes(a11y.tooltip), `full text (tooltip and accessible description): ${JSON.stringify(a11y)}`);
+  return `wide ${wide[0].width}px full; ${narrow.join(', ')}; tooltip "${a11y.tooltip}"`;
 });
 
 await check('D06','sidebar: the last item is reachable and clickable at short heights (desktop and mobile)', async (page) => {
