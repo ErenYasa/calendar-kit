@@ -149,7 +149,8 @@ export function ReactNext() {
         <Snippet files={[...nextPage, ...nextLayout]} label="Next.js App Router" />
         <Note>
           <p>
-            If a Server Component renders <code>Calendar</code> imported from <code>calendar-kit</code> (instead of <code>/client</code>), the build fails with{' '}
+            If a Server Component renders <code>Calendar</code> imported from <code>calendar-kit</code> (instead of <code>/client</code>), rendering fails: the
+            calendar uses React hooks, which Server Components cannot run. The exact error depends on the Next.js and React versions; one form is{' '}
             <code>useSyncExternalStore is not a function</code>. The root entry has no <code>&apos;use client&apos;</code> directive on purpose: with it, its helpers
             such as <code>addDays</code> would become client references and could not be called on the server.
           </p>
@@ -160,8 +161,10 @@ export function ReactNext() {
           <li>Importing the package changes no global objects, and rendering does not read <code>window</code> or <code>document</code>, so it runs on a server.</li>
           <li>
             The server does not know the user&apos;s date. Pass <code>today</code> (or a <code>value</code> or <code>defaultVisibleMonth</code>) so the server
-            HTML already shows the right months and React can take it over in the browser without a mismatch (hydration). Without it, the server renders an
-            empty placeholder and the months appear once the page runs in the browser.
+            HTML already shows the right months and React can take it over in the browser (hydration). Without any of them, the server renders an empty
+            placeholder and the months appear once the page runs in the browser. Without <code>today</code>, the today marker and rules that depend on
+            today (such as <code>disablePast</code>) are applied only in the browser. The package&apos;s tests hydrate these cases without a mismatch in
+            React 19 (jsdom); a real Next.js app has not been tested.
           </li>
           <li>The locale defaults (first day of the week, text direction) come from built-in tables, not from the browser, so server and browser agree.</li>
           <li>

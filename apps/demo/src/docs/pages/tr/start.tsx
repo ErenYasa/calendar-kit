@@ -164,8 +164,9 @@ export function ReactNext() {
         <Snippet files={[...nextPage, ...nextLayout]} label="Next.js App Router örneği" />
         <Note>
           <p>
-            Bir Server Component, <code>/client</code> yerine <code>calendar-kit</code>’ten içe aktarılan <code>Calendar</code>’ı render ederse derleme{' '}
-            <code>useSyncExternalStore is not a function</code> hatasıyla başarısız olur. Kök giriş noktasında <code>&apos;use client&apos;</code> yönergesi
+            Bir Server Component, <code>/client</code> yerine <code>calendar-kit</code>’ten içe aktarılan <code>Calendar</code>’ı render ederse render başarısız
+            olur: takvim React hook’ları kullanır ve Server Component’ler bunları çalıştıramaz. Hata metni Next.js ve React sürümüne göre değişir; bir örneği{' '}
+            <code>useSyncExternalStore is not a function</code>. Kök giriş noktasında <code>&apos;use client&apos;</code> yönergesi
             bilerek yoktur: olsaydı <code>addDays</code> gibi yardımcılar istemci referanslarına dönüşür ve sunucuda çağrılamazdı.
           </p>
         </Note>
@@ -178,8 +179,10 @@ export function ReactNext() {
           </li>
           <li>
             Sunucu kullanıcının tarihini bilmez. <code>today</code> (ya da bir <code>value</code> veya <code>defaultVisibleMonth</code>) verin; böylece
-            sunucu HTML’i doğru ayları gösterir ve React onu tarayıcıda uyuşmazlık olmadan devralır (hydration). Verilmezse sunucu boş bir yer tutucu render
-            eder; aylar sayfa tarayıcıda çalışınca görünür.
+            sunucu HTML’i doğru ayları gösterir ve React onu tarayıcıda devralır (hydration). Hiçbiri verilmezse sunucu boş bir yer tutucu render eder; aylar
+            sayfa tarayıcıda çalışınca görünür. <code>today</code> verilmezse bugün işareti ve bugüne bağlı kurallar (<code>disablePast</code> gibi) yalnızca
+            tarayıcıda uygulanır. Paket testleri bu durumları React 19 (jsdom) ile uyuşmazlık olmadan hydrate eder; gerçek bir Next.js uygulamasında
+            denenmedi.
           </li>
           <li>Yerel ayar varsayılanları (haftanın ilk günü, metin yönü) tarayıcıdan değil paketteki tablolardan gelir; bu yüzden sunucu ve tarayıcı aynı sonucu verir.</li>
           <li>
