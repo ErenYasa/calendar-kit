@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Calendar, type CalendarController, type CalendarSnapshot, type DateRange, addDays, addMonthsToMonth, getMonth, getToday } from 'calendar-kit';
 import './Controller.css';
 
-// Takvimin dışındaki düğmeler onu bir ref üzerinden yönetir. Her düğme metodun
+// Takvimin dışındaki düğmeler takvimi bir ref üzerinden yönetir. Her düğme metodun
 // döndürdüğü değeri gösterir; "Anlık durumu oku" getSnapshot() sonucunu gösterir.
 export default function ControllerButtons() {
   const [today] = useState(() => getToday());
@@ -39,10 +39,10 @@ export default function ControllerButtons() {
             type="button"
             onClick={() => call(`goToMonth('${addMonthsToMonth(thisMonth, 3)}', { focus: true })`, (c) => c.goToMonth(addMonthsToMonth(thisMonth, 3), { focus: true }))}
           >
-            3 ay sonrası, odakla
+            3 ay sonrasına git ve odaklan
           </button>
           <button type="button" onClick={() => call(`goToMonth('${addMonthsToMonth(thisMonth, 24)}')`, (c) => c.goToMonth(addMonthsToMonth(thisMonth, 24)))}>
-            2 yıl sonrası (sınıra çekilir)
+            2 yıl sonrasına git (sınıra çekilir)
           </button>
           <button type="button" onClick={() => call(`goToMonth('next spring')`, (c) => c.goToMonth('next spring'))}>
             Geçersiz ay
@@ -57,7 +57,7 @@ export default function ControllerButtons() {
               call(`select(${JSON.stringify(value)})`, (c) => c.select(value));
             }}
           >
-            Yarından itibaren 3 gün
+            Yarın + 3 gün
           </button>
           <button
             type="button"
@@ -66,7 +66,7 @@ export default function ControllerButtons() {
               call(`select(${JSON.stringify(value)})`, (c) => c.select(value));
             }}
           >
-            2 gün önce başlayan (reddedilir)
+            2 gün önce başlayan aralık (reddedilir)
           </button>
           <button type="button" onClick={() => call('clear()', (c) => c.clear())}>
             clear()
@@ -84,7 +84,7 @@ export default function ControllerButtons() {
             Sonraki tıklama bitişi seçer
           </button>
           <button type="button" onClick={() => call(`focusDate('${addDays(today, 10)}')`, (c) => c.focusDate(addDays(today, 10)))}>
-            Bugün + 10’a odaklan
+            Bugün + 10. güne odaklan
           </button>
         </div>
         <div className="controller-row">

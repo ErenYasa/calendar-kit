@@ -2,7 +2,7 @@
    Takvim kökünde ayarlanır (burada `className` üzerinden); bu dosya
    calendar-kit/styles.css’ten sonra yüklenir, bu yüzden özgüllük eşitken bu değerler kazanır. */
 .sr-loud {
-  --cal-font: 'Courier New', monospace; /* tüm metin; araç ipucuna da kopyalanır */
+  --cal-font: 'Courier New', monospace; /* tüm metin; tooltip’e de kopyalanır */
   --cal-color: #3b1f5c; /* gün sayıları, başlıklar */
   --cal-muted: #e599f7; /* hafta günü adları, geçmiş/müsait olmayan günler */
   --cal-bg: #fff9db; /* takvim arka planı, odak halkasının içindeki boşluk */

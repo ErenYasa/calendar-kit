@@ -1,8 +1,8 @@
 import { Calendar } from 'calendar-kit';
 import './unstyled.tr.css';
 
-// unstyled: cal-* sınıfı yok. Tek sınıflar sizin classNames değerlerinizdir;
-// hafta satırlarını yerleştirmek ve günleri boyutlandırmak sizin CSS’inize kalır.
+// unstyled: cal-* sınıfı eklenmez; öğelerde yalnızca sizin classNames değerleriniz olur.
+// Hafta satırlarını yerleştirmek ve günleri boyutlandırmak sizin CSS’inizin işidir.
 export function PlainCalendar() {
   return (
     <Calendar

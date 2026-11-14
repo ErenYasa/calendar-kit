@@ -52,7 +52,7 @@ export const NAV: NavGroup[] = [
     p('day-size', 'Day size & inner scroll', 'Gün boyutu ve iç kaydırma', features('DaySize')),
     p('load-more', 'Progressive months', 'Kademeli ay yükleme', features('LoadMore')),
     p('go-to-month', 'Programmatic navigation', 'Programla gezinme', features('GoToMonth')),
-    p('tooltip', 'Tooltip', 'Araç ipucu', features('TooltipPage')),
+    p('tooltip', 'Tooltip', 'Tooltip', features('TooltipPage')),
     p('day-content', 'Day content', 'Gün içeriği', features('DayContent')),
     p('loading', 'Loading & errors', 'Yükleme ve hatalar', features('Loading')),
     p('i18n', 'Locales, week start & RTL', 'Yerel ayarlar, hafta başı ve RTL', features('I18n')),

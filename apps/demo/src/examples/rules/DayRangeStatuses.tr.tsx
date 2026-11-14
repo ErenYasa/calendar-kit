@@ -4,7 +4,7 @@ import { Calendar, type CalendarDate, type DateRange, type DayRangeStatus, addDa
 const labels: Record<DayRangeStatus, string> = { available: '', closed: 'Kapalı', 'start-only': 'Başlangıç', 'end-only': 'Bitiş' };
 
 // Dahil bitişli aralıklar: seçilen her gün rezervasyona dahildir. "Başlangıç" günleri
-// yalnızca bir aralığı başlatabilir, "Bitiş" günleri yalnızca bitirebilir; ikisi de aralığın içinde olamaz.
+// yalnızca aralığın başlangıcı, "Bitiş" günleri yalnızca bitişi olabilir; ikisi de aralığın içinde kalamaz.
 export default function DayRangeStatuses() {
   const [today] = useState(() => getToday());
   const [range, setRange] = useState<DateRange>({ start: null, end: null });

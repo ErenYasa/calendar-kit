@@ -12,5 +12,5 @@ export const twoNights = check(weekendNights, '2026-11-13', '2026-11-15'); // �
 // Pazar gecesi hâlâ kapalıdır; ne konaklamanın içinde ne de giriş olarak kullanılabilir.
 export const sundayNight = check(weekendNights, '2026-11-13', '2026-11-16'); // → {"code": "blocked-in-range", "date": "2026-11-15", "dayReason": "out-of-schedule"}
 export const noSundayArrival = check(weekendNights, '2026-11-15', '2026-11-16'); // → {"code": "start-not-allowed", "date": "2026-11-15", "dayReason": "out-of-schedule"}
-// Bu bir takvim kuralıdır: relaxRules (relaxSchedule prop’u) onu kaldırır.
+// Bu bir takvim düzeni kuralıdır: relaxRules (relaxSchedule prop’u) onu kaldırır.
 export const relaxed = check(relaxRules(weekendNights), '2026-11-15', '2026-11-16'); // → "valid"

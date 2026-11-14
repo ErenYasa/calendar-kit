@@ -1,4 +1,4 @@
-// Odak, araç ipucu, işaretçi ve kaydırma olayları; analitik için tek giriş
+// Odak, tooltip, işaretçi ve kaydırma olayları; analitik için tek giriş
 // noktası olarak onEvent.
 import { useRef, useState } from 'react';
 import { Calendar, type CalendarDate, type CalendarEvent, formatDate } from 'calendar-kit';
@@ -8,8 +8,8 @@ declare function track(name: string, data?: Record<string, unknown>): void;
 declare function debugLog(...values: unknown[]): void;
 
 // Popover’lı bir tarih alanı. onOutsideClick yalnızca takvimin kendi React
-// ağacını bilir; popover çerçevenize ve açan düğmeye yapılan pointer down’lar
-// "dışarıda" sayılır: bunları kendiniz kontrol edin.
+// ağacını bilir; popover çerçevenize ve popover'ı açan düğmeye yapılan
+// pointer down'lar "dışarıda" sayılır: bunları kendiniz ayıklayın.
 export function DateField() {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<CalendarDate | null>(null);
@@ -44,8 +44,8 @@ export function DateField() {
   );
 }
 
-// Odaklanan günün ayrıntılarını takvimin yanında gösterin; iç kaydırma alanı
-// hareket ettiğinde başlığa gölge ekleyin.
+// Odaklanan günün ayrıntılarını takvimin yanında gösterin; takvimin içi
+// kaydırıldığında başlığa gölge ekleyin.
 export function FocusDetails() {
   const [focused, setFocused] = useState<CalendarDate | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -71,7 +71,7 @@ export function FocusDetails() {
   );
 }
 
-// onEvent: her olay, kendi callback’inden sonra, tek bir ayrımlı birleşim (discriminated union) olarak.
+// onEvent: her olay, kendi callback’inden sonra, tek bir ayrımlı birleşim (discriminated union) olarak gelir.
 const onCalendarEvent = (e: CalendarEvent) => {
   switch (e.type) {
     case 'change':

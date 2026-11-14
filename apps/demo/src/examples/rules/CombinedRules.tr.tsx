@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Calendar, type DateRange, addDays, closedDates, combineRules, countNights, getToday, stayRules } from 'calendar-kit';
 
-// Birbirinden bağımsız üç kural seti, her kuralın geçmesi gereken tek bir sette birleştirilir:
-// - ürün: cuma veya cumartesi giriş, 2–7 gece (takvim kuralları)
-// - bakım: iki kapalı gün (gerçek müsait olmama durumu, closedDates ile)
+// Birbirinden bağımsız üç kural seti tek bir sette birleştirilir; seçim hepsinden geçmelidir:
+// - ürün: cuma veya cumartesi giriş, 2–7 gece (takvim düzeni kuralları)
+// - bakım: iki kapalı gün (gerçek kapalılık, closedDates ile)
 // - satış penceresi: yalnızca sonraki 45 gün rezerve edilebilir
-// "Özel tarihler" her parçanın takvim kurallarını gevşetir; bakım ve satış
+// "Özel tarihler" her parçanın takvim düzeni kurallarını kaldırır; bakım ve satış
 // penceresi yine geçerlidir.
-// Bakım sebebinin metni, takvimin yerel ayarıyla (İngilizce) uyumlu kalsın diye
-// messages içinde İngilizce bırakılmıştır.
+// Bakım sebebinin metni, takvimin yerel ayarıyla (İngilizce) uyumlu olsun diye
+// messages içinde İngilizce bırakıldı.
 export default function CombinedRules() {
   const [today] = useState(() => getToday());
   const [range, setRange] = useState<DateRange>({ start: null, end: null });

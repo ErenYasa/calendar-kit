@@ -6,14 +6,15 @@
   --cal-radius: 8px;
 }
 
-/* 2. Durum: sizin sınıfınız + bir data-* niteliği. Bir durumu, değişkenini
-      hücrede ayarlayarak yeniden renklendirin; düğme ve aralık bandı onu miras alır. */
+/* 2. Durum: sizin sınıfınız + bir data-* niteliği. Bir durumun rengini,
+      değişkenini hücrede ayarlayarak değiştirin; düğme ve aralık bandı onu miras alır. */
 .booking-cell[data-range-end] {
   --cal-accent: #e8590c;
 }
 
 /* 3. Kendi özellikleriniz. Varsayılan :where() durumlarının (bugün, hover,
-      iskelet) özgüllüğü düşüktür; sınıf + nitelik onları yener. */
+      tarihler yüklenirken gösterilen boş yer tutucular) özgüllüğü sıfırdır;
+      sınıf + nitelik onları geçer. */
 .booking-day[data-mod-weekend] {
   color: #1971c2;
 }
@@ -21,7 +22,7 @@
 /* 4. Varsayılan devre dışı / müsait değil / seçili renkleri
       `.cal-day[data-…] .cal-day-button` kullanır (üç sınıf). Bu özellikleri
       değiştirmek için ya değişkeni ayarlayın (--cal-muted, --cal-accent-contrast)
-      ya da bir üst seçiciyle aynı özgüllüğü yakalayın: */
+      ya da bir üst seçici ekleyerek aynı özgüllüğe ulaşın: */
 .booking .booking-cell[data-unavailable] .booking-day {
   color: #adb5bd;
 }

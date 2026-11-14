@@ -10,7 +10,7 @@
 }
 
 /* Varsayılan tema her durumu bir CSS değişkeninden çizer; bu yüzden bir
-   durumu yeniden renklendirmenin en ucuz yolu, durum niteliğini taşıyan
+   durumun rengini değiştirmenin en kolay yolu, durum niteliğini taşıyan
    hücrede o değişkeni ayarlamaktır. Hücrenin çocukları (düğme, aralık bandı) onu miras alır. */
 .sr-cell[data-today] {
   --cal-today: var(--sr-today);
@@ -26,7 +26,7 @@
 .sr-cell[data-band] {
   --cal-range: var(--sr-band);
 }
-/* Yeni bir bitiş önizlenirken bant önizlemeyi gösterir. */
+/* Yeni bir bitiş önizlenirken bant, seçimi değil önizlemeyi gösterir. */
 .sr-cell[data-band-preview] {
   --cal-preview: var(--sr-preview);
 }

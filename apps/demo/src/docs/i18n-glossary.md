@@ -32,9 +32,18 @@ left in a Turkish page.
   configuration unchanged.
 - Translated example files keep the same logic, imports and documented outputs
   (`// → value`); only comments and user-visible text change.
+- Established React/TypeScript terms stay in English, also in headings:
+  **controlled**, **uncontrolled**, **branded type**, **render prop**, **props**,
+  **hook**, **ref**, **tooltip**, **Server/Client Component**. Explain them briefly with a
+  concrete example where they first appear on a page (e.g. "controlled: değeri
+  siz tutarsınız — `value={range}` ve `onChange={setRange}` verirsiniz"). Never
+  use literal translations such as "kontrollü", "kontrolsüz" or "markalı".
+- Describe behaviour from the user's point of view: say what happens ("seçim
+  değişmez; takvim nedeni ekran okuyucuya bildirir"), not an abstract summary
+  ("reddedilen seçimler duyurulur").
 - Address the reader with the polite/neutral form ("seçin", "kullanın").
 - Prefer plain Turkish; keep an English term in parentheses on first use when it
-  is the name developers search for, e.g. "araç ipucu (tooltip)".
+  is the name developers search for, e.g. "yerel ayar (locale)".
 
 ## Terms
 
@@ -51,13 +60,14 @@ left in a Turkish page.
 | visible months / rendered months | görünen aylar / render edilen aylar |
 | paged / continuous navigation | sayfalı / sürekli gezinme |
 | load more, progressive months | daha fazla ay yükleme, kademeli ay yükleme |
-| tooltip | araç ipucu |
+| tooltip | tooltip (İngilizce kalır: “günün tooltip’i”) |
 | slot, render prop | slot, render prop |
 | controller (ref) | controller (ref) |
 | event, callback, handler | olay, callback, işleyici |
 | prop | prop (çoğul: prop’lar) |
-| controlled / uncontrolled | kontrollü / kontrolsüz |
+| controlled / uncontrolled | controlled / uncontrolled (İngilizce kalır; ilk geçişte açıklanır) |
 | rule, adapter | kural, adaptör |
+| schedule rule | takvim düzeni (schedule) kuralı |
 | availability, available, booked, closed | müsaitlik, müsait, dolu, kapalı |
 | disabled, blocked | devre dışı, engellenmiş |
 | validation, valid, invalid, issue, reason | doğrulama, geçerli, geçersiz, sorun, sebep |
@@ -67,6 +77,8 @@ left in a Turkish page.
 | accessibility | erişilebilirlik |
 | layout, overflow, wrap, inner scroll | yerleşim, taşma, alt satıra geçme, iç kaydırma |
 | loading, error, retry | yükleme, hata, yeniden deneme |
+| skeleton (loading placeholder) | tarihler yüklenirken gösterilen boş yer tutucular ("iskelet" değil) |
+| branded type | branded type (İngilizce kalır; açıklanır) |
 | today, past, future, weekday | bugün, geçmiş, gelecek, hafta günü |
 | clamp (to min/max) | sınıra çekmek |
 | render (verb) | render etmek |

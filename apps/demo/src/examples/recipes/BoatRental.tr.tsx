@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countNights, stayRules } from 'calendar-kit';
 import './Recipes.css';
 
-// Haftalık kiralamalar: cumartesiden cumartesiye, 7 veya 14 gece. Bunlar takvim
-// (schedule) kurallarıdır; "Özel tarihler" özel bir talep için bunları gevşetir,
-// bakım günleri ise (gerçek müsait olmama durumu) yine geçerlidir.
+// Haftalık kiralama: cumartesiden cumartesiye, 7 ya da 14 gece (7–14 gece
+// sınırı ve cumartesi giriş/çıkış birlikte). Bunlar takvim düzeni
+// (schedule) kurallarıdır; "Özel tarihler" özel bir talep için bu kuralları
+// kaldırır. Bakım günlerinde tekne gerçekten müsait olmadığı için bu günler
+// yine seçilemez.
 const maintenanceDays = ['03', '04'];
 const rules = stayRules({
   disablePast: true,

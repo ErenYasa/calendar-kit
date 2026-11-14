@@ -1,9 +1,9 @@
 // react-dates DayPickerRangeController → calendar-kit Calendar.
-// Moment nesneleri, uygulamanızın sınırında "YYYY-MM-DD" dizelerine dönüşür.
+// Moment nesnelerini, uygulamanızdan takvime geçerken "YYYY-MM-DD" dizelerine çevirin.
 import { useState } from 'react';
 import { Calendar, type CalendarDate, type DateRange, fromJSDate, stayRules, toCalendarDate } from 'calendar-kit';
 
-// moment → CalendarDate: tarihin kendi takvim günüyle biçimlendirin.
+// moment → CalendarDate: tarihi, kendi takvim günüyle (saat dilimi çevirmeden) biçimlendirin.
 //   moment('2026-11-13')   → toCalendarDate(m.format('YYYY-MM-DD'))
 //   new Date(2026, 10, 13) → fromJSDate(date) (yerel takvim günü)
 export const fromMoment = (m: { format(pattern: string): string }): CalendarDate => toCalendarDate(m.format('YYYY-MM-DD'));

@@ -1,4 +1,4 @@
-// Controller dışarıdan (bir ref) ve içeriden (slotlarda ctx.actions).
+// Controller'a dışarıdan (bir ref ile) ve içeriden (slotlarda ctx.actions ile) erişin.
 import { useRef, useState } from 'react';
 import { Calendar, type CalendarController, type DateRange, addDays, getToday, stayRules } from 'calendar-kit';
 
@@ -13,12 +13,12 @@ export function QuickPicks() {
 
   const pick = (nights: number) => {
     const start = addDays(getToday(), 1);
-    // Bir tıklama gibi doğrulanır: geçersiz değer uygulanmaz ve
+    // Bir tıklama gibi doğrulanır: geçersiz değer uygulanmaz, seçim değişmez ve
     // onInvalidSelection yerelleştirilmiş mesajı alır.
     const result = calendar.current?.select({ start, end: addDays(start, nights) });
     if (!result?.valid) return;
     setMessage('');
-    // select() gezinmez: yeni başlangıcı kendiniz gösterin.
+    // select() takvimi o tarihe götürmez: yeni başlangıcın ayına kendiniz gidin.
     calendar.current?.goToMonth(start);
   };
 
@@ -40,7 +40,7 @@ export function QuickPicks() {
         mode="range"
         rules={rules}
         onInvalidSelection={(e) => setMessage(e.message)}
-        // Slotların içinde aynı controller, ctx.actions olarak.
+        // Slotların içinde aynı controller ctx.actions olarak gelir.
         renderFooter={(ctx) => (
           <button type="button" onClick={() => ctx.actions.reset()}>
             Baştan başla

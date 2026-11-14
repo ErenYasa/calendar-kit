@@ -3,13 +3,13 @@ import { Calendar } from 'calendar-kit';
 // getDayProps(sizinkiler) öğeniz için prop’ları döndürür:
 // - önce günün data-* durum nitelikleri, sonra sizin prop’larınız (aynı adlı
 //   bir data-* takviminkinin yerine geçer), en son da takvimin kendi
-//   prop’ları; bunlar kazanır: ref (sizinkiyle birleştirilir), type="button"
+//   prop’ları gelir ve çakışmada bunlar kazanır: ref (sizinkiyle birleştirilir), type="button"
 //   (`type: null` ile yoktur; bu durumda siz bir role vermezseniz role="button"
 //   eklenir), id, tabIndex, aria-label, aria-disabled, aria-pressed,
 //   aria-current, className (cal-day-button + classNames.dayButton + sizinki)
 //   ve aria-describedby (sizinkiyle birleştirilir).
 // - sizin işleyicileriniz takviminkilerden önce çalışır; takvimin o olayı
-//   işlemesini atlamak için event.preventDefault() çağırın.
+//   işlemesini istemiyorsanız event.preventDefault() çağırın.
 export function GuardedDays() {
   return (
     <Calendar

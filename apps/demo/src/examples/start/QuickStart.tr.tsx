@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countNights } from 'calendar-kit';
 import 'calendar-kit/styles.css';
 
-// Kontrollü bir aralık seçici: değer uygulamada tutulur, gece sayısı ondan hesaplanır.
+// controlled bir aralık seçici: değeri uygulama tutar (value + onChange), gece sayısını bu değerden hesaplar.
 export default function QuickStart() {
   const [stay, setStay] = useState<DateRange>({ start: null, end: null });
   const nights = countNights(stay);

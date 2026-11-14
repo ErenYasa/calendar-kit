@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Calendar, type CalendarDate, type DateRange, countDays, dayRangeRules } from 'calendar-kit';
 import './Recipes.css';
 
-// Bir festival perşembeden pazara sürer. Tek tıklama günlük bilet alır; daha
-// sonraki bir güne tıklama bunu çok günlük bir karta (en fazla 4 gün) genişletir.
-// Biletleri tükenen günler kapalıdır; azalan kontenjan günün etiketinde gösterilir.
+// Festival perşembeden pazara kadar sürer. İlk tıklama günlük bilet seçer; daha
+// sonraki bir güne tıklamak seçimi çok günlük bir karta (en fazla 4 gün) genişletir.
+// Biletleri tükenen günler kapalıdır; azalan kontenjan günün etiketinde görünür.
 const PRICE = 45;
 const ticketsLeft = (d: CalendarDate) => (Number(d.slice(8)) * 7) % 40;
 const rules = dayRangeRules({

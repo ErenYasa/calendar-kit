@@ -6,7 +6,7 @@ import { Calendar, type CalendarMonth, addMonthsToMonth, formatMonth, getMonth, 
 // Uygulamanızın kendi fonksiyonu.
 declare function track(name: string, data?: Record<string, unknown>): void;
 
-// Kontrollü visibleMonth: ay URL’de tutulur (?month=2026-11).
+// controlled visibleMonth: gösterilen ayı siz tutarsınız; burada ay URL’de durur (?month=2026-11).
 export function MonthInUrl() {
   const [thisMonth] = useState(() => getMonth(getToday()));
   const [month, setMonth] = useState<CalendarMonth>(() => parseMonth(new URLSearchParams(location.search).get('month')) ?? thisMonth);
@@ -33,7 +33,7 @@ export function MonthInUrl() {
         disablePast
         visibleMonth={month}
         // Oklar, klavyeyle sayfa değiştirme ve ref.goToMonth() yeni ayı burada ister.
-        // Saklamazsanız takvim olduğu yerde kalır.
+        // Yeni ayı saklamazsanız takvim olduğu ayda kalır.
         onVisibleMonthChange={(next, e) => {
           show(next);
           track('month_viewed', { month: next, reason: e.reason, source: e.source, clamped: e.clamped });
@@ -44,7 +44,7 @@ export function MonthInUrl() {
 }
 
 // Ekranda gerçekten görünen aylar, örneğin takvimin dışındaki bir başlık için.
-// Sürekli modda kaydırmayı takip ederler (IntersectionObserver).
+// Sürekli modda kaydırmayı izlerler (IntersectionObserver).
 export function VisibleMonthsHeading() {
   const [months, setMonths] = useState<readonly CalendarMonth[]>([]);
   const first = months[0];

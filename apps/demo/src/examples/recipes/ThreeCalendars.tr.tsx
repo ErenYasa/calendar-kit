@@ -5,8 +5,8 @@ import './ThreeCalendars.css';
 const rules = stayRules({ minNights: 2, disablePast: true });
 
 // Tek rezervasyon, üç görünüm: kompakt bir ay, iki aylık bir genel bakış ve
-// sürekli dikey bir liste. `value` ve `activeEndpoint`’i paylaşırlar; her biri
-// kendi görünen ayını, odağını ve araç ipucunu ayrı tutar.
+// sürekli kayan dikey bir liste. Üçü aynı `value` ve `activeEndpoint`’i kullanır;
+// görünen ay, odak ve tooltip ise her takvimde ayrıdır.
 export default function ThreeCalendars() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [endpoint, setEndpoint] = useState<RangeEndpoint>('start');

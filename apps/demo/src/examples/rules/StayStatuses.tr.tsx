@@ -9,9 +9,9 @@ const labels: Record<StayDayStatus, string> = {
   'check-out-only': 'Yalnız çıkış',
 };
 
-// Durumlar bugüne göre yerleştirilir, böylece örnekte her zaman görünürler.
+// Durumlar bugünün tarihine göre yerleştirilir, böylece örnekte her zaman görünürler.
 // Deneyin: ilk dolu gecenin sabahında çıkış yapın, dolu bir geceyi kapsayan bir
-// konaklama seçin, "Yalnız giriş" gününde çıkış veya "Yalnız çıkış" gününde giriş yapın.
+// konaklama seçin, "Yalnız giriş" gününde çıkış ya da "Yalnız çıkış" gününde giriş yapmayı deneyin.
 export default function StayStatuses() {
   const [today] = useState(() => getToday());
   const [range, setRange] = useState<DateRange>({ start: null, end: null });

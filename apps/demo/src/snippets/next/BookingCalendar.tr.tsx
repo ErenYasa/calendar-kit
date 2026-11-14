@@ -1,6 +1,6 @@
 'use client';
 // app/BookingCalendar.tsx — fonksiyon gerektiren her şey (kurallar,
-// callback'ler, state) için kendi Client Component'iniz.
+// callback'ler, state) bu Client Component'te durur.
 import { useState } from 'react';
 import { Calendar, type CalendarDate, type DateRange, stayRules } from 'calendar-kit';
 

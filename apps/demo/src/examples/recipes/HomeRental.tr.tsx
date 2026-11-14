@@ -3,7 +3,7 @@ import { Calendar, type DateRange, type SelectionRules, countNights, getIncluded
 import { useAvailability } from '../shared/availability.tr';
 import './Recipes.css';
 
-/** `dates` dışındaki her şey uygulama durumudur; takvim yalnızca tarihleri görür. */
+/** `dates` dışındaki her şeyi uygulama tutar; takvim yalnızca tarihleri görür. */
 interface Booking {
   dates: DateRange;
   checkOutTime: '11:00' | '18:00';
@@ -18,8 +18,8 @@ export default function HomeRental() {
   const rules = useMemo<SelectionRules<Booking>[]>(
     () => [
       stayRules<Booking>({ minNights: 2, disablePast: true, getDayStatus: (d) => dayInfo(d)?.status }),
-      // Uygulama durumuna bağlı bir iş kuralı (`ruleContext` olarak aktarılır):
-      // sonraki misafir o gün geliyorsa geç çıkış mümkün değildir.
+      // Uygulamanın state'ine bağlı bir iş kuralı (`ruleContext` ile gelir):
+      // sonraki misafir o gün geliyorsa geç çıkış yapılamaz.
       {
         getDayAvailability: (d, ctx) =>
           ctx.context.checkOutTime === '18:00' && dayInfo(d)?.status === 'booked' ? { canEnd: false, message: 'Geç çıkış yok: sonraki misafir geliyor' } : undefined,
@@ -40,8 +40,8 @@ export default function HomeRental() {
       onChange={(dates) => setBooking((b) => ({ ...b, dates }))}
       rules={rules}
       ruleContext={booking}
-      // "Özel tarihler": 2 gecelik minimum gibi takvim (schedule) kuralları
-      // gevşetilir; gerçek rezervasyonlar yine geçerlidir.
+      // "Özel tarihler": 2 gecelik minimum gibi takvim düzeni (schedule) kuralları
+      // kaldırılır; dolu günler yine seçilemez.
       relaxSchedule={customDates}
       getDataStatus={getDataStatus}
       onRenderedMonthsChange={(e) => ensure(e.months)}

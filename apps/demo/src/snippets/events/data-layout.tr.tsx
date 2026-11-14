@@ -1,6 +1,6 @@
-// Veri ve yerleşim olayları: her ayı render edildiğinde yükleyin, kaldırılan
-// ayların isteklerini iptal edin, yükleme geçişlerine tepki verin ve çevredeki
-// arayüzü takvimin gerçek yerleşimine uyarlayın.
+// Veri ve yerleşim olayları: her ayın verisini ay render edildiğinde yükleyin,
+// kaldırılan ayların isteklerini iptal edin, yükleme durumundaki değişikliklere
+// tepki verin ve çevredeki arayüzü takvimin gerçek yerleşimine göre düzenleyin.
 import { useRef, useState } from 'react';
 import { Calendar, type CalendarDate, type CalendarMonth, type DataStatus, type DefaultDayData, type RenderedMonthsChangeEvent } from 'calendar-kit';
 
@@ -30,9 +30,9 @@ export function PricedCalendar() {
     );
   };
 
-  // Mount sırasında da çağrılır (added = render edilen her ay); bu yüzden
-  // istekleri başlatan tek yer burasıdır: sayfa değiştirme, atlama ve daha
-  // fazla ay yükleme hep buraya varır.
+  // Mount sırasında da çağrılır (added = render edilen tüm aylar); bu yüzden
+  // istekleri yalnızca burada başlatmanız yeterlidir: sayfa değiştirme, aya
+  // atlama ve daha fazla ay yükleme hep bu olayı tetikler.
   const onRenderedMonthsChange = (e: RenderedMonthsChangeEvent) => {
     for (const month of e.removed) {
       requests.current.get(month)?.abort();
@@ -59,7 +59,7 @@ export function PricedCalendar() {
 }
 
 // Yerleşim olayları: aylar tek sütunda alt alta dizildiğinde kompakt bir
-// footer, ve sayfaya en fazla her 24px değişimde bir bildirilen genişlik.
+// footer; genişlik ise sayfaya yalnızca 24px'ten büyük değişimlerde bildirilir.
 export function AdaptiveFooter({ onWidth }: { onWidth: (width: number) => void }) {
   const [oneColumn, setOneColumn] = useState(false);
 

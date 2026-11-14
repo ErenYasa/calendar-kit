@@ -1,8 +1,8 @@
 import { Calendar } from 'calendar-kit';
 import './Unstyled.css';
 
-// unstyled: hiçbir varsayılan sınıf adı yok. Aşağıdaki her şey sizin
-// sınıflarınızdan gelir; takvim yalnızca ay ızgarasını ve boyutlandırmayı satır içi ayarlar.
+// unstyled: hiçbir varsayılan sınıf adı eklenmez. Aşağıdaki görünümün tamamı sizin
+// sınıflarınızdan gelir; takvim satır içi olarak yalnızca ay ızgarasını ve boyut değişkenlerini ayarlar.
 export default function Unstyled() {
   return (
     <Calendar

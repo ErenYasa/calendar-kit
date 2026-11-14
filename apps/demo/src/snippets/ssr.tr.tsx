@@ -1,6 +1,6 @@
-// Next.js olmadan sunucuda render etme. Sunucu ile ilk istemci render'ının
-// aynı sonucu vermesi için (hydration uyuşmazlığı olmadan) `today` verin; o
-// olmadan sunucu kullanıcının tarihini bilemez ve istemci devralana kadar bir
+// Next.js olmadan sunucuda render etme. Sunucu ile ilk istemci render'ı aynı
+// sonucu versin (hydration uyuşmazlığı olmasın) diye `today` verin; verilmezse
+// sunucu kullanıcının tarihini bilemez ve istemci devralana kadar boş bir
 // yer tutucu render eder.
 import { renderToString } from 'react-dom/server';
 import { Calendar, getToday } from 'calendar-kit';

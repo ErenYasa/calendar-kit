@@ -9,7 +9,7 @@ export const semantics = [engine.semantics, engine.allowSameDay]; // → ["exclu
 export const dataStatus = engine.dataStatus(toCalendarDate('2026-11-13')); // → "loaded"
 
 // checkStart ulaşılabilir bitiş aramasını da içerir: 13’ünden başlayan 2+ gecelik
-// her konaklama dolu geceyi kapsar, bu yüzden başlangıç reddedilir.
+// her konaklama dolu geceyi kapsar, bu yüzden 13’ü başlangıç olarak seçilemez.
 export const start13 = engine.checkStart(toCalendarDate('2026-11-13')); // → {"code": "min-length", "date": "2026-11-13", "params": {"min": 2, "unit": "nights"}, "dayReason": "check-out-only"}
 // checkDay yalnızca sınırlara, geçmiş/geleceğe ve veri durumuna bakar.
 export const day13 = engine.checkDay(toCalendarDate('2026-11-13')); // → null

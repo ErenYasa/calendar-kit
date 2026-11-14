@@ -1,12 +1,12 @@
-// Çoğu takvimin ihtiyaç duyduğu prop’lar: kurallı ve sınırlı kontrollü bir aralık,
-// kapsayıcısına uyum sağlayan iki ay, gün başına veri, bir yerel ayar ve takvimin
-// dışındaki kontroller için bir ref.
+// Çoğu takvimin ihtiyaç duyduğu prop’lar: kuralları ve sınırları olan controlled
+// bir aralık (değeri siz tutarsınız: value + onChange), kapsayıcıya uyan iki ay,
+// gün başına veri, bir yerel ayar ve takvimin dışındaki düğmeler için bir ref.
 import { useRef, useState } from 'react';
 import { Calendar, type CalendarController, type CalendarDate, type DateRange, type DefaultDayData, addDays, getToday, getWeekday, stayRules } from 'calendar-kit';
 
-// Bileşenin dışında bir kez tanımlanır: sabit kurallar her render’da yeniden
-// birleştirilmez; aynı veri nesnesini döndürmek de değişmeyen günlerin yeniden
-// render edilmesini önler.
+// Bileşenin dışında bir kez tanımlanır: kurallar sabit kaldığı için her render’da
+// yeniden birleştirilmez; aynı veri nesnesini döndürmek de değişmeyen günlerin
+// yeniden render edilmesini önler.
 const rules = stayRules({ minNights: 2, maxNights: 14 });
 const weekend: DefaultDayData = { label: '€140' };
 const weekday: DefaultDayData = { label: '€110' };

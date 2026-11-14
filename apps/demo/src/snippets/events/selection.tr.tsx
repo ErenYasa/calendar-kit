@@ -1,6 +1,6 @@
 // Bir rezervasyon formunda seçim olayları: taslağı kaydedin, dönüşüm hunisini
-// izleyin, reddedilen tıklamaları açıklayın ve gönder düğmesini geçerlilikle
-// senkron tutun.
+// izleyin, bir günün neden seçilemediğini açıklayın ve gönder düğmesini
+// değerin geçerliliğine göre etkinleştirin.
 import { useState } from 'react';
 import { Calendar, type DateRange, type RangeEndpoint, type ValidationResult, countNights, stayRules } from 'calendar-kit';
 
@@ -24,14 +24,14 @@ export function StayDates() {
         rules={rules}
         value={dates}
         onChange={(next, e) => {
-          // Kontrollü: takvim `next` değerini ancak siz sakladığınızda gösterir.
+          // controlled (değeri siz tutarsınız): takvim `next` değerini ancak siz sakladığınızda gösterir.
           setDates(next);
           setError(null);
           saveDraft(next);
           track('dates_changed', { reason: e.reason, source: e.source, phase: e.phase });
         }}
         onSelectionComplete={(e) => {
-          // `e.value` `unknown` türündedir: modunuza göre dönüştürün (cast).
+          // `e.value` `unknown` tipindedir: modunuza göre tip dönüştürün (cast).
           const range = e.value as DateRange;
           track('dates_completed', { nights: countNights(range), source: e.source });
         }}
@@ -39,7 +39,7 @@ export function StayDates() {
         onInvalidSelection={(e) => setError(e.message)}
         onValidationChange={(e) => setValidation(e.current)}
         onDateClick={(e) => {
-          // Reddedilenler dahil her etkinleştirme (mesaj onInvalidSelection’dadır).
+          // Seçilemeyen günler dahil her tıklama (mesaj onInvalidSelection’a gelir).
           if (!e.accepted && e.issue) track('date_rejected', { code: e.issue.code, reason: e.issue.dayReason });
         }}
       />
@@ -51,8 +51,8 @@ export function StayDates() {
   );
 }
 
-// Kontrollü activeEndpoint: "Giriş / Çıkış" alanları sonraki tıklamanın hangi
-// ucu seçeceğine karar verir. onActiveEndpointChange, onChange gibi bir istektir.
+// controlled activeEndpoint: "Giriş / Çıkış" alanları sonraki tıklamanın hangi
+// ucu seçeceğini belirler. onActiveEndpointChange, onChange gibi bir istektir.
 export function CheckInCheckOut() {
   const [dates, setDates] = useState<DateRange>(EMPTY);
   const [endpoint, setEndpoint] = useState<RangeEndpoint>('start');

@@ -1,4 +1,4 @@
-/* calendar-kit/styles.css’ten sonra içe aktarılır, bu yüzden bu değerler kazanır. */
+/* calendar-kit/styles.css’ten sonra içe aktarılır, bu yüzden bu değerler geçerli olur. */
 .night {
   --cal-bg: #16161a;
   --cal-color: #ececf1;

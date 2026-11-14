@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countNights, stayRules } from 'calendar-kit';
 import './Recipes.css';
 
-// Weekly charters: Saturday to Saturday, 7 or 14 nights. These are schedule
+// Weekly charters: Saturday to Saturday, 7 or 14 nights (the 7–14 night
+// limit together with Saturday check-in/out). These are schedule
 // rules; "Custom dates" relaxes them for a special request, while maintenance
 // days (real unavailability) still apply.
 const maintenanceDays = ['03', '04'];

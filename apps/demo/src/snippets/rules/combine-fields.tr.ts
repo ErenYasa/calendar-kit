@@ -33,6 +33,6 @@ export const lengths = [rules.minLength, rules.maxLength]; // → [3, 7]
 // Hafta günü listeleri kesişir; yalnızca tek bir setin tanımladığı liste olduğu gibi kalır.
 export const startWeekdays = rules.startWeekdays; // → [6, 0]
 export const endWeekdays = rules.endWeekdays; // → [0]
-// Tekil değerler, onu tanımlayan son setten gelir (undefined sayılmaz).
+// Tek değerli alanlar, değeri tanımlayan son setten gelir (undefined sayılmaz).
 export const semantics = rules.rangeSemantics; // → "exclusive"
 export const fixedLength = rules.fixedLength; // → 3

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Calendar, type CalendarMonth, addMonthsToMonth, formatMonth, getMonth, getToday, lastDayOfMonth } from 'calendar-kit';
 
-// Kontrollü visibleMonth: oklar yalnızca onVisibleMonthChange üzerinden bir ay
-// ister. "Okları takip et" işaretini kaldırın, istek yok sayılır.
+// controlled visibleMonth: gösterilen ayı siz tutarsınız (visibleMonth +
+// onVisibleMonthChange). Oklar yalnızca onVisibleMonthChange ile yeni bir ay
+// ister; "Okları takip et" işaretini kaldırırsanız istek yok sayılır ve takvim
+// aynı ayda kalır.
 export default function ControlledMonth() {
   const [today] = useState(() => getToday());
   const thisMonth = getMonth(today);

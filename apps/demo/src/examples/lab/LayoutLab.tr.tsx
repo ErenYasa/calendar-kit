@@ -15,8 +15,8 @@ import './LayoutLab.tr.css';
 // çizgili kutunun köşesini sürükleyin, üstteki prop'ları değiştirin ve hangi
 // olayların tetiklendiğini, React'in takvimi render etmeye ne kadar süre
 // harcadığını izleyin. Profiler'ın içinde yalnızca <Calendar> var; alttaki
-// paneller küçük bir store'dan okur, bu yüzden kayıt tutmak takvimi asla yeniden
-// render etmez ve panellerin kendi render'ları hiç ölçülmez.
+// paneller küçük bir store'dan okur, bu yüzden olayları kaydetmek takvimi yeniden
+// render ettirmez ve panellerin kendi render'ları ölçüme girmez.
 
 const MAX_COMMITS = 20;
 const MAX_EVENTS = 30;
@@ -48,9 +48,9 @@ function createLabStore() {
   let eventId = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const listeners = new Set<() => void>();
-  // Görev başına bir kez bildir: Profiler callback'leri React'in commit'i
-  // sırasında çalışır ve bir olay patlaması (boyut sürükleme) paneli tek bir
-  // kez yeniden çizmelidir.
+  // Her görevde yalnızca bir kez bildir: Profiler callback'leri React'in commit'i
+  // sırasında çalışır; art arda gelen çok sayıda olay (ör. kutuyu sürüklerken)
+  // paneli yalnızca bir kez yeniden çizmeli.
   const update = (next: Partial<Snapshot>) => {
     state = { ...state, ...next };
     timer ??= setTimeout(() => {
@@ -255,7 +255,7 @@ function LabPanels({ store }: { store: LabStore }) {
             çalıştırın (<code>npm run dev</code>).
           </p>
         ) : commits.length === 0 ? (
-          <p className="lab-empty">Bir commit kaydetmek için takvimle etkileşime geçin.</p>
+          <p className="lab-empty">Bir commit kaydı görmek için takvimi kullanın (ör. bir gün seçin).</p>
         ) : (
           <>
             <p className="lab-stats">

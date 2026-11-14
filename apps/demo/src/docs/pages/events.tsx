@@ -559,7 +559,7 @@ export function EventsReference() {
         <Payload
           caption="LoadingSnapshot"
           rows={[
-            ['initial', 'boolean', <><code>loading</code> is on and the calendar has never been shown without it: days are a skeleton and cannot be selected.</>],
+            ['initial', 'boolean', <><code>loading</code> is on and the calendar has never been shown without it: days are drawn as empty placeholders and, with the default <code>unknownDataPolicy</code> <code>&apos;block&apos;</code>, cannot be selected.</>],
             ['refreshing', 'boolean', <><code>loading</code> is on after data was shown: a background refresh; view, selection and focus are kept.</>],
             ['loadingMonths', 'readonly CalendarMonth[]', <>Rendered months whose status is <code>loading</code>.</>],
             ['errorMonths', 'readonly CalendarMonth[]', <>Rendered months whose status is <code>error</code>.</>],
