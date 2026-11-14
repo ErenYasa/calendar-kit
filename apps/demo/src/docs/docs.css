@@ -215,6 +215,14 @@ body {
   border: 1px solid var(--docs-border);
   font-size: 0.88em;
 }
+/* Inside the light example previews (an example's own UI), inline code labels
+   use a light grey chip with dark text; the docs' dark code styles and the
+   View code blocks are unaffected. */
+.docs-preview :not(pre) > code {
+  background: #e9eaee;
+  color: #1f2328;
+  border-color: #d0d4d9;
+}
 .docs-note {
   margin: 16px 0;
   padding: 10px 14px;
