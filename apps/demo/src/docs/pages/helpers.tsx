@@ -509,8 +509,9 @@ export function MessagesReference() {
         <p>
           The second example shows the difference between English and another language. For English it passes only the overrides, because the Calendar
           fills every other key from <code>messagesEn</code> itself. For German it merges the overrides over <code>messagesDe</code> first. In English,
-          hover today (“You are here”) or a booked day (9th, 18th, 27th: “Sold out”), or choose an end one night after the start (“Stays are at least 2
-          nights”). Then switch to Deutsch: the booked days and the too-short stay show the German overrides, and every other text stays German.
+          hover today (“You are here”) or the second night of a booked pair (9th, 18th, 27th: “Sold out”; the 8th, 17th and 26th can still be a check-out
+          day, so they show the built-in “Check-out only”), or choose an end one night after the start (“Stays are at least 2 nights”). Then switch to
+          Deutsch: the fully booked days and the too-short stay show the German overrides, and every other text stays German.
         </p>
         <Example src="helpers/CustomMessages" title="Custom messages over English and German" />
         <Fn name="mergeMessages" sig="function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages">

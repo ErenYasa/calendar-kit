@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Calendar, type CalendarDate, type CalendarMessagesInput, type DateRange, getDateParts, mergeMessages, messagesDe, messagesEn, stayRules } from 'calendar-kit';
 
-// Her ayın 9., 18. ve 27. gecesi dolu; konaklamalar en az 2 gece olmalı.
+// 8–9, 17–18 ve 26–27’sinde art arda iki gece dolu; konaklamalar en az 2 gece
+// olmalı. Çiftin ikinci gecesi tamamen doludur (“booked” metni görünür); ilki
+// yine de çıkış günü olabilir.
 const rules = stayRules({
   minNights: 2,
   disablePast: true,
-  getDayStatus: (date: CalendarDate) => (getDateParts(date).day % 9 === 0 ? 'booked' : 'available'),
+  getDayStatus: (date: CalendarDate) => ([8, 0].includes(getDateParts(date).day % 9) ? 'booked' : 'available'),
 });
 
 // Yalnızca değiştirmek istediğimiz metinler. Geri kalan her şey temel paketten gelir.

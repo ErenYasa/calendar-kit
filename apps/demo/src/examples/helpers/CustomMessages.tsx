@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Calendar, type CalendarDate, type CalendarMessagesInput, type DateRange, getDateParts, mergeMessages, messagesDe, messagesEn, stayRules } from 'calendar-kit';
 
-// Every 9th, 18th and 27th night is booked; stays need at least 2 nights.
+// Two booked nights in a row on the 8th–9th, 17th–18th and 26th–27th; stays
+// need at least 2 nights. The second night of a pair is fully booked (its
+// "booked" text shows); the first can still be a check-out day.
 const rules = stayRules({
   minNights: 2,
   disablePast: true,
-  getDayStatus: (date: CalendarDate) => (getDateParts(date).day % 9 === 0 ? 'booked' : 'available'),
+  getDayStatus: (date: CalendarDate) => ([8, 0].includes(getDateParts(date).day % 9) ? 'booked' : 'available'),
 });
 
 // Only the texts we want to change. Everything else comes from the base bundle.

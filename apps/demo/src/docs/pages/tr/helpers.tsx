@@ -515,9 +515,10 @@ export function MessagesReference() {
         <p>
           İkinci örnek, İngilizce ile başka bir dil arasındaki farkı gösterir. İngilizce için yalnızca değişiklikleri verir, çünkü Calendar diğer bütün
           anahtarları <code>messagesEn</code>’den kendisi doldurur. Almanca için ise değişiklikleri önce <code>messagesDe</code>’nin üzerine birleştirir.
-          İngilizcede bugünün (“You are here”) ya da dolu bir günün (9., 18., 27.: “Sold out”) üzerine gelin veya başlangıçtan bir gece sonrasını bitiş
-          olarak seçin (“Stays are at least 2 nights”). Sonra Almancaya geçin: dolu günler ve çok kısa konaklama Almanca değişiklikleri gösterir, diğer
-          bütün metinler Almanca kalır.
+          İngilizcede bugünün (“You are here”) ya da art arda dolu iki gecenin ikincisinin (9., 18., 27.: “Sold out”) üzerine gelin; 8., 17. ve 26. gün
+          yine de çıkış günü olabildiği için yerleşik “Check-out only” metnini gösterir. Ya da başlangıçtan bir gece sonrasını bitiş olarak seçin (“Stays
+          are at least 2 nights”). Sonra Almancaya geçin: tamamen dolu günler ve çok kısa konaklama Almanca değişiklikleri gösterir, diğer bütün
+          metinler Almanca kalır.
         </p>
         <Example src="helpers/CustomMessages" title="İngilizce ve Almanca üzerine özel mesajlar" />
         <Fn name="mergeMessages" sig="function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages">
