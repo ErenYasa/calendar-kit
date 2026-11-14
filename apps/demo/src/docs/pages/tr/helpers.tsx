@@ -34,7 +34,7 @@ export function DateHelpers() {
   return (
     <Page
       title="Tarih yardımcıları"
-      lead="Takvimin tarih modeli için saf fonksiyonlar: girdiyi ayrıştırma ve doğrulama, gün ve ay aritmetiği, karşılaştırma, tarihin parçalarını okuma, bir saat dilimine göre bugünü bulma ve aralıkları ölçme. Hiçbiri bir şey render etmez ve sunucunun/cihazın saat dilimine bağlı değildir."
+      lead="Takvimin tarih modeli için saf fonksiyonlar: girdiyi ayrıştırma ve doğrulama, gün ve ay aritmetiği, karşılaştırma, tarihin parçalarını okuma, bir saat dilimine göre bugünü bulma ve aralıkları ölçme. Bunları takvimin çevresindeki kendi kodunuzda kullanın; örneğin URL’den bir tarih okumak, fiyatları toplamak için bir konaklamanın gecelerini listelemek ya da ay bazında müsaitlik verisi oluşturmak için. Hiçbiri bir şey render etmez ve hiçbiri sunucunun ya da tarayıcının saat dilimine bağlı değildir."
     >
       <Section title="Tarih modeli">
         <p>
@@ -276,7 +276,8 @@ export function DateHelpers() {
 
       <Section title="Bugün ve JavaScript tarihleri">
         <p>
-          Bir <code>Date</code> bir andır; hangi takvim gününe denk geldiği saat dilimine bağlıdır. Bu fonksiyonlar bu seçimi açık hale getirir.
+          Bir <code>Date</code> bir gün değil, zamandaki bir andır: 7 Kasım 23:30 UTC, New York’ta hâlâ 7 Kasım, İstanbul’da ise artık 8 Kasım’dır. Bu
+          fonksiyonlarda günü hangi saat diliminin belirleyeceğini siz söylersiniz.
         </p>
         <Fn name="getToday" sig="function getToday(options?: { timeZone?: string; now?: Date | number }): CalendarDate">
           <p>
@@ -393,7 +394,7 @@ const MESSAGE_KEYS = [
   { name: 'announceAdded / announceRemoved', type: '(date: string, count: number) => string', description: 'Çoklu modda bir tarih eklenip çıkarıldığında duyurulur; count, seçili tarihlerin yeni sayısıdır.' },
   { name: 'announceCleared', type: 'string', description: 'Tekli veya aralık seçimi boşaldığında duyurulur.' },
   { name: 'announceRejected', type: '(date: string, reason: string) => string', description: 'Bir tıklama veya tuş basışı reddedildiğinde duyurulur; reason, biçimlendirilmiş sorun metnidir.' },
-  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'Her sebep kodu için bir fonksiyon. Metin; devre dışı bir günün etiket eki, günün varsayılan tooltip’i (past, future, before-min, after-max, invalid-date, data-unknown, data-loading için değil), announceRejected içindeki sebep ve invalidSelection olaylarının mesajıdır.' },
+  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'Her sebep kodu için, bir günün ya da seçimin neden kabul edilmediğini döndüren bir fonksiyon. Aynı metin dört yerde kullanılır: devre dışı bir günün etiketine eklenir, günün varsayılan tooltip’i olur (past, future, before-min, after-max, invalid-date, data-unknown ve data-loading hariç; bunlarda tooltip gösterilmez), announceRejected içinde sebep olarak geçer ve invalidSelection olaylarının mesajı olur.' },
   { name: 'dayReasons', type: 'Record<string, string>', description: <>Kurallarınızın veya adaptörlerin <code>reason</code> etiketleri için metinler (<code>booked</code>, <code>check-out-only</code>, …).</> },
 ];
 
@@ -512,7 +513,11 @@ export function MessagesReference() {
         </p>
         <Example src="helpers/TurkishOverrides" title="messagesTr üzerinde üç metni değiştirme" />
         <p>
-          İkinci örnek İngilizce ve Almanca metinleri değiştirir. Bir başlangıç ve ardından ertesi günü seçin ya da dolu bir güne (9., 18., 27.) tıklayın.
+          İkinci örnek, İngilizce ile başka bir dil arasındaki farkı gösterir. İngilizce için yalnızca değişiklikleri verir, çünkü Calendar diğer bütün
+          anahtarları <code>messagesEn</code>’den kendisi doldurur. Almanca için ise değişiklikleri önce <code>messagesDe</code>’nin üzerine birleştirir.
+          İngilizcede bugünün (“You are here”) ya da dolu bir günün (9., 18., 27.: “Sold out”) üzerine gelin veya başlangıçtan bir gece sonrasını bitiş
+          olarak seçin (“Stays are at least 2 nights”). Sonra Almancaya geçin: dolu günler ve çok kısa konaklama Almanca değişiklikleri gösterir, diğer
+          bütün metinler Almanca kalır.
         </p>
         <Example src="helpers/CustomMessages" title="İngilizce ve Almanca üzerine özel mesajlar" />
         <Fn name="mergeMessages" sig="function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages">
@@ -566,7 +571,7 @@ export function MessagesReference() {
 
       <Section title="Sebep mesajları">
         <p>
-          Bir gün devre dışı olduğunda veya bir seçim reddedildiğinde motor; bir sebep <code>code</code>’u, isteğe bağlı <code>params</code>, günün{' '}
+          Bir gün devre dışı olduğunda veya bir seçim reddedildiğinde seçim motoru (calendar-kit’in tarihleri kurallarınıza göre kontrol eden kısmı); bir sebep <code>code</code>’u, isteğe bağlı <code>params</code>, günün{' '}
           <code>dayReason</code> etiketi ve isteğe bağlı hazır bir <code>message</code> içeren bir <code>ValidationIssue</code> üretir. Calendar bunu{' '}
           <code>formatIssue</code> ile metne çevirir. Bir sebep mesajının kullanabileceği parametreler:
         </p>

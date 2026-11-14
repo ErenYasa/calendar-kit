@@ -11,10 +11,10 @@ export function Testing() {
             { name: 'npm run check', type: <>tümü</>, description: 'Tür denetimi, paket derlemesi, paket ve demo testleri, derlenmiş paketin SSR duman testi (smoke test).' },
             { name: 'npm run typecheck', type: <>tipler</>, description: 'Kütüphane kaynağı (ortam/ambient türleri olmadan), paket testleri ve yapılandırması (Node türleriyle), demo (tüm doküman örnekleri dahil) ve demonun Vite yapılandırması.' },
             { name: 'npm test', type: <>birim</>, description: 'Paket ve demo için Vitest + jsdom.' },
-            { name: 'npm run test:browser', type: 'Chrome', description: 'Doküman sitesinde gerçek tarayıcıda regresyon testleri (cascade, yerleşim, tooltip konumu, yükleme).' },
-            { name: 'npm run smoke:ssr -w calendar-kit', type: 'SSR', description: 'dist’i paketin exports alanı üzerinden içe aktarır ve sunucuda render eder.' },
-            { name: 'npm run size', type: <>paket boyutu</>, description: 'Küçültülmüş (minified) + gzip/brotli boyutları.' },
-            { name: 'npm run perf', type: <>zamanlama</>, description: 'CPU yavaşlatmalı (throttling) Chrome’da etkileşim süreleri.' },
+            { name: 'npm run test:browser', type: 'Chrome', description: 'Doküman sitesinde gerçek bir Chrome’da regresyon testleri: CSS cascade’i, yerleşim, tooltip konumu, yükleme durumları.' },
+            { name: 'npm run smoke:ssr -w calendar-kit', type: 'SSR', description: 'Derlenmiş paketi (dist) bir uygulamanın yaptığı gibi exports alanı üzerinden içe aktarır ve sunucuda bir takvim render eder.' },
+            { name: 'npm run size', type: <>paket boyutu</>, description: 'Paket boyutları: küçültülmüş (minified), gzip ve brotli.' },
+            { name: 'npm run perf', type: <>zamanlama</>, description: 'Chrome’da etkileşim süreleri; isteğe bağlı olarak yavaşlatılmış bir CPU ile (CPU throttling).' },
           ]}
         />
       </Section>
@@ -84,19 +84,19 @@ export function Performance() {
         <p>
           <code>npm run perf</code>, içinde yalnızca React Profiler’a (production profiling derlemesi) sarılı takvimin bulunduğu bir sayfa derler ve sistemdeki
           Chrome’u gerçek fare ve klavye girdisiyle, isteğe bağlı CPU yavaşlatmasıyla kullanır. Apple M5 Pro (macOS 26.6, Chrome 156) üzerinde ölçülmüştür;
-          değerler ms cinsinden medyandır. “render”, takvimin React Profiler <code>actualDuration</code> değeridir; “işleme”, olayın gönderilmesinden React’in
+          değerler ms cinsinden medyandır. “render”, bir etkileşimin tüm commit’lerinde takvimin React Profiler <code>actualDuration</code> değerlerinin toplamıdır; “işleme”, olayın gönderilmesinden React’in
           DOM’u güncellemesine kadar geçen süredir.
         </p>
         <DataTable
           caption="Medyan render · işleme (ms)"
           head={['Ay / gün', 'CPU', 'Başlangıç tıklaması', 'Üzerine gelme', 'Bitiş tıklaması', 'Ok tuşu', 'Sonraki ay']}
           rows={[
-            ['2 / 61', '1×', '1.7 · 1.1', '0.8 · 1.8', '2.5 · 1.3', '0.7 · 1.7', '1.4 · 1.6'],
-            ['2 / 61', '4× yavaş', '3.8 · 2.4', '1.6 · 3.1', '4.8 · 2.6', '1.3 · 2.8', '2.9 · 3.5'],
-            ['2 / 61', '6× yavaş', '5.3 · 3.5', '2.2 · 4.6', '7.5 · 3.6', '2.2 · 4.3', '5.2 · 5.8'],
-            ['12 / 365', '1×', '6.1 · 2.7', '2.5 · 4.1', '9.3 · 3.8', '1.9 · 3.0', '4.1 · 4.6'],
-            ['12 / 365', '4× yavaş', '16.0 · 7.0', '4.9 · 8.0', '21.8 · 7.7', '4.6 · 7.1', '9.4 · 11.3'],
-            ['12 / 365', '6× yavaş', '24.9 · 10.7', '7.4 · 12.0', '31.7 · 11.7', '6.4 · 10.9', '13.9 · 17.2'],
+            ['2 / 61', '1×', '1.8 · 1.2', '0.9 · 2.0', '2.2 · 1.4', '0.7 · 2.0', '1.5 · 1.8'],
+            ['2 / 61', '4× yavaş', '3.7 · 2.5', '1.6 · 3.0', '4.6 · 2.4', '1.0 · 2.9', '3.4 · 3.7'],
+            ['2 / 61', '6× yavaş', '6.0 · 3.9', '2.1 · 4.4', '6.6 · 3.8', '2.0 · 4.3', '5.1 · 6.6'],
+            ['12 / 365', '1×', '5.9 · 2.7', '2.5 · 4.1', '9.5 · 3.9', '1.8 · 2.8', '4.2 · 4.8'],
+            ['12 / 365', '4× yavaş', '17.5 · 6.9', '5.1 · 8.1', '21.9 · 7.3', '4.2 · 7.1', '9.0 · 10.9'],
+            ['12 / 365', '6× yavaş', '24.9 · 10.3', '7.3 · 12.3', '33.7 · 12.0', '7.3 · 10.9', '13.7 · 17.2'],
           ]}
         />
         <p>
@@ -126,19 +126,19 @@ export function Migration() {
         <PropsTable
           rows={[
             { name: <><code>startDate</code> / <code>endDate</code> (moment)</>, type: "value={{ start, end }}", description: "'YYYY-MM-DD' dizeleri." },
-            { name: 'onDatesChange', type: 'onChange(value, e)', description: 'Olay nesnesinde e.reason, e.phase ve e.validation bulunur.' },
+            { name: 'onDatesChange', type: 'onChange(value, e)', description: 'İkinci argüman bir olay nesnesidir: değerin neden değiştiği (e.reason), seçimin hangi aşamada olduğu (e.phase) ve doğrulama sonucu (e.validation).' },
             { name: 'focusedInput / onFocusChange', type: 'activeEndpoint / onActiveEndpointChange', description: '“Kapalı” (null) durumu yoktur: takvimi açıp kapatmak uygulamanızın işidir.' },
-            { name: 'initialVisibleMonth', type: 'defaultVisibleMonth', description: 'controlled kullanım için (ayı siz tutarsınız): visibleMonth + onVisibleMonthChange.' },
+            { name: 'initialVisibleMonth', type: 'defaultVisibleMonth', description: 'Yalnızca ilk gösterilen ayı belirler. Gösterilen ayı kendiniz yönetmek için (controlled: ayı kendi state’inizde tutarsınız) visibleMonth + onVisibleMonthChange verin.' },
             { name: <><code>numberOfMonths</code> (mobil cihaz denetimiyle)</>, type: 'numberOfMonths + overflow', description: 'Yerleşim kapsayıcıya uyar; pencere genişliği mantığına gerek yoktur.' },
             { name: 'daySize', type: 'minDaySize / maxDaySize', description: 'Hücreler kapsayıcıyla birlikte ölçeklenir.' },
             { name: 'isDayBlocked / isOutsideRange', type: 'rules', description: 'Kullanılabilecek kurallar: getDayAvailability, closedDates, stayRules({ getDayStatus }), minDate/maxDate, disablePast.' },
             { name: 'minimumNights', type: 'stayRules({ minNights })', description: 'minimumNights={0} karşılığı allowSameDay: true’dur.' },
-            { name: 'firstDayOfWeek / weekDayFormat', type: 'firstDayOfWeek / weekdayFormat', description: 'Intl tabanlı, varsayılanı yerel ayardan gelir.' },
-            { name: 'navPrev / navNext', type: 'renderNavigation, renderMonthHeader', description: 'Ya da mobilde daha fazla ay yüklemeli sürekli gezinme.' },
-            { name: 'renderCalendarInfo', type: 'renderFooter / renderHeader', description: 'Seçim durumunu ve eylemleri (actions) parametre olarak alırlar.' },
-            { name: 'renderDayContents', type: 'renderDayContent / renderDay', description: 'Elle yazılmış açılır pencereler yerine getDayTooltip ile tooltip’ler.' },
-            { name: 'onOutsideClick', type: 'onOutsideClick', description: 'React ağacını ve portal’ları hesaba katar.' },
-            { name: 'keepOpenOnDateSelect', type: '—', description: 'Varsayılan: takvim satır içidir (inline) ve kendini asla kapatmaz.' },
+            { name: 'firstDayOfWeek / weekDayFormat', type: 'firstDayOfWeek / weekdayFormat', description: 'Hafta günü adları Intl’den, varsayılan hafta başlangıcı yerel ayardan gelir.' },
+            { name: 'navPrev / navNext', type: 'renderNavigation, renderMonthHeader', description: 'Ya da küçük ekranlarda sürekli gezinme: aylar alt alta bir listede durur ve bir düğme daha fazla ay yükler.' },
+            { name: 'renderCalendarInfo', type: 'renderFooter / renderHeader', description: 'İkisi de güncel seçim durumunu ve eylemleri (actions; örneğin seçimi temizleme) argüman olarak alır.' },
+            { name: 'renderDayContents', type: 'renderDayContent / renderDay', description: 'Üzerine gelince gösterilecek metin için kendi açılır pencerenizi yazmak yerine getDayTooltip kullanın.' },
+            { name: 'onOutsideClick', type: 'onOutsideClick', description: 'React ağacına bakar; bu yüzden takvimin ya da slot’larının render ettiği portal’ların içindeki tıklamalar (takvimin tooltip’i, sizin render ettiğiniz bir popover) dışarı sayılmaz.' },
+            { name: 'keepOpenOnDateSelect', type: '—', description: 'Gerek yoktur: takvim sayfada satır içi (inline) gösterilir ve kendini asla kapatmaz.' },
           ]}
         />
         <p>
@@ -154,12 +154,12 @@ export function Migration() {
             { name: <>CSS’im temayı geçersiz kılmıyor</>, type: 'CSS', description: 'CSS değişkenlerini takvimin kendisinde (className/style ile) tanımlayın ve kendi CSS’inizi temadan sonra içe aktarın; iç sınıf adları yerine classNames ve data-* özniteliklerini kullanın.' },
             { name: <>Hydration uyuşmazlığı</>, type: 'SSR', description: 'today’i (ve gerekirse sabit bir defaultVisibleMonth) verin; sunucu kullanıcının tarihini bilemez.' },
             { name: 'useSyncExternalStore is not a function (Next.js)', type: 'RSC', description: "'calendar-kit' paketinden alınan Calendar bir Server Component içinde render edildi: onu 'calendar-kit/client' yolundan içe aktarın ya da 'use client' ile işaretli bir bileşene sarın." },
-            { name: <>Fonksiyonlar Client Component’lere aktarılamaz</>, type: 'RSC', description: 'Kurallar, callback’ler ve render prop’lar için takvimi kendi Client Component’inize koyun.' },
-            { name: <>Tooltip bir modalın arkasında kalıyor</>, type: <>portal</>, description: 'tooltip.container’ı diyaloğun içindeki bir öğeye ayarlayın (modal diyaloglar en üst katmanda, top layer’da durur).' },
+            { name: <>Fonksiyonlar Client Component’lere aktarılamaz</>, type: 'RSC', description: 'Kurallar, callback’ler ve render prop’lar fonksiyondur: Calendar’ı kendi Client Component’inizin içinde render edin ve onları orada tanımlayın.' },
+            { name: <>Tooltip bir modalın arkasında kalıyor</>, type: <>portal</>, description: 'tooltip.container’ı diyaloğun içindeki bir öğeye ayarlayın (modal diyaloglar her şeyin üstündeki katmanda, top layer’da durur).' },
             { name: <>Tooltip, transform uygulanmış bir kapsayıcıda kayık görünüyor</>, type: <>portal</>, description: 'Paket bunu kendisi çözer: transform uygulanmış portal kapsayıcılarında konum otomatik düzeltilir.' },
             { name: <>Aylar taşıyor / sayfa yana kayıyor</>, type: <>yerleşim</>, description: 'Takvim sayfayı hiçbir zaman genişletmez; üst öğesinin bir genişliği olduğundan emin olun (flex/grid üst öğelerinde min-width: 0).' },
             { name: <>defaultValue ayarlayınca seçim değişmiyor</>, type: <>durum</>, description: 'defaultValue yalnızca ilk render’da okunur; değeri sonradan değiştirmek için value ile controlled kullanın ya da ref.reset() çağırın.' },
-            { name: <>Bir gün seçilemiyor ve tooltip göstermiyor</>, type: <>veri</>, description: 'O ayın verisi bilinmiyor ya da hâlâ yükleniyor (unknownDataPolicy: block); sebep günün aria-label’ında yazar.' },
+            { name: <>Bir gün seçilemiyor ve tooltip göstermiyor</>, type: <>veri</>, description: 'O ayın verisi henüz yüklenmedi ya da hâlâ yükleniyor (unknownDataPolicy: block); gün, yükleme yer tutucusu olarak görünür ve sebep günün aria-label’ında yazar.' },
           ]}
         />
       </Section>

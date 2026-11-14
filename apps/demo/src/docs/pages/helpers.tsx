@@ -34,7 +34,7 @@ export function DateHelpers() {
   return (
     <Page
       title="Date helpers"
-      lead="Pure functions for the calendar's date model: parse and validate input, do day and month arithmetic, compare, read parts, get today in a time zone and measure ranges. None of them render anything or depend on the host time zone."
+      lead="Pure functions for the calendar's date model: parse and validate input, do day and month arithmetic, compare, read parts, get today in a time zone and measure ranges. Use them in your own code around the calendar, for example to read a date from the URL, list the nights of a stay to add up prices, or build per-month availability data. None of them render anything, and none depend on the time zone of the server or browser."
     >
       <Section title="The date model">
         <p>
@@ -273,7 +273,8 @@ export function DateHelpers() {
 
       <Section title="Today and JavaScript dates">
         <p>
-          A <code>Date</code> is an instant; which calendar day it falls on depends on the time zone. These functions make that choice explicit.
+          A <code>Date</code> is a moment in time, not a day: 23:30 UTC on 7 November is still 7 November in New York but already 8 November in Istanbul.
+          These functions make you say which time zone decides the day.
         </p>
         <Fn name="getToday" sig="function getToday(options?: { timeZone?: string; now?: Date | number }): CalendarDate">
           <p>
@@ -389,7 +390,7 @@ const MESSAGE_KEYS = [
   { name: 'announceAdded / announceRemoved', type: '(date: string, count: number) => string', description: 'Announced when a date is toggled in multiple mode; count is the new number of selected dates.' },
   { name: 'announceCleared', type: 'string', description: 'Announced when a single or range selection becomes empty.' },
   { name: 'announceRejected', type: '(date: string, reason: string) => string', description: 'Announced when a click or key press is rejected; reason is the formatted issue text.' },
-  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'One function per reason code. The text is the label suffix of a disabled day, its default tooltip (not for past, future, before-min, after-max, invalid-date, data-unknown, data-loading), the reason in announceRejected and the message of invalidSelection events.' },
+  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'One function per reason code, returning why a day or selection is not allowed. The same text is used in four places: appended to the label of a disabled day, as its default tooltip (except for past, future, before-min, after-max, invalid-date, data-unknown and data-loading, which stay silent), as the reason in announceRejected, and as the message of invalidSelection events.' },
   { name: 'dayReasons', type: 'Record<string, string>', description: <>Texts for the <code>reason</code> tags of your rules or the adapters (<code>booked</code>, <code>check-out-only</code>, …).</> },
 ];
 
@@ -506,7 +507,10 @@ export function MessagesReference() {
         </p>
         <Example src="helpers/TurkishOverrides" title="Three texts changed over messagesTr" />
         <p>
-          The second example changes English and German texts. Select a start and then the next day, or click a booked day (9th, 18th, 27th).
+          The second example shows the difference between English and another language. For English it passes only the overrides, because the Calendar
+          fills every other key from <code>messagesEn</code> itself. For German it merges the overrides over <code>messagesDe</code> first. In English,
+          hover today (“You are here”) or a booked day (9th, 18th, 27th: “Sold out”), or choose an end one night after the start (“Stays are at least 2
+          nights”). Then switch to Deutsch: the booked days and the too-short stay show the German overrides, and every other text stays German.
         </p>
         <Example src="helpers/CustomMessages" title="Custom messages over English and German" />
         <Fn name="mergeMessages" sig="function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages">
@@ -561,7 +565,7 @@ export function MessagesReference() {
 
       <Section title="Reason messages">
         <p>
-          When a day is disabled or a selection is rejected, the engine produces a <code>ValidationIssue</code> with a reason <code>code</code>, optional{' '}
+          When a day is disabled or a selection is rejected, the selection engine (the part of calendar-kit that checks dates against your rules) produces a <code>ValidationIssue</code> with a reason <code>code</code>, optional{' '}
           <code>params</code>, the day&apos;s <code>dayReason</code> tag and an optional ready-made <code>message</code>. The Calendar turns it into text with{' '}
           <code>formatIssue</code>. The params a reason message can use:
         </p>

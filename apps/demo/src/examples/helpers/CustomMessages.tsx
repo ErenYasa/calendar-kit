@@ -49,8 +49,9 @@ export default function CustomMessages() {
         onInvalidSelection={(e) => setRejected(e.message)}
       />
       <p>
-        Base bundle: {language === 'en' ? messagesEn.calendar : messagesDe.calendar}. Last rejected click: {rejected || 'none'} (try a booked day, or an
-        end one night after the start).
+        Base bundle: {language === 'en' ? 'messagesEn' : 'messagesDe'} (texts you did not override come from it, e.g. “
+        {language === 'en' ? messagesEn.calendar : messagesDe.calendar}”). Last rejected click: {rejected || 'none'} (try a booked day, or an end one
+        night after the start).
       </p>
     </div>
   );

@@ -50,7 +50,8 @@ export default function CustomMessages() {
         onInvalidSelection={(e) => setRejected(e.message)}
       />
       <p>
-        Temel paket: {language === 'en' ? messagesEn.calendar : messagesDe.calendar}. Son reddedilen tıklama: {rejected || 'yok'} (dolu bir günü ya da
+        Temel paket: {language === 'en' ? 'messagesEn' : 'messagesDe'} (değiştirmediğiniz metinler buradan gelir, ör. “
+        {language === 'en' ? messagesEn.calendar : messagesDe.calendar}”). Son reddedilen tıklama: {rejected || 'yok'} (dolu bir günü ya da
         başlangıçtan bir gece sonrasını bitiş olarak deneyin).
       </p>
     </div>
