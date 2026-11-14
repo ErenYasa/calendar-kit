@@ -20,12 +20,25 @@ export function Introduction() {
           <li>Klavye ve ekran okuyucuyla erişilebilirdir, <code>Intl</code> ile yerelleştirilir ve SSR ile çalışır.</li>
         </ul>
       </Section>
-      <Section title="Uygulamanızda kalanlar">
+      <Section title="Takvim ne yapar, uygulamanız ne yapar?">
+        <ul>
+          <li>
+            <strong>Takvim</strong> kullanıcının tarih seçmesini sağlar. Uygulamanın verdiği kuralları uygular; örneğin bir günü yalnızca çıkış tarihi olarak
+            seçilebilir yapabilir (<code>stayRules</code> içindeki <code>&apos;check-out-only&apos;</code> durumu).
+          </li>
+          <li>
+            <strong>Uygulamanız</strong> müsaitlik verisini kendi API’sinden alır ve takvime iletir: gün durumlarını <code>stayRules</code> veya{' '}
+            <code>dayRangeRules</code> içindeki <code>getDayStatus</code> ile ya da kendi kurallarınızdaki <code>getDayAvailability</code> ile verir (
+            <a href="#/api-rules">Kurallar ve adaptörler</a>). Verisi henüz gelmeyen ayları <code>getDataStatus</code> ile takvime bildirir (
+            <code>&apos;loading&apos;</code>, <code>&apos;unknown&apos;</code> veya <code>&apos;error&apos;</code>); hangi ayların gösterildiğini de{' '}
+            <code>onRenderedMonthsChange</code> ile öğrenir, böylece neyi yükleyeceğini bilir (<a href="#/loading">Yükleme ve hatalar</a>). Fiyat hesaplama,
+            giriş ve çıkış saatlerini seçtirme, misafir sayısını tutma ve rezervasyonu oluşturma uygulamanın işidir. Uygulamanın hesapladığı toplamı takvimin
+            altında göstermek için <code>renderFooter</code> kullanılabilir.
+          </li>
+        </ul>
         <p>
-          Paket yalnızca tarih seçimiyle ilgilenir. Fiyatlar, toplamlar, giriş/çıkış saatleri, misafir sayıları ve rezervasyon mantığı paketin parçası değildir: bu
-          değerleri uygulamanız tutar, hesaplar ve <code>renderFooter</code> gibi slotlarda gösterir. İş kuralları takvime yalnızca
-          “hangi gün seçilebilir” bilgisi olarak ulaşır (örneğin “bu gün yalnızca çıkış günü olabilir”). Takvim kendisi hiç veri çekmez: her ayın yüklenip
-          yüklenmediğini siz bildirirsiniz.
+          <strong>Örnek:</strong> Bir ev rezervasyonunda kullanıcı tarihleri takvimden seçer. Uygulama seçilen aralık için toplam fiyatı hesaplar,{' '}
+          <code>renderFooter</code> ile gösterir ve kullanıcı onayladığında rezervasyonu oluşturur (<a href="#/recipe-home-rental">Ev kiralama tarifi</a>).
         </p>
       </Section>
       <Section title="Tarihler">

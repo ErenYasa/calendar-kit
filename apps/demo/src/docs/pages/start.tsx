@@ -20,11 +20,25 @@ export function Introduction() {
           <li>Is keyboard and screen-reader accessible, localised through <code>Intl</code> and works with SSR.</li>
         </ul>
       </Section>
-      <Section title="What stays in your app">
+      <Section title="What the calendar does and what your app does">
+        <ul>
+          <li>
+            <strong>The calendar</strong> lets the user pick dates. It applies the rules your app gives it; for example it can make a day selectable only as a
+            check-out date (the <code>&apos;check-out-only&apos;</code> status in <code>stayRules</code>).
+          </li>
+          <li>
+            <strong>Your app</strong> fetches availability from its own API and passes it to the calendar: per-day statuses through <code>getDayStatus</code> in{' '}
+            <code>stayRules</code> or <code>dayRangeRules</code>, or <code>getDayAvailability</code> in your own rules (
+            <a href="#/api-rules">Rules &amp; adapters</a>). It tells the calendar which months&apos; data has not arrived yet with <code>getDataStatus</code>{' '}
+            (<code>&apos;loading&apos;</code>, <code>&apos;unknown&apos;</code> or <code>&apos;error&apos;</code>); <code>onRenderedMonthsChange</code> tells
+            your app which months are shown, so it knows what to fetch (<a href="#/loading">Loading &amp; errors</a>). Calculating prices, letting the user
+            choose check-in and check-out times, keeping the guest count and creating the reservation are your app&apos;s job. To show a total your app
+            calculated under the calendar, use <code>renderFooter</code>.
+          </li>
+        </ul>
         <p>
-          The package is selection-focused. Prices, totals, check-in/check-out times, guest counts and reservation logic are not part of it: your app owns
-          that state, computes it and shows it through slots such as <code>renderFooter</code>. Business rules reach the calendar only as selectability (for
-          example “this day can only be a check-out”). The calendar never fetches data: you report each month&apos;s loading status.
+          <strong>Example:</strong> in a home booking the user picks the dates in the calendar. The app calculates the total price for the selected range,
+          shows it with <code>renderFooter</code> and creates the reservation when the user confirms (<a href="#/recipe-home-rental">Home rental recipe</a>).
         </p>
       </Section>
       <Section title="Dates">
