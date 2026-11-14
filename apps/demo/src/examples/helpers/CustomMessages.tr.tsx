@@ -28,7 +28,7 @@ export default function CustomMessages() {
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [rejected, setRejected] = useState('');
   // Calendar, `messages`’ı İngilizcenin üzerine kendisi birleştirir; İngilizce
-  // olmayan tam bir paket ile geçersiz kılmalar mergeMessages ile birleştirilir.
+  // olmayan tam bir paket ile değişiklikler mergeMessages ile birleştirilir.
   const messages = language === 'en' ? overrides.en : mergeMessages(messagesDe, overrides.de);
 
   return (
@@ -36,8 +36,8 @@ export default function CustomMessages() {
       <label>
         Dil{' '}
         <select value={language} onChange={(e) => setLanguage(e.target.value as 'en' | 'de')}>
-          <option value="en">İngilizce (messagesEn + geçersiz kılmalar)</option>
-          <option value="de">Almanca (messagesDe + geçersiz kılmalar)</option>
+          <option value="en">İngilizce (messagesEn + değişiklikler)</option>
+          <option value="de">Almanca (messagesDe + değişiklikler)</option>
         </select>
       </label>
       <Calendar

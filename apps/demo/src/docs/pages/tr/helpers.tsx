@@ -34,14 +34,17 @@ export function DateHelpers() {
   return (
     <Page
       title="Tarih yardımcıları"
-      lead="Takvimin tarih modeli için saf fonksiyonlar: girdiyi ayrıştırıp doğrulayın, gün ve ay aritmetiği yapın, karşılaştırın, parçaları okuyun, bir saat dilimindeki bugünü alın ve aralıkları ölçün. Hiçbiri bir şey render etmez ve sunucunun/cihazın saat dilimine bağlı değildir."
+      lead="Takvimin tarih modeli için saf fonksiyonlar: girdiyi ayrıştırma ve doğrulama, gün ve ay aritmetiği, karşılaştırma, tarihin parçalarını okuma, bir saat dilimine göre bugünü bulma ve aralıkları ölçme. Hiçbiri bir şey render etmez ve sunucunun/cihazın saat dilimine bağlı değildir."
     >
       <Section title="Tarih modeli">
         <p>
           Bir gün, bir <code>CalendarDate</code>’tir: <code>YYYY-MM-DD</code> biçiminde, gerçek bir Gregoryen tarih olduğu kontrol edilmiş bir dize. Bir ay ise{' '}
-          <code>YYYY-MM</code> biçiminde bir <code>CalendarMonth</code>’tur. İkisi de markalı (branded) dize türleridir; bu yüzden düz bir <code>string</code>,
-          TypeScript onu kabul etmeden önce aşağıdaki ayrıştırıcılardan birinden geçmelidir. Buna karşılık bir <code>CalendarDate</code>, dize beklenen her yerde
-          kullanılabilir (JSON, URL’ler, map anahtarları, <code>&lt;</code>/<code>&gt;</code> karşılaştırması).
+          <code>YYYY-MM</code> biçiminde bir <code>CalendarMonth</code>’tur. Çalışma zamanında ikisi de sıradan dizedir. TypeScript ise onları ayrı türler
+          olarak ele alır (branded type: derleme sırasında fazladan bir etiket taşıyan dize türü); bu yüzden düz bir <code>string</code>, tarih ya da ay
+          beklenen bir yere verilmeden önce aşağıdaki ayrıştırıcılardan birinden geçmelidir, yoksa TypeScript onu kabul etmez. Tür kontrolü derleme
+          sırasında yapılır; bir dizenin gerçek bir gün olup olmadığını ise ayrıştırıcılar çalışma zamanında kontrol eder. Ters yönde bir şey gerekmez: bir{' '}
+          <code>CalendarDate</code>, dize beklenen her yerde kullanılabilir (JSON, URL’ler, map anahtarları, <code>&lt;</code>/<code>&gt;</code>{' '}
+          karşılaştırması).
         </p>
         <p>
           Tüm aritmetik, tarihi tam sayı bir gün numarasına çevirip geri dönüştürür; bu yüzden sonuçlar asla sunucunun/cihazın saat dilimine veya yaz saatine
@@ -279,7 +282,7 @@ export function DateHelpers() {
           <p>
             <code>now</code> anının (bir <code>Date</code> veya epoch milisaniyesi; varsayılan: şu anki zaman), <code>"Europe/Istanbul"</code> gibi bir IANA
             adı olan <code>timeZone</code>’da görülen takvim günü. Saat dilimi olmadan (ya da boş bir dizeyle) çalışılan ortamın yerel saat dilimi kullanılır;
-            bu, sunucuda sunucunun saat dilimidir. İkisini birlikte vermek sonucu deterministik yapar; sunucu tarafı render ve testler için istediğiniz budur.
+            bu, sunucuda sunucunun saat dilimidir. İkisini birlikte verirseniz sonuç her çalıştırmada aynı olur; sunucu tarafı render ve testler için istediğiniz budur.
             Sonucu Calendar’ın <code>today</code> prop’una verin.
           </p>
           <p>
@@ -290,8 +293,8 @@ export function DateHelpers() {
         </Fn>
         <Fn name="fromJSDate" sig="function fromJSDate(date: Date, timeZone?: string): CalendarDate">
           <p>
-            Var olan bir <code>Date</code>’i, <code>timeZone</code>’da denk geldiği takvim gününe çevirir (varsayılan: çalışılan ortamın yerel saat dilimi).
-            Konumsal (positional) imzalı <code>getToday({'{ now: date, timeZone }'})</code>’dir ve aynı hata davranışına sahiptir. API’lerden veya başka tarih
+            Var olan bir <code>Date</code>’i, <code>timeZone</code>’da denk geldiği takvim gününe çevirir (varsayılan: çalışılan ortamın yerel saat dilimi).{' '}
+            <code>getToday({'{ now: date, timeZone }'})</code> çağrısının, argümanları sırayla alan biçimidir ve hataları da aynıdır. API’lerden veya başka tarih
             seçicilerden gelen zaman damgaları için kullanın; her zaman UTC gününü veren <code>toISOString()</code>’i asla dilimlemeyin.
           </p>
         </Fn>
@@ -374,11 +377,11 @@ const MESSAGE_KEYS = [
   {
     name: 'loading',
     type: 'string',
-    description: 'Veri yüklenirken ekran okuyucu durum metni (günlerin kendisi bir iskelet gösterir): ilk yükleme için ve her ay için “<ay başlığı>: <loading>” olarak. Yükleme başladığında da duyurulur ve renderLoading’e aktarılır.',
+    description: 'Veri yüklenirken ekran okuyucu durum metni (günlerin yerinde boş yer tutucular görünür): ilk yükleme için ve her ay için “<ay başlığı>: <loading>” olarak. Yükleme başladığında da duyurulur ve renderLoading’e aktarılır.',
   },
   { name: 'error / retry', type: 'string', description: <>Verisi yüklenemeyen bir ayın mesajı ve düğme metni (<code>renderError</code>’a da aktarılır); bir ay başarısız olduğunda <code>error</code> duyurulur.</> },
   { name: 'today', type: 'string', description: 'Ekran okuyucular için bugünün gün etiketine eklenir.' },
-  { name: 'todayLabel', type: 'string', description: <><code>highlightToday</code> açıkken ve günün başka bir araç ipucu yoksa bugün üzerindeki varsayılan araç ipucu.</> },
+  { name: 'todayLabel', type: 'string', description: <><code>highlightToday</code> açıkken ve günün başka bir tooltip’i yoksa bugünün varsayılan tooltip’i.</> },
   { name: 'readOnlyNotice', type: 'string', description: <>Salt okunur bir takvimin üstündeki açıklama. <code>''</code> onu gizler.</> },
   { name: 'selected', type: 'string', description: 'Seçili günün etiketine eklenir (tekli ve çoklu modlar).' },
   { name: 'rangeStart / rangeEnd', type: 'string', description: 'Aralığın başlangıç ve bitiş günlerinin etiketlerine eklenir.' },
@@ -390,7 +393,7 @@ const MESSAGE_KEYS = [
   { name: 'announceAdded / announceRemoved', type: '(date: string, count: number) => string', description: 'Çoklu modda bir tarih eklenip çıkarıldığında duyurulur; count, seçili tarihlerin yeni sayısıdır.' },
   { name: 'announceCleared', type: 'string', description: 'Tekli veya aralık seçimi boşaldığında duyurulur.' },
   { name: 'announceRejected', type: '(date: string, reason: string) => string', description: 'Bir tıklama veya tuş basışı reddedildiğinde duyurulur; reason, biçimlendirilmiş sorun metnidir.' },
-  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'Her sebep kodu için bir fonksiyon. Metin; devre dışı bir günün etiket eki, varsayılan araç ipucu (past, future, before-min, after-max, invalid-date, data-unknown, data-loading için değil), announceRejected içindeki sebep ve invalidSelection olaylarının mesajıdır.' },
+  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'Her sebep kodu için bir fonksiyon. Metin; devre dışı bir günün etiket eki, günün varsayılan tooltip’i (past, future, before-min, after-max, invalid-date, data-unknown, data-loading için değil), announceRejected içindeki sebep ve invalidSelection olaylarının mesajıdır.' },
   { name: 'dayReasons', type: 'Record<string, string>', description: <>Kurallarınızın veya adaptörlerin <code>reason</code> etiketleri için metinler (<code>booked</code>, <code>check-out-only</code>, …).</> },
 ];
 
@@ -398,11 +401,11 @@ export function MessagesReference() {
   return (
     <Page
       title="Mesajlar ve biçimlendirme"
-      lead="Ay, hafta günü ve tarih adları, takvimin yerel ayarında Intl’den gelir; takvimin kendi metinleri (düğme adları, ekran okuyucu duyuruları, sebepler) ise değiştirebileceğiniz ya da kısmen geçersiz kılabileceğiniz bir mesaj paketinden gelir."
+      lead="Ay, hafta günü ve tarih adları, takvimin yerel ayarında Intl’den gelir; takvimin kendi metinleri (düğme adları, ekran okuyucu duyuruları, sebepler) ise değiştirebileceğiniz ya da yalnızca bazı metinlerini değiştirebileceğiniz bir mesaj paketinden gelir."
     >
       <Section title="Yerel ayara göre biçimlendirme">
         <p>
-          Bunlar, Calendar’ın başlıkları, üst bilgileri ve etiketleri için kullandığı fonksiyonlardır; kendi arayüzünüz (özetler, girdiler, araç ipuçları) onunla
+          Bunlar, Calendar’ın başlıkları, üst bilgileri ve etiketleri için kullandığı fonksiyonlardır; kendi arayüzünüz (özetler, girdiler, tooltip’ler) onunla
           uyumlu olsun diye dışa aktarılırlar. Yerel ayar herhangi bir BCP 47 etiketidir; <code>undefined</code>, biçimlendirmede çalışma ortamının varsayılanı,
           hafta ve yön tablolarında ise <code>en-US</code> anlamına gelir. Geçersiz bir yerel ayar etiketi, <code>Intl</code>’in bir <code>RangeError</code>{' '}
           fırlatmasına yol açar.
@@ -411,7 +414,7 @@ export function MessagesReference() {
           <p>
             Bir tarihi <code>Intl.DateTimeFormat</code> ile biçimlendirir. <code>options</code> zorunludur (yerel ayarın varsayılan sayısal biçimi için{' '}
             <code>{'{}'}</code> verin). Tarih, <code>timeZone: 'UTC'</code> zorlanarak UTC gece yarısından biçimlendirilir; böylece yerel saat dilimi onu asla
-            önceki güne kaydıramaz; <code>options</code> içindeki bir <code>timeZone</code> geçersiz kılınır. Biçimlendiriciler yerel ayar ve seçeneklere göre
+            önceki güne kaydıramaz; <code>options</code> içindeki bir <code>timeZone</code> yok sayılır. Biçimlendiriciler yerel ayar ve seçeneklere göre
             önbelleğe alınır.
           </p>
         </Fn>
@@ -425,7 +428,7 @@ export function MessagesReference() {
         >
           <p>
             Bir ayı ilk gününü biçimlendirerek biçimlendirir; böylece <code>formatDate</code>’in tarih aldığı yerde bir <code>CalendarMonth</code> alır.
-            Seçenek verilmezse Calendar’ın gösterdiği ay başlığını verir (“November 2026”); Calendar’ın <code>monthTitleFormat</code> prop’u buraya başka
+            Seçenek verilmezse Calendar’ın gösterdiği ay başlığını verir (ör. “Kasım 2026”); Calendar’ın <code>monthTitleFormat</code> prop’u buraya başka
             seçenekler aktarır.
           </p>
         </Fn>
@@ -462,8 +465,18 @@ export function MessagesReference() {
 
       <Section title="Mesaj paketleri">
         <p>
+          Takvimin dilini birbirinden bağımsız iki prop belirler. <code>locale</code> (<code>'tr-TR'</code> gibi bir BCP 47 etiketi) yalnızca{' '}
+          <code>Intl</code> üzerinden yapılan biçimlendirmede kullanılır: ay ve hafta günü adları, tarih biçimleri, varsayılan hafta başlangıcı ve yazı yönü.{' '}
+          <code>messages</code> ise takvimin kendi metinlerini taşır: düğme metinleri ve erişilebilir adlar, bir gün seçilemediğinde gösterilen sebepler (
+          <code>reasons</code>), gün durumlarınızın metinleri (<code>dayReasons</code>) ve ekran okuyucu duyuruları.
+        </p>
+        <p>
           Calendar her zaman <code>messagesEn</code> ile başlar ve <code>messages</code> prop’unu onun üzerine uygular. <code>locale</code>’i değiştirmek
-          metinleri <em>değiştirmez</em>; eşleşen paketi de verin. Her paket ayrı bir export’tur; bu yüzden kullanılmayanlar tree-shaking ile atılır.
+          metinleri <em>değiştirmez</em>; eşleşen paketi de verin. Her paket ayrı bir export’tur; kullanmadıklarınız tree-shaking ile pakete girmez.
+        </p>
+        <p>
+          Bu dokümantasyon sitesindeki dil seçimi yalnızca dokümantasyonun dilini değiştirir. Örneklerdeki takvimler kodlarında verilen yerel ayarı ve
+          mesajları korur: hangi dilde okursanız okuyun, Türkçe bir takvim Türkçe, İngilizce bir takvim İngilizce kalır.
         </p>
         <DataTable
           caption="Yerleşik paketler (hepsi CalendarMessages türünde)"
@@ -483,17 +496,29 @@ export function MessagesReference() {
         />
       </Section>
 
-      <Section title="Mesajları geçersiz kılma">
+      <Section title="Takvim metinlerini özelleştirme">
         <p>
-          Yalnızca değiştirmek istediğiniz anahtarları verin. Calendar’da <code>messages</code> İngilizcenin üzerine birleştirilir; İngilizce olmayan bir paketi
-          geçersiz kılmak için onu <code>mergeMessages</code> ile kendiniz birleştirin. Bu örnekte bir başlangıç ve ardından sonraki günü seçin ya da dolu bir
-          güne (9., 18., 27.) tıklayın.
+          Yalnızca değiştirmek istediğiniz anahtarları verin. Yalnızca bazı anahtarları içeren bir <code>messages</code> nesnesinin eksikleri <strong>İngilizceden</strong> tamamlanır: Calendar her
+          zaman <code>mergeMessages(messagesEn, messages)</code> hesaplar; bu yüzden vermediğiniz her anahtar, <code>locale</code> Türkçe olsa bile
+          İngilizce metni gösterir. Türkçeyi (ya da İngilizce olmayan başka bir paketi) özelleştirmek için değişikliklerinizi o paketin üzerine kendiniz
+          birleştirin ve eksiksiz sonucu verin: <code>messages={'{'}mergeMessages(messagesTr, overrides){'}'}</code>.
+        </p>
+        <p>
+          İlk örnek Türkçe bir takvimdir (<code>tr-TR</code> ve <code>messagesTr</code>) ve tam olarak üç metni değiştirir: ayın altındaki düğme (
+          <code>loadNext</code>), konaklama çok kısa olduğunda gösterilen metin (<code>reasons['min-length']</code>) ve aralık tamamlandığında ekran
+          okuyucunun okuduğu duyuru (<code>announceRange</code>). Bir başlangıç, ardından bitiş olarak ertesi günü seçin: seçim değişmez ve yeni metin
+          takvimin altında görünür. Sonra başlangıçtan en az iki gece sonraki bir bitiş seçin. Duyuru görünmeyen bir canlı bölgeye (live region) gider; bu
+          yüzden örnek aynı metni aynı mesajlarla yeniden üretip takvimin altında gösterir.
+        </p>
+        <Example src="helpers/TurkishOverrides" title="messagesTr üzerinde üç metni değiştirme" />
+        <p>
+          İkinci örnek İngilizce ve Almanca metinleri değiştirir. Bir başlangıç ve ardından ertesi günü seçin ya da dolu bir güne (9., 18., 27.) tıklayın.
         </p>
         <Example src="helpers/CustomMessages" title="İngilizce ve Almanca üzerine özel mesajlar" />
         <Fn name="mergeMessages" sig="function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages">
           <p>
             Yeni ve eksiksiz bir paket döndürür: <code>override</code>’ın üst düzey anahtarları <code>base</code>’inkilerin yerine geçer; <code>reasons</code> ve{' '}
-            <code>dayReasons</code> ise anahtar anahtar birleştirilir, böylece tek bir sebebi geçersiz kılmak diğerlerinin hepsini korur. Geçersiz kılma
+            <code>dayReasons</code> ise anahtar anahtar birleştirilir, böylece tek bir sebebi değiştirmek diğerlerinin hepsini korur. İkinci argüman
             verilmezse <code>base</code>’in kendisini döndürür. <code>undefined</code> değeriyle bulunan bir anahtar, üst düzeyde olduğu gibi{' '}
             <code>reasons</code> ve <code>dayReasons</code> içinde de listelenmemiş sayılır ve temel metni korur. Sonucu bir kez oluşturun (modül kapsamında
             veya <code>useMemo</code> ile); Calendar, <code>messages</code> nesnesinin kimliği her değiştiğinde yeniden birleştirir.
@@ -510,10 +535,31 @@ export function MessagesReference() {
         <Snippet files={messages} label="Mesajları birleştirme ve biçimlendirme" />
       </Section>
 
+      <Section title="Kendi dil paketinizi ekleyin">
+        <p>
+          Hazır paketi olmayan bir dil için kendi kodunuzda eksiksiz bir paket yazın ve onu eşleşen yerel ayarla birlikte verin. Türünü{' '}
+          <code>CalendarMessagesInput</code> değil <code>CalendarMessages</code> olarak belirtin: böylece her anahtar zorunlu olur (<code>reasons</code>{' '}
+          içinde her <code>ReasonCode</code> için bir fonksiyon dahil) ve unutulan bir anahtar TypeScript hatası verir. Hiçbir metin sessizce İngilizceden
+          gelmez. (Calendar yine <code>messagesEn</code> üzerine birleştirir, ama eksiksiz bir pakette doldurulacak bir şey kalmaz.)
+        </p>
+        <p>
+          <code>announceRange</code> gibi duyuru fonksiyonları, takvimin yerel ayarında zaten biçimlendirilmiş tarihler alır. Sebep fonksiyonları sorunun
+          parametrelerini alır: tarihler <code>f.date</code> ile biçimlendirilecek <code>YYYY-MM-DD</code> dizeleridir, sayılar ise düz sayıdır; bu yüzden
+          tekil ya da çoğul sözcüğü paket kendisi seçer (1 noite, 2 noites). <code>dayReasons</code> bir <code>Record&lt;string, string&gt;</code>{' '}
+          olduğundan TypeScript eksik bir etiketi fark edemez; örnek, hazır paketlerin etiketlerini yerel bir türde listeleyerek onları da zorunlu yapar.
+        </p>
+        <Example src="helpers/PortugueseBrazilPack" title="Brezilya Portekizcesi paketi" />
+        <p>
+          Burada ay ve hafta günü adlarını, tarih biçimini ve haftanın pazar günü başlamasını <code>locale="pt-BR"</code>, bütün metinleri ise{' '}
+          <code>messagesPtBr</code> sağlar. Portekizce bir sebep görmek için dolu bir güne (9., 18., 27.) tıklayın ya da başlangıçtan bir gece sonrasını
+          bitiş olarak seçin. Paketin tamamını görmek için örneğin kodunu açın; paket kendi sekmesinde gösterilir.
+        </p>
+      </Section>
+
       <Section title="CalendarMessages anahtarları">
         <p>
           Bir paketin her anahtarı ve Calendar’ın onu nerede kullandığı. Bir günün erişilebilir etiketi, biçimlendirilmiş tarihi ve ardından virgülle ayrılmış
-          ilgili eklerdir; duyurulardaki tarihler takvimin yerel ayarında “13 November 2026” biçiminde biçimlendirilir.
+          ilgili eklerdir; duyurulardaki tarihler takvimin yerel ayarında gün, uzun ay adı ve yıl olarak biçimlendirilir (Türkçede “13 Kasım 2026”).
         </p>
         <PropsTable caption="CalendarMessages" rows={MESSAGE_KEYS} />
       </Section>

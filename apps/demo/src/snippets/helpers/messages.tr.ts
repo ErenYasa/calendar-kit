@@ -1,6 +1,6 @@
 import { formatDate, formatIssue, mergeMessages, messagesDe, messagesEn, parseDate, type CalendarMessagesInput, type MessageFormatHelpers } from 'calendar-kit/core';
 
-// Kısmi bir geçersiz kılma (override): listelenmeyen her şey temel metni korur.
+// Yalnızca bazı anahtarları değiştiren bir nesne (override): listelenmeyen her anahtar temel metni korur.
 const overrides: CalendarMessagesInput = {
   readOnlyNotice: '',
   announceRange: (start, end) => `Stay from ${start} to ${end}.`,
