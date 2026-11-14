@@ -30,13 +30,21 @@ export function EventsReference() {
       title="Callback’ler ve olaylar"
       lead={
         <>
-          Her callback kendi türünde bir olay nesnesi alır. Uygulama mantığı için ilgili callback’i (<code>onChange</code>, <code>onVisibleMonthChange</code>, …)
-          kullanın; tüm olayları tek bir ayrımlı birleşim (discriminated union) olarak almak için <code>onEvent</code>’i kullanın.
+          Takvim, olup biteni uygulamanıza callback prop’larıyla bildirir: kullanıcı bir tarih seçti, başka bir aya geçti, bir güne odaklandı gibi.
+          Her callback kendi türünde bir olay nesnesi alır. Uygulama mantığı için ilgili callback’i (<code>onChange</code>, <code>onVisibleMonthChange</code>,
+          …) kullanın; tüm olayları tek bir fonksiyonda almak için <code>onEvent</code>’i kullanın. Bu fonksiyon olayları ayrımlı bir birleşim
+          (discriminated union) olarak alır: hangi olay olduğunu <code>type</code> alanından anlarsınız.
         </>
       }
     >
       <Section title="Callback’ler nasıl çağrılır">
         <ul>
+          <li>
+            <strong>controlled</strong>, değeri uygulamanızın tutması ve prop olarak geri vermesi demektir; örneğin{' '}
+            <code>{'value={range} onChange={setRange}'}</code>. Bu durumda callback bir istektir ve takvim yeni değeri ancak siz onu sakladığınızda
+            gösterir. <strong>uncontrolled</strong>, değeri takvimin kendisinin tutması demektir (en fazla bir <code>defaultValue</code> verirsiniz);
+            callback yalnızca zaten değişmiş olanı bildirir. Aynısı <code>visibleMonth</code> ve <code>activeEndpoint</code> için de geçerlidir.
+          </li>
           <li>
             Çoğu callback yalnızca olayı alır: <code>onDateClick(event)</code>. Üç tanesi önce yeni değeri, sonra olayı alır:{' '}
             <code>onChange(value, event)</code>, <code>onVisibleMonthChange(month, event)</code> ve <code>onActiveEndpointChange(endpoint, event)</code>.
@@ -53,11 +61,11 @@ export function EventsReference() {
             gerek yoktur ve her render’da yeni bir fonksiyon vermek bir olayın yeniden yayılmasına yol açmaz.
           </li>
           <li>
-            <strong>Eylemler</strong> (bir tıklama, bir tuş, bir controller çağrısı) olaylarını senkron olarak, tarayıcı olayı ya da controller çağrısı sürerken
-            yayar. <strong>Türetilmiş olaylar</strong> (<code>validationChange</code>, <code>visibleMonthsChange</code>,{' '}
-            <code>renderedMonthsChange</code>, <code>loadingChange</code>, <code>layoutChange</code>, <code>tooltipOpenChange</code>, <code>ready</code> ve
-            uncontrolled <code>activeEndpointChange</code>) ise React render ettikten sonra gelir: takvim yeni durumu son bildirdiğiyle karşılaştırır ve fark
-            varsa bildirir. (uncontrolled: değeri takvim kendisi tutar; controlled: değeri siz tutarsınız — örneğin value ve onChange verirsiniz.)
+            <strong>Eylem olayları</strong>, kullanıcının veya kodunuzun yaptığı bir şeyden (tıklama, tuş, controller çağrısı) doğar ve hemen, o tarayıcı
+            olayı ya da controller çağrısı daha sürerken yayılır. <strong>Türetilmiş olaylar</strong> (<code>validationChange</code>,{' '}
+            <code>visibleMonthsChange</code>, <code>renderedMonthsChange</code>, <code>loadingChange</code>, <code>layoutChange</code>,{' '}
+            <code>tooltipOpenChange</code>, <code>ready</code> ve uncontrolled <code>activeEndpointChange</code>) ise ortaya çıkan durumu anlatır: React bu
+            durumu render ettikten sonra ve yalnızca son bildirilenden farklıysa gelir.
           </li>
           <li>
             Bir prop’u siz değiştirdiğinizde, o değişikliği isteyen callback çağrılmaz: yeni bir <code>value</code> <code>onChange</code>’i, yeni bir{' '}
@@ -65,7 +73,7 @@ export function EventsReference() {
             Türetilmiş olaylar ise prop değişikliğinin sonuçlarını yine bildirir (örneğin <code>validationChange</code> veya <code>renderedMonthsChange</code>).
           </li>
           <li>
-            Geliştirme ortamında React StrictMode altında effect’ler mount sırasında iki kez çalışır, bu yüzden <code>onReady</code> iki kez tetiklenebilir.
+            Geliştirme ortamında React StrictMode altında effect’ler ilk render’da iki kez çalışır, bu yüzden <code>onReady</code> iki kez tetiklenebilir.
             Eylem olayları (<code>onChange</code> gibi) hiçbir zaman iki kez gelmez. Gerçek bir yeniden mount (örneğin yeni bir <code>key</code>) mount
             olaylarını yeniden yayar.
           </li>
@@ -74,7 +82,8 @@ export function EventsReference() {
 
       <Section title="Olay kaynakları">
         <p>
-          Birden çok kaynaktan gelebilen olaylar <code>source: EventSource</code> taşır:
+          Birden çok sebepten doğabilen olaylar, olayı neyin başlattığını söyleyen <code>source: EventSource</code> alanını taşır. Uygulamanız kullanıcıya
+          ve kendi koduna farklı tepki verecekse buna bakın; örneğin analitikte yalnızca tıklamaları ve tuş basışlarını saymak için.
         </p>
         <DataTable
           caption="EventSource değerleri"
@@ -90,23 +99,24 @@ export function EventsReference() {
               <>
                 Bir günde Enter veya Space; ok, Home/End ve Page tuşları; Tab ile gelen odak.
               </>,
-              'pointer ile aynıları; ayrıca visibleMonthChange (odak gösterilmeyen bir aya geçtiğinde) ve loadMore (trigger keyboard: odak sürekli listenin sonunun ötesine geçtiğinde)',
+              'pointer ile aynıları; ayrıca visibleMonthChange (odak gösterilmeyen bir aya geçtiğinde) ve trigger değeri keyboard olan loadMore (odak sürekli listenin sonunun ötesine geçtiğinde)',
             ],
             [c('navigation'), 'Varsayılan önceki/sonraki düğmeleri veya renderNavigation’dan previous()/next().', 'visibleMonthChange'],
             [
               c('programmatic'),
-              'Bir controller metodu (ref veya ctx.actions üzerinden).',
-              'change, selectionComplete, selectionClear, invalidSelection, activeEndpointChange, visibleMonthChange, dayFocusChange ve loadMore (trigger keyboard: sürekli listenin sonunun ötesine focusDate(); ref.loadMore() ise source olarak load-more bildirir)',
+              'Ref üzerinden ya da bir slotun içinde ctx.actions üzerinden çağrılan bir controller metodu (bkz. Controller (ref)).',
+              'change, selectionComplete, selectionClear, invalidSelection, activeEndpointChange, visibleMonthChange, dayFocusChange ve trigger değeri keyboard olan loadMore (sürekli listenin sonunun ötesindeki bir güne focusDate(); ref.loadMore() ise source olarak load-more bildirir)',
             ],
             [
               c('load-more'),
-              'Sürekli modda ay eklenmesi (varsayılan düğme, renderLoadMore’un loadMore()’u, otomatik gözcü öğe (sentinel), ref.loadMore()); sınıra gelinip yükleme düğmesi kaybolduğunda ızgaraya taşınan odak.',
+              'Sürekli modda ay eklenmesi (varsayılan düğme, renderLoadMore’un loadMore()’u, otomatik gözcü öğe (sentinel), ref.loadMore()); yüklenebilecek son aya gelinip yükleme düğmesi kaybolduğunda takvimin ızgaraya taşıdığı odak.',
               'loadMore ve dayFocusChange',
             ],
             [
               c('prop'),
               <>
-                Üst bileşen controlled bir <code>value</code>’yu değiştirdi ve bu yüzden aralığın sıradaki ucu değişti.
+                Uygulamanız controlled bir <code>value</code>’yu değiştirdi ve bu yüzden sonraki tıklamanın belirleyeceği uç da değişti (örneğin aralığı
+                temizlediniz).
               </>,
               'activeEndpointChange (yalnızca uncontrolled uç noktada)',
             ],
@@ -118,15 +128,16 @@ export function EventsReference() {
 
       <Section title="Olay sırası">
         <p>
-          Aşağıdaki sıra paket testleriyle güvence altındadır (aralık modu, uncontrolled değer). Parantez içindeki adımlar yalnızca ilgili durum oluştuğunda
-          gelir; değeri değişmeyen türetilmiş olaylar hiç yayılmaz.
+          Değeri uncontrolled olan bir aralık takviminde tek bir eylemin hangi olayları hangi sırayla yaydığı. Bir işleyici diğerinin önce çalışmış
+          olmasına dayanıyorsa buna bakın; örneğin <code>onSelectionComplete</code>, <code>onChange</code>’in sakladığı state’i okuyorsa. Parantez
+          içindeki adımlar yalnızca ilgili durum oluştuğunda gelir (örneğin <code>validationChange</code> yalnızca geçerlilik değiştiğinde).
         </p>
         <DataTable
           caption="Eylem başına olay sırası"
           head={['Eylem', 'Olaylar, sırasıyla']}
           rows={[
             ['Mount', 'validationChange (cause initial) → visibleMonthsChange → renderedMonthsChange → ready; ResizeObserver bildirdiğinde resize'],
-            ['Aralık başlangıcına tıklama', 'dateClick → dayFocusChange → change → activeEndpointChange (start’tan end’e)'],
+            ['Aralık başlangıcına tıklama', 'dateClick → (dayFocusChange) → change → activeEndpointChange (start’tan end’e) → (validationChange)'],
             ['Aralık bitişine tıklama', 'dateClick → (dayFocusChange) → change → selectionComplete → activeEndpointChange (end’den start’a) → (validationChange)'],
             [
               <>
@@ -139,15 +150,16 @@ export function EventsReference() {
             ['Zaten seçili tekli tarihe tıklama', 'dateClick (accepted: true, kind: select) → (dayFocusChange) → selectionComplete; change yok'],
             ['ref.select(geçerli değer)', 'change (reason set) → (selectionComplete) → (selectionClear) → (activeEndpointChange) → (validationChange); değer mevcut değere eşitse hiçbir olay yok'],
             ['ref.select(geçersiz değer)', 'yalnızca invalidSelection'],
-            ['ref.clear()', 'change (reason clear) → selectionClear → (activeEndpointChange); seçim zaten boşsa hiçbir olay yok'],
-            ['Sayfa değiştirme veya aya atlama', 'visibleMonthChange → visibleMonthsChange → renderedMonthsChange → (loadingChange); ay aynı kalırsa hiçbir olay yok'],
+            ['ref.clear()', 'change (reason clear) → selectionClear → (activeEndpointChange) → (validationChange); seçim zaten boşsa hiçbir olay yok'],
+            ['Sayfa değiştirme veya aya atlama (sayfalı mod)','visibleMonthChange → visibleMonthsChange → renderedMonthsChange → (loadingChange); ay aynı kalırsa hiçbir olay yok'],
             ['Daha fazla ay yükleme', 'loadMore → (visibleMonthsChange) → renderedMonthsChange → (loadingChange); eklenecek ay yoksa hiçbir olay yok'],
           ]}
         />
         <Note>
           <code>dayFocusChange</code> yeni odaklanan her gün için bir kez gelir. Testlerde tıklama odak değişmeden gerçekleştiği için <code>dateClick</code>’ten
           sonra gelir. Fareye basıldığı anda (pointer down) düğmeye odaklanan tarayıcılarda (Chrome, Firefox, Edge) ise gün önce odak alır, bu yüzden{' '}
-          <code>dayFocusChange</code>, <code>dateClick</code>’ten önce gelir. Bu ikisinin birbirine göre sırasına güvenmeyin.
+          <code>dayFocusChange</code>, <code>dateClick</code>’ten önce gelir. Bu ikisinin birbirine göre sırasına güvenmeyin. Benzer şekilde sürekli modda{' '}
+          <code>visibleMonthsChange</code> genellikle bir kare sonra, tarayıcı ekrandaki ayları bildirdiğinde gelir.
         </Note>
       </Section>
 
@@ -257,7 +269,7 @@ export function EventsReference() {
           Kullanıcı aynı değeri yeniden tamamlarsa (seçili tekli tarihi ya da aynı aralığı yeniden seçerek) <code>selectionComplete</code> yine gelir; değer
           değişmediyse <code>change</code> gelmez. Bu yüzden bir popover’ı kapatmak için doğru yer burasıdır. Zaten seçili değeri{' '}
           <code>ref.select()</code> ile yeniden vermek hiçbir olay yaymaz. <code>ref.reset()</code> için (varsayılan değer tamamlanmış olsa bile), prop
-          değişikliklerinde veya sonraki render’larda tetiklenmez. controlled bir <code>activeEndpoint</code> ile uç nokta isteğinden sonra, aksi halde{' '}
+          değişikliklerinde veya sonraki render’larda tetiklenmez. Controlled bir <code>activeEndpoint</code> ile uç nokta isteğinden sonra, aksi halde{' '}
           <code>change</code>’in hemen ardından gelir. Tipik kullanım, bir popover’ı kapatmak veya odağı formun sonraki alanına taşımaktır.
         </p>
         <Signature>{'onSelectionComplete?: (e: SelectionCompleteEvent) => void'}</Signature>
@@ -274,7 +286,7 @@ export function EventsReference() {
       <Section title="onSelectionClear">
         <p>
           Boş olmayan bir seçimi boşaltan bir değişiklikten sonra tetiklenir: <code>ref.clear()</code>, boş bir varsayılana <code>ref.reset()</code>,{' '}
-          <code>ref.select(null)</code>, aralık modunda bitişi olmayan başlangıca yeniden tıklama veya çoklu modda son seçili tarihin kaldırılması. controlled
+          <code>ref.select(null)</code>, aralık modunda bitişi olmayan başlangıca yeniden tıklama veya çoklu modda son seçili tarihin kaldırılması. Controlled
           bir <code>value</code>’yu kendiniz temizlediğinizde tetiklenmez.
         </p>
         <Signature>{'onSelectionClear?: (e: SelectionClearEvent) => void'}</Signature>
@@ -340,7 +352,7 @@ export function EventsReference() {
 
       <Section title="onValidationChange">
         <p>
-          <em>Mevcut</em> değerin geçerli olup olmadığını bildirir. Mount sırasında bir kez tetiklenir (<code>cause: &apos;initial&apos;</code>,{' '}
+          <em>Mevcut</em> değerin geçerli olup olmadığını bildirir. İlk render’da bir kez tetiklenir (<code>cause: &apos;initial&apos;</code>,{' '}
           <code>previous: null</code>); sonra yalnızca sonuç değiştiğinde gelir: <code>valid</code> değiştiğinde veya sorun değiştiğinde (kod, tarih, gün
           sebebi, mesaj veya parametreler). Değer değişip geçerli kalıyorsa olay gelmez.
         </p>
@@ -353,7 +365,7 @@ export function EventsReference() {
         <Payload
           caption="ValidationChangeEvent"
           rows={[
-            ['previous', 'ValidationResult | null', 'Son bildirilen sonuç; mount sırasında null.'],
+            ['previous', 'ValidationResult | null', 'Son bildirilen sonuç; ilk render’da null.'],
             ['current', 'ValidationResult', <>Mevcut değer için <code>{'{ valid: boolean, issue: ValidationIssue | null }'}</code>.</>],
             ['selection', 'Selection', <>Doğrulanan değer, <code>{'{ mode, value }'}</code> olarak.</>],
             [
@@ -386,7 +398,7 @@ export function EventsReference() {
             Değişikliğin uygulanması için yeni değeri state’inize yazın. Prop’u kendiniz değiştirmek olay yaymaz.
           </li>
         </ul>
-        <p>Mount sırasında, diğer modlarda ve uç nokta aynı kaldığında yayılmaz.</p>
+        <p>İlk render’da, diğer modlarda ve uç nokta aynı kaldığında yayılmaz.</p>
         <Signature>{'onActiveEndpointChange?: (endpoint: RangeEndpoint, e: ActiveEndpointChangeEvent) => void'}</Signature>
         <Payload
           caption="ActiveEndpointChangeEvent"
@@ -410,8 +422,9 @@ export function EventsReference() {
 
       <Section title="onVisibleMonthChange">
         <p>
-          <strong>Referans ayın</strong> değişmesi istendiğinde tetiklenir (referans ay, gösterilen aylar arasında <code>monthPosition</code> sırasında duran
-          ve <code>visibleMonth</code> ile belirlenen aydır):
+          Kullanıcı veya kodunuz takvimden başka bir ayı göstermesini istediğinde tetiklenir: önceki/sonraki okları, klavyeyle sayfa değiştirme ya da bir
+          controller metodu. Bildirdiği ay <strong>referans ay</strong>dır, yani takvimin konumlandığı ay. Ekranda birden çok ay varsa{' '}
+          <code>monthPosition</code> sırasındaki aydır (varsayılan olarak ilki); <code>visibleMonth</code>’in belirlediği ay da budur.
         </p>
         <DataTable
           caption="visibleMonthChange’i neler yayar"
@@ -426,7 +439,7 @@ export function EventsReference() {
         />
         <p>Şu durumlarda tetiklenmez:</p>
         <ul>
-          <li>mount sırasında veya <code>visibleMonth</code> prop’unu değiştirdiğinizde;</li>
+          <li>ilk render’da veya <code>visibleMonth</code> prop’unu değiştirdiğinizde;</li>
           <li>
             sürekli modda yeni ay yüklenirken veya kaydırılırken: referans ay değişmez (<code>onVisibleMonthsChange</code> veya{' '}
             <code>onRenderedMonthsChange</code> kullanın);
@@ -466,12 +479,17 @@ export function EventsReference() {
             ['clamped', 'boolean', 'İstek min/max dışındaydı ve izin verilen en yakın aya taşındı.'],
           ]}
         />
-        <Example src="events/ControlledMonth" title="controlled visibleMonth" />
+        <p>
+          Aşağıdaki örnekte ay controlled’dır. Oklara tıklayın: takvimin altındaki satır her isteği <code>reason</code> ve <code>source</code> değerleriyle
+          gösterir. &quot;Okları takip et&quot; işaretini kaldırırsanız istekler yok sayılır ve takvim olduğu ayda kalır. Listeden bir ay seçmek prop’u
+          doğrudan değiştirir ve olay yaymaz.
+        </p>
+        <Example src="events/ControlledMonth" title="Controlled visibleMonth" />
       </Section>
 
       <Section title="onVisibleMonthsChange">
         <p>
-          Ekranda görünen ayların listesi değiştiğinde tetiklenir; mount sırasında da bir kez (<code>previous: []</code> ile). Sayfalı modda bunlar o an
+          Ekranda görünen ayların listesi değiştiğinde tetiklenir; ilk render’da da bir kez (<code>previous: []</code> ile). Sayfalı modda bunlar o an
           gösterilen aylardır (<code>overflow=&quot;reduce-months&quot;</code> bazılarını gizlediğinde daha az). Sürekli modda kaydırmayı izlerler: kaydırma
           alanına (sayfa ya da <code>maxBlockSize</code> verilmiş takvim) giren render edilmiş aylardır; IntersectionObserver ile her karede en fazla bir
           kez ölçülür.
@@ -481,14 +499,14 @@ export function EventsReference() {
         <Payload
           caption="VisibleMonthsChangeEvent"
           rows={[
-            ['previous', 'readonly CalendarMonth[]', 'Geçen sefer bildirilen aylar (mount sırasında []).'],
+            ['previous', 'readonly CalendarMonth[]', 'Geçen sefer bildirilen aylar (ilk render’da []).'],
             ['months', 'readonly CalendarMonth[]', 'Şu an ekrandaki aylar, kronolojik sırayla.'],
           ]}
         />
       </Section>
 
       <Section title="Örnek: gezinme olayları">
-        <p>controlled bir visibleMonth ile ayı URL’de tutun ve görünen ayları kendi başlığınızda gösterin.</p>
+        <p>Controlled bir visibleMonth ile ayı URL’de tutun ve görünen ayları kendi başlığınızda gösterin.</p>
         <Snippet files={navigationCode} label="Gezinme olayları" />
       </Section>
 
@@ -496,7 +514,7 @@ export function EventsReference() {
 
       <Section title="onRenderedMonthsChange">
         <p>
-          DOM’daki aylar değiştiğinde tetiklenir; mount sırasında da bir kez, render edilen tüm aylar <code>added</code> içinde olacak şekilde. Veri
+          DOM’daki aylar değiştiğinde tetiklenir; ilk render’da da bir kez, render edilen tüm aylar <code>added</code> içinde olacak şekilde. Veri
           isteklerini başlatmanın yeri burasıdır: sayfa değiştirme, aya atlama, daha fazla ay yükleme, son ayın ötesine klavyeyle gezinme ve{' '}
           <code>maxRenderedMonths</code> sınırında ay kaldırma hep bu olayla bildirilir. <code>removed</code> içindeki ayların isteklerini iptal edin.
         </p>
@@ -508,7 +526,7 @@ export function EventsReference() {
         <Payload
           caption="RenderedMonthsChangeEvent"
           rows={[
-            ['previous', 'readonly CalendarMonth[]', 'Önceden render edilen aylar (mount sırasında []).'],
+            ['previous', 'readonly CalendarMonth[]', 'Önceden render edilen aylar (ilk render’da []).'],
             ['months', 'readonly CalendarMonth[]', 'Şu an render edilen aylar, sırayla.'],
             ['added', 'readonly CalendarMonth[]', 'months içinde olup previous içinde olmayan aylar.'],
             ['removed', 'readonly CalendarMonth[]', 'previous içinde olup months içinde olmayan aylar.'],
@@ -553,7 +571,7 @@ export function EventsReference() {
         <p>
           Yükleme durumu değiştiğinde tetiklenir: <code>loading</code> prop’u açılıp kapandığında ya da render edilmiş bir ayın <code>getDataStatus</code>{' '}
           sonucu <code>loading</code> veya <code>error</code> olduğunda ya da bu durumdan çıktığında (böyle bir ay render edildiğinde veya kaldırıldığında
-          da). Mount sırasında yayılmaz: başlangıç durumunu kendi prop’larınızdan okuyun.
+          da). İlk render’da yayılmaz: başlangıç durumunu kendi prop’larınızdan okuyun.
         </p>
         <Signature>{'onLoadingChange?: (e: LoadingChangeEvent) => void'}</Signature>
         <Payload
@@ -589,7 +607,7 @@ export function EventsReference() {
         <p>
           Takvimin kök öğesinin boyutunu bildirir. İlk bildirimde <code>previous: null</code> olur; sonra genişlik veya yükseklik <em>son bildirilen</em>{' '}
           boyuta göre <code>resizeThreshold</code> pikselden (varsayılan 0) fazla değiştiğinde tetiklenir. ResizeObserver callback’leri animasyon karesi
-          başına bire indirilir ve aynı boyut iki kez bildirilmez. ResizeObserver yoksa yalnızca mount sırasında bir kez bildirir.
+          başına bire indirilir ve aynı boyut iki kez bildirilmez. ResizeObserver yoksa yalnızca ilk render’da bir kez bildirir.
         </p>
         <p>
           <code>resizeThreshold</code> yalnızca bu bildirimlerin sıklığını azaltır; yerleşim yine her boyut değişikliğine uyar. Yapısal değişiklikler
@@ -609,7 +627,7 @@ export function EventsReference() {
         <p>
           Etkin yerleşim yapısal olarak değiştiğinde tetiklenir: yön, gezinme, istenen veya etkin ay sayısı, sütunlar, etkin ay konumu, etkin taşma, minimum
           gün boyutuna ulaşılması, yazı yönü veya minimum ay genişliği. Yapıyı değiştirmeyen genişlik değişiklikleri onu tetiklemez. Sebep bir boyut
-          değişikliği ya da bir prop değişikliği olabilir. Mount sırasında yayılmaz (<code>onReady</code> kullanın).
+          değişikliği ya da bir prop değişikliği olabilir. İlk render’da yayılmaz (<code>onReady</code> kullanın).
         </p>
         <Signature>{'onLayoutChange?: (e: LayoutChangeEvent) => void'}</Signature>
         <Payload
@@ -670,7 +688,7 @@ export function EventsReference() {
         <p>
           Bir günün tooltip’i açıldığında, kapandığında veya açık tooltip başka bir güne geçtiğinde tetiklenir; tooltip’i neyin açtığı fark etmez: fareyle
           üzerine gelme, klavye odağı, dokunma, kalıcı (persistent) tooltip ya da controlled <code>tooltip.openDate</code> (açık günü siz belirlersiniz).
-          Aynı günde yalnızca açılma sebebinin değişmesi (önce hover, sonra odak) onu tetiklemez. Mount sırasında yalnızca zaten açık bir tooltip varsa
+          Aynı günde yalnızca açılma sebebinin değişmesi (önce hover, sonra odak) onu tetiklemez. İlk render’da yalnızca zaten açık bir tooltip varsa
           tetiklenir. Escape tooltip’i kapatır ve bu da bildirilir.
         </p>
         <Signature>{'onTooltipOpenChange?: (e: TooltipOpenChangeEvent) => void'}</Signature>
@@ -765,27 +783,34 @@ export function ControllerReference() {
       title="Controller (ref)"
       lead={
         <>
-          Takvimi kendi arayüzünüzden yönetmek için bir ref verin: aylar arasında gezinin, tarih seçin, seçimi temizleyin, odağı taşıyın ve durumu okuyun.
-          Slotların içinde aynı nesne <code>ctx.actions</code> olarak gelir.
+          Controller, kendi düğmelerinizin ve kodunuzun takvimi yönetmesini sağlar: ayı değiştirin, tarih seçin veya seçimi temizleyin, odağı taşıyın ve
+          mevcut durumu okuyun. Ona bir ref üzerinden ya da takvimin slotlarında <code>ctx.actions</code> olarak erişirsiniz.
         </>
       }
     >
       <Section title="Controller’ı edinmek">
         <p>
-          Türü <code>CalendarController</code> olan bir ref oluşturun ve <code>Calendar</code>’a verin. Ref mount’tan önce ve sunucuda <code>null</code>’dır; bu
-          yüzden metotları olay işleyicilerinden veya effect’lerden <code>?.</code> ile çağırın. Nesne takvim yaşadığı sürece aynı kalır ve her zaman en
-          güncel durumla çalışır; saklamak veya alt bileşenlere aktarmak güvenlidir.
+          Ref, React’te bir bileşene dışarıdan erişmenin yoludur: <code>useRef</code> ile oluşturursunuz, React onu mount’tan sonra doldurur. Türü{' '}
+          <code>CalendarController</code> olan bir ref oluşturun ve <code>Calendar</code>’a verin. Ref mount’tan önce ve sunucuda <code>null</code>’dır;
+          bu yüzden metotları olay işleyicilerinden veya effect’lerden <code>?.</code> ile çağırın (örneğin <code>calendar.current?.next()</code>).
+          Nesne takvim yaşadığı sürece aynı kalır ve her zaman en güncel durumla çalışır; saklamak veya alt bileşenlere aktarmak güvenlidir.
         </p>
         <p>
-          Slotlar (<code>renderHeader</code>, <code>renderFooter</code>, <code>renderMonthHeader</code>, <code>renderNavigation</code>,{' '}
-          <code>renderLoading</code>, <code>renderError</code>, <code>renderLoadMore</code>) aynı controller’ı <code>ctx.actions</code> olarak, anlık durum
-          alanlarıyla (<code>ctx.phase</code>, <code>ctx.visibleMonths</code>, …) birlikte alır; böylece takvimin içine koyduğunuz düğmeler için ref
-          gerekmez.
+          Slotlar, takvimin bazı bölümlerini kendiniz çizmenizi sağlayan render prop’lardır (<code>renderHeader</code>, <code>renderFooter</code>,{' '}
+          <code>renderMonthHeader</code>, <code>renderNavigation</code>, <code>renderLoading</code>, <code>renderError</code>,{' '}
+          <code>renderLoadMore</code>). Her biri slot bağlamı <code>ctx</code>’i alır: mevcut durum (<code>ctx.phase</code>,{' '}
+          <code>ctx.visibleMonths</code>, … yani <code>getSnapshot()</code> ile aynı alanlar) ve <code>ctx.actions</code> olarak aynı controller. Böylece
+          takvimin içine koyduğunuz bir düğme için ref gerekmez.
         </p>
         <p>
-          Metotlar, kullanıcı eylemleriyle aynı olayları <code>source: &apos;programmatic&apos;</code> ile yayar. controlled prop’larla (<code>value</code>,{' '}
+          Metotlar, kullanıcı eylemleriyle aynı olayları <code>source: &apos;programmatic&apos;</code> ile yayar. Controlled prop’larla (<code>value</code>,{' '}
           <code>visibleMonth</code>, <code>activeEndpoint</code>; değeri siz tutarsınız ve callback ile güncellersiniz) bir metot, tıpkı bir tıklama gibi,
           değişikliği callback üzerinden yalnızca <em>ister</em>.
+        </p>
+        <p>
+          Aşağıdaki örnekte her düğme bir metodu çağırır ve döndürdüğü değeri yazar. &quot;2 yıl sonrasına git (sınıra çekilir)&quot; düğmesini deneyin:
+          takvim yalnızca önümüzdeki 180 güne izin verdiği için sonuç <code>clamped: true</code> içerir. &quot;2 gün önce başlayan aralık
+          (reddedilir)&quot; ise <code>valid: false</code> döndürür ve seçimi değiştirmez.
         </p>
         <Example src="events/ControllerButtons" title="Takvimin dışındaki düğmeler" />
         <Snippet files={controllerCode} label="Ref’ten ve slottan controller" />
@@ -893,7 +918,7 @@ export function ControllerReference() {
           <code>clear(): void</code>. Seçimi boşaltır: <code>change</code> (<code>reason: &apos;clear&apos;</code>, <code>date: null</code>), ardından{' '}
           <code>selectionClear</code> yayar; aralık modunda sonraki tıklama yine başlangıcı belirler (uç nokta <code>end</code> idiyse{' '}
           <code>activeEndpointChange</code> da gelir). Doğrulama yapılmaz. Seçim zaten boşsa veya salt okunur modda hiçbir şey yapmaz ve olay yaymaz.
-          controlled bir <code>value</code> ile değişiklik yalnızca bir istektir.
+          Controlled bir <code>value</code> ile değişiklik yalnızca bir istektir.
         </p>
       </Section>
 
@@ -906,7 +931,7 @@ export function ControllerReference() {
           yeniden doğrulanmaz (geçersiz hale gelmiş olabilirse <code>onValidationChange</code>’i izleyin). Salt okunur modda hiçbir şey yapmaz.
         </p>
         <p>
-          controlled bir <code>value</code> ile normalde <code>defaultValue</code> vermezsiniz; bu yüzden <code>reset()</code> boş bir değer ister.
+          Controlled bir <code>value</code> ile normalde <code>defaultValue</code> vermezsiniz; bu yüzden <code>reset()</code> boş bir değer ister.
         </p>
       </Section>
 
@@ -956,7 +981,7 @@ export function ControllerReference() {
         </p>
         <p>
           uncontrolled (uç noktayı takvim tutar): <code>activeEndpointChange</code> (<code>source: &apos;programmatic&apos;</code>) render’dan sonra bildirilir.
-          controlled <code>activeEndpoint</code> (uç noktayı siz tutarsınız): çağrı yalnızca isteği yayar; uygulamak için prop’u güncelleyin. uncontrolled
+          Controlled <code>activeEndpoint</code> (uç noktayı siz tutarsınız): çağrı yalnızca isteği yayar; uygulamak için prop’u güncelleyin. Uncontrolled
           bir uç nokta, sonraki seçim değişikliğinde yine değere göre belirlenir (örneğin aralık tamamlanınca <code>start</code>’a döner).
         </p>
       </Section>

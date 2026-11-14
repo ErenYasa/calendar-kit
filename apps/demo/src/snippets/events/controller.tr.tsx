@@ -14,7 +14,8 @@ export function QuickPicks() {
   const pick = (nights: number) => {
     const start = addDays(getToday(), 1);
     // Bir tıklama gibi doğrulanır: geçersiz değer uygulanmaz, seçim değişmez ve
-    // onInvalidSelection yerelleştirilmiş mesajı alır.
+    // onInvalidSelection yerelleştirilmiş mesajı alır (burada "1 gece",
+    // minNights: 2 kuralı yüzünden reddedilir).
     const result = calendar.current?.select({ start, end: addDays(start, nights) });
     if (!result?.valid) return;
     setMessage('');
