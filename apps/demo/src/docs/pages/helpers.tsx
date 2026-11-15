@@ -374,7 +374,7 @@ const MESSAGE_KEYS = [
   {
     name: 'loading',
     type: 'string',
-    description: 'Screen-reader status text while data loads (the days themselves show a skeleton): for the initial load, and per month as “<month title>: <loading>”. Also announced when loading starts and passed to renderLoading.',
+    description: 'Screen-reader status text while data loads (the days themselves show loading placeholders): for the initial load, and per month as “<month title>: <loading>”. Also announced when loading starts and passed to renderLoading.',
   },
   { name: 'error / retry', type: 'string', description: <>Message and button text for a month whose data failed to load (also passed to <code>renderError</code>); <code>error</code> is announced when a month fails.</> },
   { name: 'today', type: 'string', description: "Appended to today's day label for screen readers." },

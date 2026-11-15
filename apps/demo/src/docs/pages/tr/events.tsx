@@ -157,8 +157,8 @@ export function EventsReference() {
         />
         <Note>
           <code>dayFocusChange</code> yeni odaklanan her gün için bir kez gelir. Testlerde tıklama odak değişmeden gerçekleştiği için <code>dateClick</code>’ten
-          sonra gelir. Fareye basıldığı anda (pointer down) düğmeye odaklanan tarayıcılarda (Chrome, Firefox, Edge) ise gün önce odak alır, bu yüzden{' '}
-          <code>dayFocusChange</code>, <code>dateClick</code>’ten önce gelir. Bu ikisinin birbirine göre sırasına güvenmeyin. Benzer şekilde sürekli modda{' '}
+          sonra gelir. Chrome’da (gerçek bir fare tıklamasıyla denendi) düğme fareye basıldığı anda (pointer down) odak alır, bu yüzden{' '}
+          <code>dayFocusChange</code>, <code>dateClick</code>’ten önce gelir; diğer tarayıcılar denenmedi. Bu ikisinin birbirine göre sırasına güvenmeyin. Benzer şekilde sürekli modda{' '}
           <code>visibleMonthsChange</code> genellikle bir kare sonra, tarayıcı ekrandaki ayları bildirdiğinde gelir.
         </Note>
       </Section>

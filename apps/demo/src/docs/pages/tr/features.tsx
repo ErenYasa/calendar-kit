@@ -32,7 +32,7 @@ export function SelectionModes() {
         <p>
           Bir aralığın hangi günlerde başlayabileceğini sınırlayan kurallar, burada hangi tarihlerin seçilebileceğini de sınırlar. Örneğin{' '}
           <code>startWeekdays</code> değeri <code>[2, 4]</code> olduğunda yalnızca salı ve perşembe seçilebilir (0 = pazar). Kullanıcı izin verilmeyen bir
-          güne tıkladığında seçim değişmez: ekran okuyucu nedeni okur, günün tooltip’i (güne gelindiğinde ya da odaklanıldığında açılan küçük kutu) da nedeni
+          güne tıkladığında seçim değişmez: takvim nedeni ekran okuyucular için canlı bölgesine (live region) yazar, günün tooltip’i (güne gelindiğinde ya da odaklanıldığında açılan küçük kutu) da nedeni
           gösterir. Bu metinleri <code>messages.reasons</code> üzerinden değiştirebilirsiniz.
         </p>
         <p>
@@ -104,7 +104,7 @@ export function DateLimits() {
           Bugün ince bir daire ve “Bugün” tooltip’iyle işaretlenir. Tarih, verdiyseniz <code>today</code> prop’undan gelir; vermediyseniz{' '}
           <code>timeZone</code> içinde (varsayılan: tarayıcının saat dilimi) hesaplanır. Gece yarısından sonra, gösterilen ay değişmeden güncellenir.{' '}
           <code>disablePast</code>/<code>disableFuture</code> da aynı tarihi kullanır. <code>highlightToday=&#123;false&#125;</code> yalnızca daireyi ve
-          tooltip’i kaldırır; ekran okuyucular günün etiketinde “bugün” bilgisini yine duyar.
+          tooltip’i kaldırır; “bugün” bilgisi günün erişilebilir etiketinde kalır.
         </p>
         <Example src="features/TodayMarker" title="Başka bir saat diliminde bugün ve işaretsiz bugün" />
       </Section>
@@ -495,7 +495,7 @@ export function DayContent() {
           { name: 'label', type: 'ReactNode', description: 'Sayının altında kısa metin, ör. bir fiyat.' },
           { name: 'badge', type: 'ReactNode', description: 'Üst bitiş köşesinde küçük bir badge.' },
           { name: 'icon', type: 'ReactNode', description: 'Üst başlangıç köşesinde küçük bir simge; sayıyı veya etiketi kaydırmaz.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Küçük renkli noktalar; her etiket ekran okuyucuya okunur.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Küçük renkli noktalar; ekran okuyuculardan gizlenir. Varsayılan gün içeriği label’ı kullanmaz; anlamını description’a yazın.' },
           { name: 'description', type: 'string', description: 'Ekran okuyucuların günün etiketinden sonra okuduğu ek metin (aria-describedby).' },
         ]}
       />
@@ -791,7 +791,7 @@ export function Accessibility() {
           Bir günün etiketi tam tarihi, bugün, başlangıç, bitiş veya seçili olup olmadığını ve neden seçilemediğini içerir. Bu tür günler{' '}
           <code>aria-disabled</code> kullanır ve odaklanabilir kalır.
         </li>
-        <li>Bir canlı bölge (live region: değiştiğinde ekran okuyucuların okuduğu görünmez bir alan) seçimleri, reddedilen seçimleri ve yüklemeyi duyurur.</li>
+        <li>Seçimler, reddedilen seçimler ve yükleme bir canlı bölgeye (live region: değiştiğinde ekran okuyucuların okuduğu, aria-live özellikli görünmez bir alan) yazılır.</li>
         <li>Odağı gösterilen ayların ötesine taşımak ayı değiştirir; ay eklemek veya kaldırmak odağı asla kaybettirmez.</li>
         <li>Odağı bir diyalogda tutmak ve kapanınca geri vermek uygulamanın işidir; takvim odağı yalnızca kendi ızgarasının içinde taşır.</li>
       </ul>

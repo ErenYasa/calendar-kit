@@ -153,8 +153,8 @@ export function EventsReference() {
         />
         <Note>
           <code>dayFocusChange</code> appears once per newly focused day. In the tests the click arrives without focus, so it follows <code>dateClick</code>. In
-          browsers that focus a button on pointer down (Chrome, Firefox, Edge) the day is focused first, so <code>dayFocusChange</code> comes before{' '}
-          <code>dateClick</code>. Do not rely on the relative order of these two. In the same way, in continuous mode{' '}
+          Chrome (checked with a real mouse click) the button is focused on pointer down, so <code>dayFocusChange</code> comes before{' '}
+          <code>dateClick</code>; other browsers have not been checked. Do not rely on the relative order of these two. In the same way, in continuous mode{' '}
           <code>visibleMonthsChange</code> usually arrives a frame later, once the browser reports which months are on screen.
         </Note>
       </Section>

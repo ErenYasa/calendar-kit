@@ -715,7 +715,7 @@ export function PropsReference() {
                 <>
                   Tooltip per day. When given it <strong>replaces</strong> the default tooltips (rejection reasons and “Today”); return{' '}
                   {c('day.reasonText')} to keep reasons. {c('{ content, persistent: true }')} shows it without hover (the first persistent day wins), e.g.
-                  “Choose your check-out”. Days drawn as skeletons get no tooltip. {to('tooltip', 'Tooltip')}.
+                  “Choose your check-out”. Days drawn as loading placeholders get no tooltip. {to('tooltip', 'Tooltip')}.
                 </>
               ),
             },
@@ -783,8 +783,8 @@ export function PropsReference() {
               type: '(props: LoadingRenderProps, ctx: SlotContext) => ReactNode',
               description: (
                 <>
-                  A visible loading indicator; by default only skeleton days and screen-reader text are shown. Called per {c('scope')}:{' '}
-                  {c("'initial'")} ({c('loading')} on first load), {c("'month'")} (each loading month, skeleton stays) and {c("'load-more'")} (months just
+                  A visible loading indicator; by default only the loading placeholders and a status text for screen readers are shown. Called per {c('scope')}:{' '}
+                  {c("'initial'")} ({c('loading')} on first load), {c("'month'")} (each loading month, the placeholders stay) and {c("'load-more'")} (months just
                   added). Not called for a background refresh. {to('loading', 'Loading & errors → A visible loading indicator')}.
                 </>
               ),

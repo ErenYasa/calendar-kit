@@ -151,7 +151,7 @@ export function StylingReference() {
             [c('dayContent'), c('cal-day-content'), <>{c('span')} inside the default button, around the number or {c('renderDayContent')}. Accepts a function.</>, <>No {c('renderDay')}.</>],
             [c('tooltip'), c('cal-tooltip'), <>The portalled {c('div[role=tooltip]')} (in {c('document.body')} or {c('tooltip.container')}). {c('tooltip.className')} is added after it. Carries {c('data-placement')}.</>, 'While a day tooltip is open.'],
             [c('loadMore'), c('cal-load-more'), <>Default load-more {c('<button>')} with {c('data-direction')}.</>, <>{c('navigation="continuous"')}, {c('loadMore="button"')}, more months can be loaded, no {c('renderLoadMore')}.</>],
-            [c('loading'), c('cal-loading'), <>Default initial-load indicator with {c('data-scope="initial"')}: a spinner in the months grid while no month is rendered, and a visually hidden status text during the initial {c('loading')}.</>, <>Initial load only, without {c('renderLoading')}. Month and load-more loading have no default element with this class (the days are drawn as a skeleton).</>],
+            [c('loading'), c('cal-loading'), <>Default initial-load indicator with {c('data-scope="initial"')}: a spinner in the months grid while no month is rendered, and a visually hidden status text during the initial {c('loading')}.</>, <>Initial load only, without {c('renderLoading')}. Month and load-more loading have no default element with this class (the days are drawn as loading placeholders).</>],
             [c('error'), c('cal-error'), <>{c('div[role=alert]')} in a month whose data status is {c('error')}, with a {c('cal-retry')} button when {c('onRetry')} is set.</>, <>Month status {c('error')}, no {c('renderError')}.</>],
             [c('liveRegion'), c('cal-live'), 'Visually hidden aria-live region for announcements.', 'Always (kept visually hidden inline, also when unstyled).'],
           ]}
@@ -219,15 +219,15 @@ export function StylingReference() {
             [c('--cal-bg'), c('#fff'), 'Root background, the shared (sticky) weekday row background, and the gap between a focused day and its focus ring.'],
             [c('--cal-accent'), c('#1f2328'), 'Selected day circle, the outline of the previewed range end, day badges.'],
             [c('--cal-accent-contrast'), c('#fff'), 'Number on a selected circle, badge text.'],
-            [c('--cal-range'), c('#eef0f2'), 'Selected range band; also nav button and load-more hover, the shared weekday row border, the footer top border, and the skeleton shimmer.'],
-            [c('--cal-preview'), c('#f4f5f6'), 'Preview band while choosing an end; also the read-only notice background and the skeleton shimmer.'],
+            [c('--cal-range'), c('#eef0f2'), 'Selected range band; also nav button and load-more hover, the shared weekday row border, the footer top border, and the loading placeholders’ shimmer.'],
+            [c('--cal-preview'), c('#f4f5f6'), 'Preview band while choosing an end; also the read-only notice background and the loading placeholders’ shimmer.'],
             [c('--cal-hover'), c('#d0d4d9'), 'Thin outline of a hovered day (not disabled, not selected, not read-only).'],
             [c('--cal-focus'), c('#2563eb'), 'Keyboard focus ring of days, nav buttons, load-more and retry buttons.'],
             [c('--cal-today'), c('#9aa0a6'), <>Thin outline of today’s circle (only while {c('highlightToday')} is on).</>],
             [c('--cal-ring'), c('#c4c7cc'), 'Outer half-ring on the start and end of a multi-day band.'],
             [c('--cal-danger'), c('#b42318'), 'Month error message: text colour, and an 8% tint as its background.'],
             [c('--cal-radius'), c('12px'), 'Rounded band ends where the band breaks at a week or month edge.'],
-            [c('--cal-circle'), c('0.84'), 'Circle size as a fraction of the cell’s shorter side: selection, today, hover and focus circles, band height, end half-rings, label/badge width, skeleton pills.'],
+            [c('--cal-circle'), c('0.84'), 'Circle size as a fraction of the cell’s shorter side: selection, today, hover and focus circles, band height, end half-rings, label/badge width, loading placeholder pills.'],
             [c('--cal-tooltip-bg'), c('#fff'), 'Tooltip and arrow background.'],
             [c('--cal-tooltip-color'), c('#1f2328'), 'Tooltip text colour.'],
             [c('--cal-tooltip-shadow'), c('0 4px 16px rgb(0 0 0 / 0.14)'), 'Tooltip box-shadow.'],
@@ -285,8 +285,8 @@ export function StylingReference() {
           head={['Attribute', 'Values', 'Meaning']}
           rows={[
             [c('data-month'), c('YYYY-MM'), 'The month.'],
-            [c('data-status'), c('unknown | loading | error'), <>From {c('getDataStatus')}; absent when {c('loaded')}. The theme draws the days as a skeleton for {c('unknown')} and {c('loading')}.</>],
-            [c('data-skeleton'), yes, <>Initial load ({c('loading')} before the calendar was shown without it): days drawn as a skeleton.</>],
+            [c('data-status'), c('unknown | loading | error'), <>From {c('getDataStatus')}; absent when {c('loaded')}. The theme draws the days as loading placeholders for {c('unknown')} and {c('loading')}.</>],
+            [c('data-skeleton'), yes, <>Initial load ({c('loading')} before the calendar was shown without it): days drawn as loading placeholders.</>],
           ]}
         />
         <DataTable
@@ -390,7 +390,7 @@ export function StylingReference() {
             { name: 'renderFooter', type: '(ctx) => ReactNode', description: <>Inside {c('div.cal-footer')} ({c('classNames.footer')}), after the months. The theme adds a top border in {c('--cal-range')}.</> },
             { name: 'renderNavigation', type: '(NavigationRenderProps, ctx) => ReactNode', description: <>Paged only. Inside {c('div.cal-navigation')} above the months and replaces the default arrows. Props: {c('canPrevious')}, {c('canNext')}, {c('previous()')}, {c('next()')}, {c('months')}, {c('labels')}.</> },
             { name: 'renderMonthHeader', type: '(MonthHeaderRenderProps, ctx) => ReactNode', description: <>Replaces the whole {c('cal-month-header')} row, without a wrapper. Props: {c('month')}, {c('title')}, {c('index')}, {c('status')} and {c('navigation')}: the default arrows that belong to this header, or {c('null')} (always null with {c('renderNavigation')} or continuous navigation). The month is then labelled with {c('aria-label')}.</> },
-            { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>No wrapper. {c('scope')} {c('initial')}: after the viewport during the initial load; {c('month')}: inside a loading month after its grid (the skeleton stays); {c('load-more')}: in the load-more area while added months load (no default for this one).</> },
+            { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>No wrapper. {c('scope')} {c('initial')}: after the viewport during the initial load; {c('month')}: inside a loading month after its grid (the placeholders stay); {c('load-more')}: in the load-more area while added months load (no default for this one).</> },
             { name: 'renderError', type: '(ErrorRenderProps, ctx) => ReactNode', description: <>Replaces {c('div.cal-error')} in each month with status {c('error')}. {c('retry()')} calls {c('onRetry([month])')}.</> },
             { name: 'renderLoadMore', type: '(LoadMoreRenderProps, ctx) => ReactNode', description: <>Replaces the default load-more button inside its area (continuous, {c('loadMore="button"')}, directions in {c('loadDirections')}); also called at {c('minDate')}/{c('maxDate')} with {c('canLoad: false')}, where {c('loadMore()')} does nothing. Props: {c('direction')}, {c('canLoad')}, {c('loading')}, {c('loadMore()')}, {c('label')}.</> },
             { name: 'renderDayTooltip', type: '(DayTooltipRenderProps) => ReactNode', description: <>Content of the open tooltip, inside {c('div.cal-tooltip')} before the arrow. Props: {c('day')}, {c('content')} (from {c('getDayTooltip')} or the default reason text), {c('trigger')}, {c('placement')}. No ctx.</> },

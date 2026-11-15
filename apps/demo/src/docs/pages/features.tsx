@@ -32,7 +32,7 @@ export function SelectionModes() {
         <p>
           Rules that limit which days can start a range also limit which dates can be picked here. For example <code>startWeekdays</code> set to{' '}
           <code>[2, 4]</code> allows only Tuesdays and Thursdays (0 = Sunday). When the user clicks a day that is not allowed, the selection does not change:
-          a screen reader announces the reason, and the day&apos;s tooltip (the small box that appears when you point at or focus the day) shows it. You can
+          the calendar writes the reason to its screen-reader live region, and the day&apos;s tooltip (the small box that appears when you point at or focus the day) shows it. You can
           change these texts through <code>messages.reasons</code>.
         </p>
         <p>
@@ -103,7 +103,7 @@ export function DateLimits() {
           Today is marked with a thin circle and a “Today” tooltip. The date comes from the <code>today</code> prop when you pass it; otherwise it is computed
           in <code>timeZone</code> (default: the browser&apos;s time zone). It updates after midnight without changing the month shown.{' '}
           <code>disablePast</code>/<code>disableFuture</code> use the same date. <code>highlightToday=&#123;false&#125;</code> removes only the circle and the
-          tooltip; screen readers still hear “today” in the day&apos;s label.
+          tooltip; “today” stays in the day&apos;s accessible label.
         </p>
         <Example src="features/TodayMarker" title="Today in another time zone, and without the marker" />
       </Section>
@@ -492,7 +492,7 @@ export function DayContent() {
           { name: 'label', type: 'ReactNode', description: 'Short text under the number, e.g. a price.' },
           { name: 'badge', type: 'ReactNode', description: 'A small badge in the top end corner.' },
           { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner; it does not move the number or the label.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots; each label is read to screen readers.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots, hidden from screen readers. The default day content does not use label; put the meaning in description.' },
           { name: 'description', type: 'string', description: 'Extra text that screen readers read after the day’s label (aria-describedby).' },
         ]}
       />
@@ -786,7 +786,7 @@ export function Accessibility() {
           A day&apos;s label contains the full date, whether it is today, the start, the end or selected, and why it cannot be picked. Such days use{' '}
           <code>aria-disabled</code> and stay focusable.
         </li>
-        <li>A live region (an invisible area that screen readers read out when it changes) announces selections, rejected picks and loading.</li>
+        <li>Selections, rejected picks and loading are written to a live region (an invisible aria-live area that screen readers read out when it changes).</li>
         <li>Moving focus past the months shown changes the month; adding or removing months never loses focus.</li>
         <li>Trapping focus in a dialog and returning focus when it closes are the app&apos;s job; the calendar only moves focus inside its own grid.</li>
       </ul>

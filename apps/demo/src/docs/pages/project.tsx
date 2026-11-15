@@ -23,7 +23,7 @@ export function Testing() {
           <li>Date model and arithmetic (time-zone and DST safe), selection engine and rules.</li>
           <li>Calendar behaviour in jsdom: modes, keyboard, focus, events and their order, loading, tooltips, layout decisions, render counts.</li>
           <li>Regression tests for every fixed verification finding (see <code>docs/verification-findings.md</code>).</li>
-          <li>Stylesheet cascade (specificity of focus, today, skeleton and reduced-motion rules) on the compiled CSS.</li>
+          <li>Stylesheet cascade (specificity of focus, today, loading placeholder and reduced-motion rules) on the compiled CSS.</li>
           <li>Package: export targets present in <code>npm pack</code>, build output (<code>&apos;use client&apos;</code> kept, core without React), declarations under node16/nodenext/bundler.</li>
           <li>Docs: every example uses only the public entry points and only shows files that exist.</li>
         </ul>

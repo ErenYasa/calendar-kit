@@ -15,7 +15,9 @@ export default function DayContent() {
       badge: deal ? '-20%' : undefined,
       icon: date.endsWith('-01') || date.endsWith('-15') ? '★' : undefined, // the 15th: price, icon and badge together
       markers: info.status === 'booked' ? [{ color: '#d6336c', label: 'Partly booked' }] : undefined,
-      description: deal ? '20% discount' : undefined,
+      // The dots are hidden from screen readers and the default content does not
+      // use a marker's label, so its meaning goes into the description too.
+      description: [deal && '20% discount', info.status === 'booked' && 'Partly booked'].filter(Boolean).join(', ') || undefined,
     };
   };
   // In a small cell a badge longer than the circle is cut with an ellipsis.
