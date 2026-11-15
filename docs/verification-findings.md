@@ -9,7 +9,7 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız: 51 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 54 madde; + 8 şüphe/gözlem)
+## Sayım (çakışmasız: 53 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 56 madde; + 8 şüphe/gözlem)
 
 Her madde tam olarak bir grupta sayılır.
 
@@ -17,6 +17,7 @@ Her madde tam olarak bir grupta sayılır.
 |---|---|---|
 | Düzeltildi | 49 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51 |
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 5 | F27, F29, F31, F47, F50b |
+| Açık (bu PR’da düzeltilmedi) | 2 | F52, F53 |
 | Bekleyen (karar gerekli) | 0 | — |
 | Doğrulanamadı | 2 | S03 (klasik scrollbar gerekir), S04 (ekran okuyucu gerekir) |
 | Gözlem (hata olarak kanıtlanmadı) | 4 | S05, S06, S07, S08 |
@@ -196,6 +197,39 @@ Kalan açık: **0**. Kararlar 2026-11-07'de verildi (aşağıdaki seçenekler ka
 - **F49** (`type="button"`): (a) `getDayProps({ type: null })` ile kaldırılabilsin (küçük API eklemesi); (b) belge: `renderDay`'de `<button>` kullanın. Öneri: (a).
 - **F50b**: (a) `'resize'`/`'scroll'`u `EventSource`'tan çıkar (tip kırıcı, sürüm notu); (b) ayrılmış değer olarak bırak. **F50c**: (a) `InvalidSelectionEvent.date` `CalendarDate | null` olsun (tip kırıcı); (b) seçimdeki ilgili tarihe (tekil değer / aralık başlangıcı) düş.
 - **F51**: (a) değişiklik yoksa olay gönderme (`select` aynı değer, eşit `reset`, sınırda `next`/`previous`); (b) mevcut davranışı koru ve belgele (`clamped: true` sınırı bildirir). Öneri: (a), `next`/`previous` için kesin; `select` için `selectionComplete`'in "onay" olarak kullanıldığı uygulamalar varsa (b).
+
+### F52 (açık): `minNights` > `maxNights` olduğunda başlangıç kabulü tutarsız
+
+Bulunduğu yer: dokümantasyon incelemesi (2026-11-15). Kural motoru bu PR’da değiştirilmedi.
+
+Yeniden üretim (paket kaynağı, vitest/jsdom; `createSelectionEngine` ve `<Calendar mode="range">` aynı sonucu verir):
+
+1. `stayRules({ minNights: 5, maxNights: 3 })`, bütün günler müsait, `today` 2026-11-02.
+   - Her başlangıç reddedilir: `plan('2026-11-10')` → `rejected`, `min-length`. Takvimde ayın 30 günü de devre dışıdır; tıklama `invalidSelection` (`min-length`) yayar.
+   - Başlangıç 2026-11-10 kabul edilmiş gibi bitişler denendiğinde: 1–4 gece `min-length`, 5–6 gece `max-length`. Hiçbir uzunluk iki koşulu birden sağlamaz.
+   - Sorun: sebep metni “en az 5 gece” der; asıl sebep (alt sınırın üst sınırdan büyük olması) bildirilmez.
+2. Aynı kurallar + `getDayStatus: () => 'check-in-only'` (hiçbir gün çıkış günü olamaz).
+   - Başlangıç **kabul edilir**: `plan('2026-11-10')` → `start`, sorun yok.
+   - Ardından her bitiş reddedilir (`end-not-allowed`); aralık hiçbir zaman tamamlanamaz.
+   - Sorun: `requireReachableEnd` (adaptörlerde açık) ulaşılamaz bitişli başlangıcı reddetmelidir. `maxLength < minLength` iken arama döngüsü hiç çalışmaz (`core/engine.ts` ulaşılabilir bitiş araması, ~281–317. satırlar); daha kısa bir bitiş de uzunluk kuralı olmadan geçerli olmadığı için `min-length` da dönmez ve başlangıç kabul edilir.
+3. Aynı kurallar + yalnızca 11 Kasım dolu: başlangıç yine `min-length` ile reddedilir (1. durumla aynı).
+
+Beklenen (öneri, karar verilmedi): çelişkili uzunluk sınırları hiçbir başlangıca izin vermemeli ve bunu açık bir sebeple bildirmeli (veya `stayRules`/`dayRangeRules` geliştirme ortamında uyarı vermeli). Kapsam: yalnızca yanlış yapılandırma; geçerli sınırlarla (`minNights ≤ maxNights`) etkisi yok.
+
+### F53 (açık): `DefaultDayData.markers[].label` hiçbir yerde kullanılmıyor
+
+Bulunduğu yer: dokümantasyon doğrulaması (2026-11-15). Paket bu PR’da değiştirilmedi.
+
+Yeniden üretim: `getDayData={() => ({ markers: [{ color: 'red', label: 'Partly booked' }] })}` ile bir takvim render edin.
+
+- Noktalar `<span class="cal-day-markers" aria-hidden="true">` içinde çizilir.
+- Her nokta yalnızca `className` ve arka plan rengini alır (`react/Day.tsx`, `DefaultDayContent`).
+- `label` ne görünür metne, ne `title`’a, ne de günün `aria-label`/`aria-describedby` değerine eklenir; ekran okuyucular bu bilgiyi almaz.
+- Tip yorumu (`react/types.ts`, “each is announced through `description`/`label`”) bunun aksini düşündürür.
+
+Dokümantasyon düzeltildi: `label` kullanılmaz, anlam `description`’a yazılmalıdır. DayContent örneği artık bunu yapar.
+
+Beklenen (öneri, karar verilmedi): ya etiketler günün açıklamasına eklenmeli, ya da alan ve yorumu kaldırılmalı/açıkça “kullanılmaz” diye belgelenmeli.
 
 ### Dokümantasyon sırasında görülen diğer gözlemler (hata olarak kanıtlanmadı)
 
