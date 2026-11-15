@@ -14,7 +14,7 @@ export function LayoutLab() {
         </>
       }
     >
-      <Section title="The lab">
+      <Section title="How to use the lab">
         <p>
           The calendar sits in a box you can narrow by dragging its bottom corner. The layout follows that box, not the window, so you can try a phone width
           on a desktop screen. The box starts at the full width of the example. Below the calendar, the React Profiler measurements and the{' '}
@@ -39,7 +39,7 @@ export function LayoutLab() {
                 {c('paged')} shows a fixed window with previous/next arrows; {c('continuous')} scrolls through months and loads more at the edges (the lab sets{' '}
                 {c('maxBlockSize={480}')} and {c('loadDirections="both"')} so it scrolls inside the box).
               </>,
-              <a href="#/load-more">Progressive months</a>,
+              <a href="#/load-more">Loading more months</a>,
             ],
             [
               'overflow',
@@ -136,8 +136,8 @@ export function LayoutLab() {
             Dragging the box emits {c('resize')}; {c('layoutChange')} follows only when the columns, effective months or overflow actually change.
           </li>
           <li>
-            Clicking a day emits {c('dateClick')} (also for a rejected day), then {c('change')} and {c('activeEndpointChange')}; the click that completes
-            the range adds {c('selectionComplete')}. Moving focus to another day emits {c('dayFocusChange')}; after React has rendered,{' '}
+            Clicking a day emits {c('dateClick')}. If the day cannot be selected, {c('invalidSelection')} follows and the selection stays the same.
+            Otherwise {c('change')} and {c('activeEndpointChange')} follow, and the click that completes the range adds {c('selectionComplete')}. Moving focus to another day emits {c('dayFocusChange')}; after React has rendered,{' '}
             {c('validationChange')} follows when the validation result changed.
           </li>
         </ul>

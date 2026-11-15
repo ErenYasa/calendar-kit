@@ -20,20 +20,22 @@ export function RulesReference() {
       title="Rules & adapters"
       lead={
         <>
-          The React-free selection model: the <code>SelectionRules</code> object, the adapters that build it for stays and day ranges, the functions that combine
-          and relax rule sets, and the headless engine that evaluates them. Everything here is exported from <code>calendar-kit/core</code> (and{' '}
-          <code>calendar-kit</code>), so the same rules can be checked on the server.
+          Rules decide which days can be picked and which selections are valid. This page is the full reference: the <code>SelectionRules</code> object,
+          the adapters that build it for overnight stays and day bookings, the functions that combine and relax rule sets, and the engine that checks a date
+          or a range without React. Everything here is exported from <code>calendar-kit/core</code> (and <code>calendar-kit</code>), so your server can
+          check a booking request with the same rules as the calendar.
         </>
       }
     >
-      <Section title="SelectionRules">
+      <Section title="SelectionRules: the rule object">
         <p>
-          The calendar&apos;s <code>rules</code> prop takes one rule set or an array of them. An array is merged with <code>combineRules</code>; the{' '}
-          <code>minDate</code>, <code>maxDate</code>, <code>disablePast</code>, <code>disableFuture</code> and <code>getDataStatus</code> props are added as one
-          more set at the end of that list. Every field is optional; an empty object allows every day.
+          A rule set is a plain object; every field is optional and an empty object allows every day. The calendar&apos;s <code>rules</code> prop takes one
+          rule set or an array of them, for example <code>{'rules={[stayRules({ minNights: 2 }), closedDates(holidays)]}'}</code>. An array is merged with{' '}
+          <code>combineRules</code>, so a day must pass every set. The calendar&apos;s <code>minDate</code>, <code>maxDate</code>, <code>disablePast</code>,{' '}
+          <code>disableFuture</code> and <code>getDataStatus</code> props are added as one more set at the end of that list.
         </p>
 
-        <h3>Bounds</h3>
+        <h3>Bounds: earliest and latest day</h3>
         <PropsTable
           caption="Bounds"
           rows={[
@@ -42,8 +44,8 @@ export function RulesReference() {
               type: 'CalendarDate | null',
               description: (
                 <>
-                  Earliest selectable day (inclusive). An earlier day fails with <code>before-min</code>. The calendar also stops navigating before the month that
-                  contains it.
+                  Earliest selectable day (inclusive). Earlier days cannot be selected (reason <code>before-min</code>), and the calendar does not navigate to
+                  months before this day&apos;s month.
                 </>
               ),
             },
@@ -52,7 +54,7 @@ export function RulesReference() {
               type: 'CalendarDate | null',
               description: (
                 <>
-                  Latest selectable day (inclusive); later days fail with <code>after-max</code>. Navigation stops at its month.
+                  Latest selectable day (inclusive). Later days cannot be selected (reason <code>after-max</code>), and navigation stops at this day&apos;s month.
                 </>
               ),
             },
@@ -62,8 +64,8 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  Days before <em>today</em> fail with <code>past</code>. Has no effect while today is unknown (<code>today: null</code> in the engine). Does not
-                  limit navigation.
+                  Days before <em>today</em> cannot be selected (reason <code>past</code>). Has no effect while today is unknown (<code>today: null</code> in the
+                  engine). Past months can still be browsed.
                 </>
               ),
             },
@@ -73,20 +75,20 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  Days after today fail with <code>future</code>. Same conditions as <code>disablePast</code>.
+                  Days after today cannot be selected (reason <code>future</code>). Otherwise works like <code>disablePast</code>.
                 </>
               ),
             },
           ]}
         />
         <p>
-          Bound checks apply to every day a selection touches: a start, an end and every day between them. A bound violation on a day inside a range is reported
-          as <code>blocked-in-range</code>.
+          Bounds apply to every day a selection touches: the start, the end and every day between them. When a day inside a range is out of bounds, the
+          range is rejected with <code>blocked-in-range</code>.
         </p>
 
-        <h3>Range shape</h3>
+        <h3>Range length and end day</h3>
         <PropsTable
-          caption="Range shape"
+          caption="Range length and end day"
           rows={[
             {
               name: 'rangeSemantics',
@@ -94,11 +96,11 @@ export function RulesReference() {
               default: "'inclusive'",
               description: (
                 <>
-                  How the end is counted. <code>inclusive</code>: <code>[start, end]</code>, the end day is part of the booking (13 → 20 = 8 days).{' '}
-                  <code>exclusive</code>: <code>[start, end)</code>, the end is a boundary such as a check-out day (13 → 20 = 7 nights). In both cases the start
-                  must allow starting, the end must allow ending and every day strictly between them must allow passing through; the semantics changes the length
-                  unit, the default of <code>allowSameDay</code> and which days are reported as included (<code>getIncludedDays</code>,{' '}
-                  <code>DayState.included</code>).
+                  Whether the end day is part of the booking. <code>inclusive</code> end, <code>[start, end]</code>: the end day is booked too, so 13 → 20 is
+                  8 days (boat rental, event). <code>exclusive</code> end, <code>[start, end)</code>: the end is only a boundary, such as a check-out day, so 13
+                  → 20 is 7 nights (hotel stay). The setting changes the length unit (days or nights), the default of <code>allowSameDay</code> and which days
+                  count as included (<code>getIncludedDays</code>, <code>DayState.included</code>). The checks themselves are the same: the start must allow
+                  starting, the end must allow ending and every day strictly between them must allow passing through.
                 </>
               ),
             },
@@ -108,8 +110,8 @@ export function RulesReference() {
               default: 'inclusive: true · exclusive: false',
               description: (
                 <>
-                  Whether <code>start === end</code> is a valid range. When it is not, clicking the lone start again clears it, and validating such a range gives{' '}
-                  <code>same-day</code>. A same-day range needs a day that passes both the start and the end checks (<code>canStart</code>, <code>canEnd</code>,{' '}
+                  Whether a range may start and end on the same day (<code>start === end</code>). When it may not, clicking the start again (before an end is
+                  picked) clears the selection, and validating such a range gives <code>same-day</code>. A same-day range needs a day that passes both the start and the end checks (<code>canStart</code>, <code>canEnd</code>,{' '}
                   <code>startWeekdays</code>, <code>endWeekdays</code>). In exclusive semantics a same-day range has length 0,
                   so it is only valid when <code>minLength</code> is unset or 0.
                 </>
@@ -120,7 +122,7 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  Shortest range. Measured in nights for exclusive ranges (<code>end − start</code>) and in days for inclusive ranges (<code>end − start + 1</code>
+                  Shortest allowed range. Measured in nights for exclusive ranges (<code>end − start</code>) and in days for inclusive ranges (<code>end − start + 1</code>
                   ). Shorter ranges fail with <code>min-length</code>, params <code>{'{ min, actual, unit }'}</code>.
                 </>
               ),
@@ -130,8 +132,8 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  Longest range, same unit. Longer ranges fail with <code>max-length</code>, params <code>{'{ max, actual, unit }'}</code>. Also caps the
-                  reachable-end search.
+                  Longest allowed range, same unit. Longer ranges fail with <code>max-length</code>, params <code>{'{ max, actual, unit }'}</code>. Also sets how
+                  far the reachable-end search looks.
                 </>
               ),
             },
@@ -152,8 +154,9 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  The first click selects that day alone as a complete range (<code>start === end</code>, next endpoint <code>end</code>). A later click on or
-                  after it extends the range; clicking the same lone day clears it; a click before it starts over. Ignored when same-day ranges are not allowed or{' '}
+                  The first click selects that day alone as a complete range (<code>start === end</code>, next endpoint <code>end</code>), so a one-day booking
+                  needs one click. A click on a later day extends the range; clicking the same day again clears it; a click on an earlier day starts over from
+                  there. Ignored when same-day ranges are not allowed or{' '}
                   <code>fixedLength</code> is set. If the single day itself is not valid (for example under <code>minLength: 2</code>, or on a day that cannot be
                   an end) the click falls back to an ordinary start.
                 </>
@@ -162,7 +165,7 @@ export function RulesReference() {
           ]}
         />
 
-        <h3>Schedule</h3>
+        <h3>Schedule: allowed weekdays</h3>
         <PropsTable
           caption="Schedule rules"
           rows={[
@@ -171,7 +174,8 @@ export function RulesReference() {
               type: 'readonly Weekday[]',
               description: (
                 <>
-                  Weekdays (0 = Sunday … 6 = Saturday) a range, single pick or multiple pick may start on. Other days fail with <code>weekday-start</code>, params{' '}
+                  Weekdays (0 = Sunday … 6 = Saturday) a range, a single pick or a multiple pick may start on. Other days cannot be a start (reason{' '}
+                  <code>weekday-start</code>, params{' '}
                   <code>{'{ weekday }'}</code>. Days that are not allowed as starts can still be ends or be passed through.
                 </>
               ),
@@ -181,7 +185,7 @@ export function RulesReference() {
               type: 'readonly Weekday[]',
               description: (
                 <>
-                  Weekdays a range may end on; others fail with <code>weekday-end</code>. Also checked for same-day ranges, whose end is the start day.
+                  Weekdays a range may end on; other days cannot be an end (reason <code>weekday-end</code>). Also checked for same-day ranges, whose end is the start day.
                 </>
               ),
             },
@@ -191,7 +195,7 @@ export function RulesReference() {
               description: (
                 <>
                   Weekdays the service operates on. Every other day is closed as a whole (reason <code>out-of-schedule</code>, marked as schedule): it cannot be
-                  a start, an end or be crossed. This replaces what <code>getDayAvailability</code> returned for that day unless it was already closed. An empty
+                  a start or an end, and no range can cross it. This replaces what <code>getDayAvailability</code> returned for that day unless it was already closed. An empty
                   list closes every day.
                 </>
               ),
@@ -199,11 +203,14 @@ export function RulesReference() {
           ]}
         />
         <p>
-          These three fields, the length fields and availability results marked <code>schedule: true</code> are <em>schedule rules</em>: the regular timetable
-          rather than real unavailability. The calendar&apos;s <code>relaxSchedule</code> prop (and <code>relaxRules</code>) removes them (see relaxRules below). Days blocked only by the schedule are drawn faded (<code>data-out-of-schedule</code>) instead of struck through.
+          These three fields, the length fields and availability results marked <code>schedule: true</code> are <em>schedule rules</em>: your regular
+          timetable (check-in on Saturdays only, at least 2 nights), not real unavailability such as a booked or closed day. The difference matters when
+          staff make an exception, for example a booking taken by phone: the calendar&apos;s <code>relaxSchedule</code> prop (or <code>relaxRules</code>,
+          see below) removes the schedule rules and keeps every real restriction. Days blocked only by the schedule are drawn faded{' '}
+          (<code>data-out-of-schedule</code>) instead of struck through.
         </p>
 
-        <h3>Availability and data</h3>
+        <h3>Day availability and loading state</h3>
         <PropsTable
           caption="Availability and data"
           rows={[
@@ -212,18 +219,20 @@ export function RulesReference() {
               type: '(date, ctx: RuleContext) => DayAvailability | null | undefined',
               description: (
                 <>
-                  Per-day selectability. Return nothing for a fully available day. It is called at most once per day for each engine snapshot (the calendar
-                  creates one per render), and it receives the current selection in <code>ctx</code>, so availability may depend on the chosen start.
+                  Says what is possible on one day (start, end, pass through) and why not; see DayAvailability below. Return nothing for a fully available
+                  day. The second argument <code>ctx</code> is the rule context (current selection, mode, today, your <code>ruleContext</code>; see
+                  RuleContext below), so availability may depend on the chosen start. It is called at most once per day for each engine; the calendar creates a
+                  new engine when the rules, the selection, today or <code>ruleContext</code> change.
                 </>
               ),
             },
             {
               name: 'getDataStatus',
               type: "(month: CalendarMonth) => 'unknown' | 'loading' | 'loaded' | 'error'",
-              default: "every month 'loaded'",
+              default: <>every month <code>'loaded'</code></>,
               description: (
                 <>
-                  Load state of your availability data per month. When both the rules and the calendar prop define it, the worse status wins (see{' '}
+                  Whether your availability data for a month is loaded yet. When both the rules and the calendar prop define it, the worse status wins (see{' '}
                   <code>combineRules</code>).
                 </>
               ),
@@ -234,15 +243,15 @@ export function RulesReference() {
               default: "'block'",
               description: (
                 <>
-                  <code>block</code>: a day in a month that is not <code>loaded</code> fails with <code>data-unknown</code>, <code>data-loading</code> or{' '}
-                  <code>data-error</code> — as a start, an end and inside a range. <code>allow</code>: the data status is ignored by validation.
+                  <code>block</code>: a day in a month that is not <code>loaded</code> cannot be a start or an end and cannot lie inside a range (reason{' '}
+                  <code>data-unknown</code>, <code>data-loading</code> or <code>data-error</code>). <code>allow</code>: validation ignores the data status.
                 </>
               ),
             },
           ]}
         />
 
-        <h3>Validation</h3>
+        <h3>Custom validation and selection limits</h3>
         <PropsTable
           caption="Validation"
           rows={[
@@ -251,10 +260,12 @@ export function RulesReference() {
               type: '(selection, ctx: RuleContext) => ValidationIssue | null | undefined',
               description: (
                 <>
-                  Your own rule. Runs only after every built-in check has passed, for each proposed selection: clicks and keys (also when a range start is placed,
-                  so it sees <code>{'{ start, end: null }'}</code>), <code>ref.select()</code>, and revalidation when rules, data or <code>ruleContext</code>{' '}
-                  change. It is not called for deselecting actions (clearing a range, toggling a date off). A returned issue without <code>code</code> gets{' '}
-                  <code>custom</code>; its <code>message</code> is shown as is.
+                  Your own rule, for anything the fields above cannot express (e.g. “at most 4 guests on weekends”). It receives the proposed selection and the
+                  rule context <code>ctx</code>, and returns an issue to reject it or nothing to accept it. It runs only after every built-in check has passed:
+                  for clicks and keys (also when a range start is placed, so it sees <code>{'{ start, end: null }'}</code>), for <code>ref.select()</code> (setting
+                  the selection from code through the calendar&apos;s ref), and when rules, data or <code>ruleContext</code> change. The calendar also calls it for every rendered day to decide which days are disabled, so
+                  keep it fast and free of side effects. It is not called for deselecting actions (clearing a range, toggling a date off). A returned issue
+                  without <code>code</code> gets <code>custom</code>; its <code>message</code> is shown as is.
                 </>
               ),
             },
@@ -263,7 +274,7 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  Multiple mode only: the most distinct dates. The value is treated as a set, so a duplicated date counts once. Adding one more fails with{' '}
+                  Multiple mode only: how many different dates can be selected. A date listed twice counts once. Adding one more fails with{' '}
                   <code>max-selections</code>, params <code>{'{ max, actual }'}</code>.
                 </>
               ),
@@ -271,11 +282,11 @@ export function RulesReference() {
             {
               name: 'requireReachableEnd',
               type: 'boolean',
-              default: 'false (true in both adapters)',
+              default: <><code>false</code> (both adapters: <code>true</code>)</>,
               description: (
                 <>
-                  Range mode only: a start is rejected when no valid end can follow it, for example when the next night is booked under a 2-night minimum. See
-                  the search rules below.
+                  Range mode only: a day cannot be picked as the start when no valid end can follow it, for example when the next night is booked and the
+                  minimum is 2 nights. The user never gets stuck with a start that has no possible end. How the search works is described below.
                 </>
               ),
             },
@@ -283,22 +294,22 @@ export function RulesReference() {
         />
         <h3>How the reachable-end search decides</h3>
         <p>
-          For a candidate start, the engine tries ends from the shortest allowed length upward: <code>minLength</code>, or 1 night / 1 day when same-day ranges
-          are not allowed. It looks at no more than 63 end candidates and never past <code>maxLength</code>. The first fully valid end makes the start
+          For a candidate start, the engine tries ends from the shortest allowed length upward (<code>minLength</code>, or 1 night / 1 day when same-day
+          ranges are not allowed). It looks at no more than 63 end candidates and never past <code>maxLength</code>. The first fully valid end makes the start
           acceptable. The search stops early, proving that no later end can work, when a day inside the range is blocked, or a candidate end passes{' '}
           <code>maxDate</code>, the future limit or a month without loaded data. A start is rejected only when that proof exists or every candidate up to{' '}
           <code>maxLength</code> failed. When the 63 candidates run out first, the start stays selectable and its end is validated when it is picked.
         </p>
         <p>
-          The rejection reports the bound or data issue when that ended the search. Otherwise it reports <code>min-length</code> on the start (with the{' '}
-          <code>dayReason</code> of the last failure) only when the minimum is what blocks: a <code>minLength</code> above the natural one (1 night / 1 day) is
+          Which reason the rejected start shows: the bound or data issue when that ended the search. Otherwise <code>min-length</code> on the start
+          (params <code>{'{ min, unit }'}</code>, with the <code>dayReason</code> of the last failure), but only when the minimum is what blocks: a <code>minLength</code> above the natural one (1 night / 1 day) is
           configured and a shorter end would be valid without the length rule. In every other case the last candidate&apos;s issue is reported, so a start
           with no possible check-out after it gets e.g. <code>end-not-allowed</code>, not “Minimum N”. The search is skipped when <code>fixedLength</code> is set (a fixed range is validated as a whole instead) and it is not part of{' '}
           <code>validate()</code>.
         </p>
         <Snippet files={reachableEnd} label="requireReachableEnd" />
 
-        <h3>DayAvailability</h3>
+        <h3>DayAvailability: what getDayAvailability returns</h3>
         <PropsTable
           caption="DayAvailability (returned by getDayAvailability)"
           rows={[
@@ -308,8 +319,8 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  Nothing is possible on this day. Overrides the three flags below: a closed day cannot start, end or be crossed whatever they say. Fails with{' '}
-                  <code>closed</code>.
+                  Nothing is possible on this day. Overrides the three flags below: a closed day cannot be a start or an end and no range can cross it, whatever
+                  they say. Reason <code>closed</code>.
                 </>
               ),
             },
@@ -339,7 +350,8 @@ export function RulesReference() {
               default: '!closed',
               description: (
                 <>
-                  Can lie strictly between start and end. <code>false</code> makes any range across it fail with <code>blocked-in-range</code> on this date.
+                  Can lie strictly between start and end. <code>false</code> rejects every range that crosses this day (reason <code>blocked-in-range</code>,
+                  on this date).
                 </>
               ),
             },
@@ -364,15 +376,15 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  The restriction comes from the timetable, not from real unavailability. Relaxing the schedule ignores this whole result, so mark only results
-                  that are purely schedule.
+                  The restriction comes from your timetable, not from real unavailability. With <code>relaxSchedule</code> the whole result is ignored, so mark
+                  only results that are purely schedule.
                 </>
               ),
             },
           ]}
         />
 
-        <h3>RuleContext</h3>
+        <h3>RuleContext: what the ctx argument contains</h3>
         <PropsTable
           caption="RuleContext (ctx of getDayAvailability and validateSelection)"
           rows={[
@@ -432,17 +444,18 @@ export function RulesReference() {
           </li>
         </ol>
         <p>
-          Unparseable values in <code>validate()</code> give <code>invalid-date</code> (params <code>{'{ field, value }'}</code> for ranges). Issues carry{' '}
+          Values that are not valid dates give, in <code>validate()</code>, <code>invalid-date</code> (params <code>{'{ field, value }'}</code> for ranges). Issues carry{' '}
           <code>code</code>, the offending <code>date</code>, <code>params</code> for message templates, the day&apos;s <code>dayReason</code> and{' '}
           <code>message</code> when present.
         </p>
       </Section>
 
-      <Section title="stayRules">
+      <Section title="stayRules: overnight stays">
         <p>
-          <code>stayRules(options)</code> describes overnight stays. A stay is <code>[check-in, check-out)</code>: the end the guest picks is the check-out day,
-          which is drawn as part of the range but is not a night. Every night of the stay is validated; the check-out day only needs to allow departures. The
-          adapter always sets exclusive semantics and turns on <code>requireReachableEnd</code>.
+          <code>stayRules(options)</code> builds a rule set for overnight stays (hotels, holiday homes) from options in hotel terms: nights, check-in,
+          check-out. A stay is <code>[check-in, check-out)</code>: the second day the guest picks is the check-out day, which is drawn as part of the range
+          but is not a night. Every night of the stay is checked; the check-out day only needs to allow departures. The adapter always uses an exclusive end
+          and turns on <code>requireReachableEnd</code>.
         </p>
         <Snippet files={counting} label="Counting nights and days" />
         <PropsTable
@@ -453,8 +466,8 @@ export function RulesReference() {
               type: 'number',
               description: (
                 <>
-                  Shortest stay in nights; becomes <code>minLength</code>. Also used by the reachable-end search, so a check-in whose only possible stays are too
-                  short is disabled (reported as <code>min-length</code>).
+                  Shortest stay in nights; becomes <code>minLength</code>. A check-in day whose possible stays are all too short (e.g. the next night is booked)
+                  is disabled, with reason <code>min-length</code>.
                 </>
               ),
             },
@@ -512,12 +525,12 @@ export function RulesReference() {
             },
             {
               name: 'minDate, maxDate, disablePast, disableFuture',
-              type: 'see SelectionRules',
+              type: <>see <code>SelectionRules</code></>,
               description: 'Passed through unchanged.',
             },
             {
               name: 'getDataStatus, unknownDataPolicy, validateSelection',
-              type: 'see SelectionRules',
+              type: <>see <code>SelectionRules</code></>,
               description: (
                 <>
                   Passed through unchanged. Other <code>SelectionRules</code> fields (<code>getDayAvailability</code>, <code>maxSelections</code>, …) are not
@@ -529,8 +542,8 @@ export function RulesReference() {
         />
         <h3>Stay statuses</h3>
         <p>
-          A status is translated into availability for that date. Because the date is the night&apos;s start, the same day is the morning of the previous
-          night: the first booked night of a run can still be someone&apos;s check-out day.
+          Each status becomes the availability of its date. A date is the evening a night starts, but it is also the morning after the previous night, so
+          the first booked night of a run can still be another guest&apos;s check-out day.
         </p>
         <DataTable
           caption="Effect of each StayDayStatus on its date"
@@ -575,10 +588,10 @@ export function RulesReference() {
         <Snippet files={stayWeekdays} label="availableWeekdays and check-out days" />
       </Section>
 
-      <Section title="dayRangeRules">
+      <Section title="dayRangeRules: bookings counted in days">
         <p>
-          <code>dayRangeRules(options)</code> describes day-based bookings (boat days, multi-day events, rentals): <code>[start, end]</code>, every day from start
-          to end is part of the booking, so 13 → 20 is 8 days (<code>countDays</code>). Picking the same day twice is a valid 1-day range — the adapter always
+          <code>dayRangeRules(options)</code> builds a rule set for bookings counted in days (boat days, multi-day events, rentals): <code>[start, end]</code>,
+          every day from start to end is part of the booking, so 13 → 20 is 8 days (<code>countDays</code>). Picking the same day twice is a valid 1-day range — the adapter always
           allows same-day ranges; use <code>minDays: 2</code> to forbid them. Inclusive semantics and <code>requireReachableEnd</code> are always on.
         </p>
         <PropsTable
@@ -600,7 +613,7 @@ export function RulesReference() {
             {
               name: 'availableWeekdays',
               type: 'readonly Weekday[]',
-              description: <>Operating weekdays, e.g. weekends only <code>[6, 0]</code>. Other days are closed and cannot be inside a booking.</>,
+              description: <>Operating weekdays (schedule rule), e.g. weekends only <code>[6, 0]</code>. Other days are closed and cannot be inside a booking.</>,
             },
             {
               name: 'singleDayFirst',
@@ -608,7 +621,7 @@ export function RulesReference() {
               default: 'false',
               description: (
                 <>
-                  First click books that one day, a later click on or after it extends the booking (see <code>SelectionRules.singleDayFirst</code>).
+                  The first click books that one day; a click on a later day extends the booking (see <code>SelectionRules.singleDayFirst</code>).
                 </>
               ),
             },
@@ -619,7 +632,7 @@ export function RulesReference() {
             },
             {
               name: 'minDate, maxDate, disablePast, disableFuture, getDataStatus, unknownDataPolicy, validateSelection',
-              type: 'see SelectionRules',
+              type: <>see <code>SelectionRules</code></>,
               description: 'Passed through unchanged.',
             },
           ]}
@@ -635,27 +648,29 @@ export function RulesReference() {
           ]}
         />
         <p>
-          A one-day range needs a day that can both start and end, so <code>start-only</code> and <code>end-only</code> days cannot be booked alone (with{' '}
-          <code>singleDayFirst</code> the click on such a day just places a start).
+          A one-day range needs a day that can both start and end, so <code>start-only</code> and <code>end-only</code> days cannot be booked alone. With{' '}
+          <code>singleDayFirst</code>, a first click on a start-only day only places the start; an end-only day cannot be clicked first. Try it below: start on
+          a “Start” day, end on an “End” day, or try to cross one of them.
         </p>
         <Example src="rules/DayRangeStatuses" title="Start-only and end-only days" />
         <Snippet files={dayStatuses} label="Day statuses, checked by the engine" />
       </Section>
 
-      <Section title="closedDates">
+      <Section title="closedDates: closing a list of dates">
         <p>
-          <code>closedDates(dates, reason = &apos;closed&apos;)</code> returns a rule set whose only field is <code>getDayAvailability</code>: each listed date is
-          closed with the given reason tag, every other day is left alone. <code>dates</code> is any iterable of <code>CalendarDate</code> strings; a{' '}
+          <code>closedDates(dates, reason = &apos;closed&apos;)</code> closes a fixed list of dates, such as holidays or maintenance days. It returns a rule set
+          whose only field is <code>getDayAvailability</code>: each listed date is closed with the given reason tag, every other day is left alone. <code>dates</code> is any iterable of <code>CalendarDate</code> strings; a{' '}
           <code>Set</code> is used as is, any other iterable is copied into a set once. Lookups are by exact string, so pass
           normalised <code>YYYY-MM-DD</code> dates. Use it next to an adapter in the <code>rules</code> array or in <code>combineRules</code>; give the reason a
           text through <code>messages.dayReasons</code>, as the example in the next section does.
         </p>
       </Section>
 
-      <Section title="combineRules">
+      <Section title="combineRules: using several rule sets together">
         <p>
-          <code>combineRules(...sets)</code> merges rule sets into one in which <em>every</em> rule must pass. It is what the calendar does with a{' '}
-          <code>rules</code> array. Falsy entries (<code>null</code>, <code>undefined</code>, <code>false</code>) are skipped, so conditional rules can be written
+          <code>combineRules(...sets)</code> merges rule sets into one in which <em>every</em> rule must pass, for example product rules, closed dates and a
+          sales window. It is what the calendar does with a <code>rules</code> array; call it yourself when you need the merged set outside the calendar
+          (engine, server, <code>relaxRules</code>). Falsy entries (<code>null</code>, <code>undefined</code>, <code>false</code>) are skipped, so conditional rules can be written
           inline; inputs are never mutated. The sets are merged left to right with these semantics:
         </p>
         <DataTable
@@ -717,10 +732,11 @@ export function RulesReference() {
         </Note>
       </Section>
 
-      <Section title="relaxRules">
+      <Section title="relaxRules: dropping the schedule rules">
         <p>
-          <code>relaxRules(rules, options)</code> is the pure version of the calendar&apos;s <code>relaxSchedule</code> prop (“custom dates”). It returns a copy
-          without the schedule rules and keeps everything that describes real unavailability.
+          <code>relaxRules(rules, options)</code> returns a copy of the rules without the schedule rules (allowed weekdays, lengths) and keeps everything
+          that describes real unavailability. The calendar&apos;s <code>relaxSchedule</code> prop does the same for you, for example behind a “Custom dates”
+          switch for staff; use <code>relaxRules</code> directly with the engine or on the server.
         </p>
         <DataTable
           caption="What relaxRules removes and keeps"
@@ -762,11 +778,11 @@ export function RulesReference() {
         </Note>
       </Section>
 
-      <Section title="createSelectionEngine">
+      <Section title="createSelectionEngine: checking dates without React">
         <p>
-          <code>createSelectionEngine(input)</code> is the headless evaluator the calendar uses for clicks, keyboard, hover previews and disabled states. It is a
-          snapshot of one set of inputs: results are memoised per day for the engine&apos;s lifetime, so create a new engine whenever the rules, selection, today
-          or context change. It does not add the calendar&apos;s <code>minDate</code>/<code>disablePast</code>/… props — put them into the rules.
+          <code>createSelectionEngine(input)</code> checks dates and ranges against rules without rendering anything. The calendar uses it for clicks,
+          keyboard, hover previews and disabled days; you can use it in tests or on the server. An engine is a snapshot of one set of inputs: results are
+          cached per day for the engine&apos;s lifetime, so create a new engine whenever the rules, selection, today or context change. It does not add the calendar&apos;s <code>minDate</code>/<code>disablePast</code>/… props — put them into the rules.
         </p>
         <PropsTable
           caption="SelectionEngineInput"
@@ -860,7 +876,7 @@ export function RulesReference() {
               type: '{ kind, date, issue, next }',
               description: (
                 <>
-                  What activating the date would do: the <code>kind</code> below, the <code>issue</code> when it is <code>rejected</code>, and the{' '}
+                  What clicking the date (or pressing Enter on it) would do: the <code>kind</code> below, the <code>issue</code> when it is <code>rejected</code>, and the{' '}
                   <code>next</code> state (selection and active endpoint) to apply otherwise. A rejected plan returns the unchanged state.
                 </>
               ),
@@ -877,19 +893,19 @@ export function RulesReference() {
             [<code key="k">complete</code>, 'Range: the end was chosen, or a fixed-length range / singleDayFirst day was created in one click.'],
             [<code key="k">clear</code>, 'Range: the lone start clicked again when same-day ranges are not allowed, or the lone singleDayFirst day.'],
             [<code key="k">toggle-on / toggle-off</code>, 'Multiple mode: add or remove a date.'],
-            [<code key="k">rejected</code>, 'Any check or validateSelection failed; issue says why.'],
+            [<code key="k">rejected</code>, 'Any check or validateSelection failed; the day is disabled and issue says why.'],
           ]}
         />
         <Snippet files={enginePlan} label="Engine methods" />
         <h3>Server-side validation</h3>
         <p>
-          Never trust a date range sent by a browser. Build the same rules on the server (or share the module) and validate the request with an engine whose
-          today is the server&apos;s date in your business time zone (<code>getToday({'{ timeZone }'})</code>).
+          Never trust a date range sent by a browser. Build the same rules on the server (or import the same module) and validate the request with an engine
+          whose today is the current date in your business time zone (<code>getToday({'{ timeZone }'})</code>).
         </p>
         <Snippet files={serverValidation} label="Validating a booking request" />
       </Section>
 
-      <Section title="Conflicts and limitations">
+      <Section title="Conflicting rules and limits">
         <Note>
           <p>
             <strong>Exclusive same-day + minimum.</strong> A same-day stay has 0 nights. <code>stayRules({'{ allowSameDay: true, minNights: 1 }'})</code> never

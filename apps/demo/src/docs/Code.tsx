@@ -1,28 +1,30 @@
 import { type ComponentType, Suspense, lazy, useEffect, useId, useRef, useState } from 'react';
 import type files from '*?code';
+import { useLang, useUi } from './i18n';
 
 type CodeFiles = typeof files;
 
 /** Code with file tabs, horizontal scroll and an accessible copy button. */
 export function CodeTabs({ files, label }: { files: CodeFiles; label: string }) {
+  const ui = useUi();
   const [active, setActive] = useState(0);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const id = useId();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const file = files[active] ?? files[0]!;
 
   useEffect(() => {
     if (!status) return;
-    const t = setTimeout(() => setStatus(''), 2000);
+    const t = setTimeout(() => setStatus(null), 2000);
     return () => clearTimeout(t);
   }, [status]);
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(file.code);
-      setStatus(`Copied ${file.name} to the clipboard`);
+      setStatus({ ok: true, text: ui.copiedStatus(file.name) });
     } catch {
-      setStatus('Copy failed: select the code and copy it manually');
+      setStatus({ ok: false, text: ui.copyFailedStatus });
     }
   };
 
@@ -39,7 +41,7 @@ export function CodeTabs({ files, label }: { files: CodeFiles; label: string }) 
     <div className="docs-code">
       <div className="docs-code-bar">
         {files.length > 1 ? (
-          <div role="tablist" aria-label={`${label} files`} className="docs-code-tabs">
+          <div role="tablist" aria-label={ui.filesLabel(label)} className="docs-code-tabs">
             {files.map((f, i) => (
               <button
                 key={f.name}
@@ -63,14 +65,14 @@ export function CodeTabs({ files, label }: { files: CodeFiles; label: string }) 
           <span className="docs-code-file">{file.name}</span>
         )}
         <button type="button" className="docs-button docs-copy" onClick={copy}>
-          Copy
+          {ui.copy}
         </button>
         <span role="status" className="docs-sr-only">
-          {status}
+          {status?.text}
         </span>
         {status && (
           <span className="docs-copy-status" aria-hidden="true">
-            {status.startsWith('Copied') ? 'Copied' : 'Copy failed'}
+            {status.ok ? ui.copied : ui.copyFailed}
           </span>
         )}
       </div>
@@ -78,7 +80,7 @@ export function CodeTabs({ files, label }: { files: CodeFiles; label: string }) 
         id={`${id}-panel`}
         role={files.length > 1 ? 'tabpanel' : undefined}
         aria-labelledby={files.length > 1 ? `${id}-tab-${active}` : undefined}
-        aria-label={files.length > 1 ? undefined : `${file.name} source`}
+        aria-label={files.length > 1 ? undefined : ui.sourceLabel(file.name)}
         tabIndex={0}
         className="docs-pre"
       >
@@ -92,9 +94,15 @@ const components = import.meta.glob<{ default: ComponentType }>('../examples/**/
 const sources = import.meta.glob<CodeFiles>('../examples/**/*.tsx', { query: '?code', import: 'default' });
 const cache = new Map<string, ComponentType>();
 
-function exampleComponent(src: string) {
+/** The example file for the docs language: `Name.tr.tsx` in Turkish, `Name.tsx` otherwise. */
+function exampleKey(src: string, lang: string) {
   const key = `../examples/${src}.tsx`;
-  if (!components[key]) throw new Error(`Unknown example ${src}`);
+  const localized = `../examples/${src}.${lang}.tsx`;
+  return lang !== 'en' && components[localized] ? localized : key;
+}
+
+function exampleComponent(key: string) {
+  if (!components[key]) throw new Error(`Unknown example ${key}`);
   if (!cache.has(key)) cache.set(key, lazy(components[key] as () => Promise<{ default: ComponentType }>));
   return cache.get(key)!;
 }
@@ -106,7 +114,10 @@ function exampleComponent(src: string) {
  * example is rendered; the code only when "View code" is opened.
  */
 export function Example({ src, title }: { src: string; title: string }) {
-  const Component = exampleComponent(src);
+  const lang = useLang();
+  const ui = useUi();
+  const key = exampleKey(src, lang);
+  const Component = exampleComponent(key);
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<CodeFiles | null>(null);
   const id = `ex-${src.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
@@ -114,26 +125,27 @@ export function Example({ src, title }: { src: string; title: string }) {
   useEffect(() => {
     if (!open || files) return;
     let live = true;
-    void sources[`../examples/${src}.tsx`]!().then((f) => live && setFiles(f));
+    void sources[key]!().then((f) => live && setFiles(f));
     return () => {
       live = false;
     };
-  }, [open, files, src]);
+  }, [open, files, key]);
 
   return (
     <figure className="docs-example" id={id} aria-label={title}>
       <div className="docs-preview">
-        <Suspense fallback={<p className="docs-muted">Loading example…</p>}>
+        <Suspense fallback={<p className="docs-muted">{ui.loadingExample}</p>}>
           <Component />
         </Suspense>
       </div>
       <div className="docs-example-bar">
+        {lang !== 'en' && key === `../examples/${src}.tsx` && <span className="docs-untranslated">{ui.untranslatedExample}</span>}
         <button type="button" className="docs-button" aria-expanded={open} aria-controls={`${id}-code`} onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide code' : 'View code'}
+          {open ? ui.hideCode : ui.viewCode}
         </button>
       </div>
       <div id={`${id}-code`} hidden={!open}>
-        {open && (files ? <CodeTabs files={files} label={title} /> : <p className="docs-muted docs-pad">Loading code…</p>)}
+        {open && (files ? <CodeTabs files={files} label={title} /> : <p className="docs-muted docs-pad">{ui.loadingCode}</p>)}
       </div>
     </figure>
   );

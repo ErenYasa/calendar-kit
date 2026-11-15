@@ -1,9 +1,9 @@
 // react-dates DayPickerRangeController → calendar-kit Calendar.
-// Moment objects become "YYYY-MM-DD" strings at the boundary of your app.
+// Dates are "YYYY-MM-DD" strings: convert Moment objects and Dates where they enter the calendar.
 import { useState } from 'react';
 import { Calendar, type CalendarDate, type DateRange, fromJSDate, stayRules, toCalendarDate } from 'calendar-kit';
 
-// moment → CalendarDate: format with the date's own calendar day.
+// moment → CalendarDate: format the day the moment shows (no conversion to UTC).
 //   moment('2026-11-13')   → toCalendarDate(m.format('YYYY-MM-DD'))
 //   new Date(2026, 10, 13) → fromJSDate(date) (local calendar day)
 export const fromMoment = (m: { format(pattern: string): string }): CalendarDate => toCalendarDate(m.format('YYYY-MM-DD'));

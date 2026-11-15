@@ -22,7 +22,7 @@ export default function LoadMoreRender() {
         renderLoadMore={({ direction, canLoad, loadMore }) =>
           canLoad ? (
             <button type="button" className="add-month" onClick={loadMore}>
-              {direction === 'previous' ? '← Add the previous month' : 'Add the next month →'}
+              {direction === 'previous' ? '↑ Add the previous month' : 'Add the next month ↓'}
             </button>
           ) : (
             <p className="no-more">{direction === 'previous' ? 'No earlier dates' : 'No more dates'}</p>

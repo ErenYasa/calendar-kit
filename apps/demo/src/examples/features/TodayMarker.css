@@ -3,3 +3,7 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
 }
+.today-pair-label {
+  margin: 0 0 8px;
+  font-weight: 600;
+}

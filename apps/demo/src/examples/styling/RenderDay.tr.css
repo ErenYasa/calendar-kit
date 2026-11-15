@@ -1,0 +1,13 @@
+/* Yalnızca yerleşim ve ek bir etiket: seçili, üzerine gelinen, odaklanan ve
+   devre dışı günlerin renkleri varsayılan temadan gelir. */
+.rd-day {
+  flex-direction: column;
+  gap: 1px;
+  font-weight: 600;
+  line-height: 1;
+}
+.rd-tag {
+  font-size: 9px;
+  font-weight: 500;
+  opacity: 0.75;
+}

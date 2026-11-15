@@ -8,6 +8,7 @@ import { Calendar, type CalendarController, type CalendarDate, type DateRange, t
 // every render, and returning the same data object lets unchanged days skip
 // re-rendering.
 const rules = stayRules({ minNights: 2, maxNights: 14 });
+// Price shown under each day number: Friday and Saturday nights cost more.
 const weekend: DefaultDayData = { label: '€140' };
 const weekday: DefaultDayData = { label: '€110' };
 const getDayData = (date: CalendarDate) => (getWeekday(date) >= 5 ? weekend : weekday);

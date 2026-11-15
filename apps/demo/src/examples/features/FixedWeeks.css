@@ -1,0 +1,14 @@
+.fixed-weeks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+  gap: 24px;
+}
+.fixed-weeks-label {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.fixed-weeks .cal-week {
+  outline: 1px dashed #9aa0a6;
+  outline-offset: -1px;
+}

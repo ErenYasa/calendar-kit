@@ -34,14 +34,16 @@ export function DateHelpers() {
   return (
     <Page
       title="Date helpers"
-      lead="Pure functions for the calendar's date model: parse and validate input, do day and month arithmetic, compare, read parts, get today in a time zone and measure ranges. None of them render anything or depend on the host time zone."
+      lead="Pure functions for the calendar's date model: parse and validate input, do day and month arithmetic, compare, read parts, get today in a time zone and measure ranges. Use them in your own code around the calendar, for example to read a date from the URL, list the nights of a stay to add up prices, or build per-month availability data. None of them render anything, and none depend on the time zone of the server or browser."
     >
       <Section title="The date model">
         <p>
           A day is a <code>CalendarDate</code>: a string in <code>YYYY-MM-DD</code> form that has been checked to be a real Gregorian date. A month is a{' '}
-          <code>CalendarMonth</code> in <code>YYYY-MM</code> form. Both are branded string types, so a plain <code>string</code> must go through a parser
-          below before TypeScript accepts it, while a <code>CalendarDate</code> can be used anywhere a string is expected (JSON, URLs, map keys,{' '}
-          <code>&lt;</code>/<code>&gt;</code> comparison).
+          <code>CalendarMonth</code> in <code>YYYY-MM</code> form. At runtime both are ordinary strings. TypeScript, however, treats them as separate
+          types (a branded type: a string type with an extra compile-time tag), so a plain <code>string</code> must go through one of the parsers below
+          before TypeScript accepts it where a date or month is expected. The type check happens when you compile; whether a string is a real day is
+          checked at runtime by the parsers. The other way round needs nothing: a <code>CalendarDate</code> can be used anywhere a string is expected (JSON,
+          URLs, map keys, <code>&lt;</code>/<code>&gt;</code> comparison).
         </p>
         <p>
           All arithmetic converts the date to an integer day number and back, so results never depend on the host time zone or daylight saving time, and{' '}
@@ -271,7 +273,8 @@ export function DateHelpers() {
 
       <Section title="Today and JavaScript dates">
         <p>
-          A <code>Date</code> is an instant; which calendar day it falls on depends on the time zone. These functions make that choice explicit.
+          A <code>Date</code> is a moment in time, not a day: 23:30 UTC on 7 November is still 7 November in New York but already 8 November in Istanbul.
+          These functions make you say which time zone decides the day.
         </p>
         <Fn name="getToday" sig="function getToday(options?: { timeZone?: string; now?: Date | number }): CalendarDate">
           <p>
@@ -371,7 +374,7 @@ const MESSAGE_KEYS = [
   {
     name: 'loading',
     type: 'string',
-    description: 'Screen-reader status text while data loads (the days themselves show a skeleton): for the initial load, and per month as “<month title>: <loading>”. Also announced when loading starts and passed to renderLoading.',
+    description: 'Screen-reader status text while data loads (the days themselves show loading placeholders): for the initial load, and per month as “<month title>: <loading>”. Also announced when loading starts and passed to renderLoading.',
   },
   { name: 'error / retry', type: 'string', description: <>Message and button text for a month whose data failed to load (also passed to <code>renderError</code>); <code>error</code> is announced when a month fails.</> },
   { name: 'today', type: 'string', description: "Appended to today's day label for screen readers." },
@@ -387,7 +390,7 @@ const MESSAGE_KEYS = [
   { name: 'announceAdded / announceRemoved', type: '(date: string, count: number) => string', description: 'Announced when a date is toggled in multiple mode; count is the new number of selected dates.' },
   { name: 'announceCleared', type: 'string', description: 'Announced when a single or range selection becomes empty.' },
   { name: 'announceRejected', type: '(date: string, reason: string) => string', description: 'Announced when a click or key press is rejected; reason is the formatted issue text.' },
-  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'One function per reason code. The text is the label suffix of a disabled day, its default tooltip (not for past, future, before-min, after-max, invalid-date, data-unknown, data-loading), the reason in announceRejected and the message of invalidSelection events.' },
+  { name: 'reasons', type: 'Record<ReasonCode, ReasonMessage>', description: 'One function per reason code, returning why a day or selection is not allowed. The same text is used in four places: appended to the label of a disabled day, as its default tooltip (except for past, future, before-min, after-max, invalid-date, data-unknown and data-loading, which stay silent), as the reason in announceRejected, and as the message of invalidSelection events.' },
   { name: 'dayReasons', type: 'Record<string, string>', description: <>Texts for the <code>reason</code> tags of your rules or the adapters (<code>booked</code>, <code>check-out-only</code>, …).</> },
 ];
 
@@ -456,8 +459,19 @@ export function MessagesReference() {
 
       <Section title="Message bundles">
         <p>
+          Two props set the calendar&apos;s language, and they are independent of each other. <code>locale</code> (a BCP 47 tag such as{' '}
+          <code>'tr-TR'</code>) is used only for formatting through <code>Intl</code>: month and weekday names, date formats, the default first day of the
+          week and the writing direction. <code>messages</code> holds the calendar&apos;s own texts: button texts and accessible names, the reasons shown
+          when a day cannot be selected (<code>reasons</code>), the texts for your day statuses (<code>dayReasons</code>) and the screen-reader
+          announcements.
+        </p>
+        <p>
           The Calendar always starts from <code>messagesEn</code> and applies its <code>messages</code> prop on top. Changing <code>locale</code> does{' '}
           <em>not</em> change the texts; pass the matching bundle as well. Each bundle is a separate export, so unused ones are tree-shaken.
+        </p>
+        <p>
+          The language switch of this documentation site changes only the documentation. The calendars in the examples keep the locale and messages set in
+          their code, so a Turkish calendar stays Turkish and an English one stays English whichever docs language you read.
         </p>
         <DataTable
           caption="Built-in bundles (all of type CalendarMessages)"
@@ -477,10 +491,27 @@ export function MessagesReference() {
         />
       </Section>
 
-      <Section title="Overriding messages">
+      <Section title="Customizing calendar text">
         <p>
-          Pass only the keys you want to change. On the Calendar, <code>messages</code> is merged over English; to override a non-English bundle, merge it
-          yourself with <code>mergeMessages</code>. In this example, select a start and then the next day, or click a booked day (9th, 18th, 27th).
+          Pass only the keys you want to change. A partial <code>messages</code> object is completed from <strong>English</strong>: the Calendar always
+          computes <code>mergeMessages(messagesEn, messages)</code>, so every key you leave out shows the English text, even when <code>locale</code> is
+          Turkish. To customize Turkish (or any other non-English pack), merge your changes over that pack yourself and pass the complete result:{' '}
+          <code>messages={'{'}mergeMessages(messagesTr, overrides){'}'}</code>.
+        </p>
+        <p>
+          The first example is a Turkish calendar (<code>tr-TR</code> with <code>messagesTr</code>) that changes exactly three texts: the button below the
+          month (<code>loadNext</code>), the text shown when a stay is too short (<code>reasons['min-length']</code>) and the screen-reader announcement for a
+          complete range (<code>announceRange</code>). Choose a start and then the next day as the end: the selection does not change and the new text
+          appears below the calendar. Then choose an end two or more nights after the start. The announcement goes to a visually hidden live region, so
+          the example builds the same text again with the same messages and shows it below the calendar.
+        </p>
+        <Example src="helpers/TurkishOverrides" title="Three texts changed over messagesTr" />
+        <p>
+          The second example shows the difference between English and another language. For English it passes only the overrides, because the Calendar
+          fills every other key from <code>messagesEn</code> itself. For German it merges the overrides over <code>messagesDe</code> first. In English,
+          hover today (“You are here”) or the second night of a booked pair (9th, 18th, 27th: “Sold out”; the 8th, 17th and 26th can still be a check-out
+          day, so they show the built-in “Check-out only”), or choose an end one night after the start (“Stays are at least 2 nights”). Then switch to
+          Deutsch: the fully booked days and the too-short stay show the German overrides, and every other text stays German.
         </p>
         <Example src="helpers/CustomMessages" title="Custom messages over English and German" />
         <Fn name="mergeMessages" sig="function mergeMessages(base: CalendarMessages, override?: CalendarMessagesInput): CalendarMessages">
@@ -495,12 +526,34 @@ export function MessagesReference() {
         <PropsTable
           caption="CalendarMessagesInput"
           rows={[
-            { name: 'any CalendarMessages key', type: 'same as in CalendarMessages', description: 'Optional; replaces the base value.' },
+            { name: <>any <code>CalendarMessages</code> key</>, type: <>same as in <code>CalendarMessages</code></>, description: 'Optional; replaces the base value.' },
             { name: 'reasons', type: 'Partial<Record<ReasonCode, ReasonMessage>>', description: 'Only the reason codes to change.' },
             { name: 'dayReasons', type: 'Record<string, string>', description: 'Added to or replacing the base day-reason texts.' },
           ]}
         />
         <Snippet files={messages} label="Merging and formatting messages" />
+      </Section>
+
+      <Section title="Add your own language pack">
+        <p>
+          For a language without a ready pack, write a complete bundle in your own code and pass it together with the matching locale. Type it as{' '}
+          <code>CalendarMessages</code>, not <code>CalendarMessagesInput</code>: then every key is required, including a function for every{' '}
+          <code>ReasonCode</code> in <code>reasons</code>, and a forgotten key is a TypeScript error. Nothing silently falls back to English. (The Calendar
+          still merges over <code>messagesEn</code>, but a complete bundle leaves nothing for it to fill.)
+        </p>
+        <p>
+          Announcement functions such as <code>announceRange</code> receive dates that are already formatted in the calendar&apos;s locale. Reason
+          functions receive the issue&apos;s params: dates as <code>YYYY-MM-DD</code> strings to format with <code>f.date</code>, and counts as plain
+          numbers, so the pack chooses the singular or plural word itself (1 noite, 2 noites). Because <code>dayReasons</code> is a{' '}
+          <code>Record&lt;string, string&gt;</code>, TypeScript cannot notice a missing tag; the example lists the tags of the built-in packs in a local type
+          so they are required as well.
+        </p>
+        <Example src="helpers/PortugueseBrazilPack" title="A Brazilian Portuguese pack" />
+        <p>
+          Here <code>locale="pt-BR"</code> supplies the month and weekday names, the date format and Sunday as the first day of the week, and{' '}
+          <code>messagesPtBr</code> supplies every text. Click a booked day (9th, 18th, 27th) or choose an end one night after the start to see a
+          Portuguese reason. Open View code to read the whole pack in its own tab.
+        </p>
       </Section>
 
       <Section title="CalendarMessages keys">
@@ -513,7 +566,7 @@ export function MessagesReference() {
 
       <Section title="Reason messages">
         <p>
-          When a day is disabled or a selection is rejected, the engine produces a <code>ValidationIssue</code> with a reason <code>code</code>, optional{' '}
+          When a day is disabled or a selection is rejected, the selection engine (the part of calendar-kit that checks dates against your rules) produces a <code>ValidationIssue</code> with a reason <code>code</code>, optional{' '}
           <code>params</code>, the day&apos;s <code>dayReason</code> tag and an optional ready-made <code>message</code>. The Calendar turns it into text with{' '}
           <code>formatIssue</code>. The params a reason message can use:
         </p>

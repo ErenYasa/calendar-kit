@@ -30,13 +30,21 @@ export function EventsReference() {
       title="Callbacks & events"
       lead={
         <>
-          Every callback receives a typed event object. Use the specific callbacks (<code>onChange</code>, <code>onVisibleMonthChange</code>, …) for app
-          logic, or <code>onEvent</code> to receive all of them as one discriminated union.
+          The calendar tells your app what happened through callback props: the user picked a date, moved to another month, focused a day, and so on.
+          Each callback receives a typed event object. Use the specific callbacks (<code>onChange</code>, <code>onVisibleMonthChange</code>, …) for app
+          logic, or <code>onEvent</code> to receive all of them in one function, as one discriminated union (a union of event types you tell apart by their{' '}
+          <code>type</code> field).
         </>
       }
     >
       <Section title="How callbacks are called">
         <ul>
+          <li>
+            <strong>Controlled</strong> means your app holds the value and passes it back as a prop, for example{' '}
+            <code>{'value={range} onChange={setRange}'}</code>: the callback is then a request, and the calendar shows the new value only once you store
+            it. <strong>Uncontrolled</strong> means the calendar holds the value itself (you pass at most a <code>defaultValue</code>): the callback only
+            tells you what already changed. The same applies to <code>visibleMonth</code> and <code>activeEndpoint</code>.
+          </li>
           <li>
             Most callbacks receive only the event: <code>onDateClick(event)</code>. Three receive the new value first:{' '}
             <code>onChange(value, event)</code>, <code>onVisibleMonthChange(month, event)</code> and <code>onActiveEndpointChange(endpoint, event)</code>.
@@ -54,10 +62,11 @@ export function EventsReference() {
             <code>useCallback</code>, and a new function identity never re-emits an event.
           </li>
           <li>
-            <strong>Actions</strong> (a click, a key, a controller call) emit their events synchronously, inside the browser event or the controller call.{' '}
-            <strong>Derived events</strong> (<code>validationChange</code>, <code>visibleMonthsChange</code>, <code>renderedMonthsChange</code>,{' '}
-            <code>loadingChange</code>, <code>layoutChange</code>, <code>tooltipOpenChange</code>, <code>ready</code> and an uncontrolled{' '}
-            <code>activeEndpointChange</code>) compare the committed state with the last reported one and arrive after React has rendered.
+            <strong>Action events</strong> come from something the user or your code did (a click, a key, a controller call) and are emitted right
+            away, while that browser event or controller call is still running. <strong>Derived events</strong> (<code>validationChange</code>,{' '}
+            <code>visibleMonthsChange</code>, <code>renderedMonthsChange</code>, <code>loadingChange</code>, <code>layoutChange</code>,{' '}
+            <code>tooltipOpenChange</code>, <code>ready</code> and an uncontrolled <code>activeEndpointChange</code>) describe the resulting state: they
+            arrive after React has rendered it, and only when it differs from what was reported last.
           </li>
           <li>
             Changing a prop never calls the callback that would request that change: a new <code>value</code> does not call <code>onChange</code>, a new{' '}
@@ -74,7 +83,8 @@ export function EventsReference() {
 
       <Section title="Event sources">
         <p>
-          Events that can have several origins carry <code>source: EventSource</code>:
+          Events that can have several origins carry <code>source: EventSource</code>, which says what caused them. Check it when your app should react
+          differently to the user and to its own code, for example to track only clicks and key presses in analytics.
         </p>
         <DataTable
           caption="EventSource values"
@@ -86,23 +96,23 @@ export function EventsReference() {
               <>
                 Enter or Space on a day; arrow, Home/End and Page keys; focus that arrives with Tab.
               </>,
-              'The same as pointer, plus visibleMonthChange (moving focus into a month that is not shown) and loadMore (trigger keyboard: moving focus past the end of a continuous list)',
+              'The same as pointer, plus visibleMonthChange (focus moved into a month that is not shown) and loadMore with trigger keyboard (focus moved past the end of a continuous list)',
             ],
             [c('navigation'), 'The default previous/next buttons, or previous()/next() from renderNavigation.', 'visibleMonthChange'],
             [
               c('programmatic'),
-              'A controller method (ref or ctx.actions).',
-              'change, selectionComplete, selectionClear, invalidSelection, activeEndpointChange, visibleMonthChange, dayFocusChange, loadMore (trigger keyboard: focusDate() past the end of a continuous list; ref.loadMore() itself reports load-more)',
+              'A controller method, called through the ref or through ctx.actions inside a slot (see Controller (ref)).',
+              'change, selectionComplete, selectionClear, invalidSelection, activeEndpointChange, visibleMonthChange, dayFocusChange, and loadMore with trigger keyboard (focusDate() past the end of a continuous list; ref.loadMore() itself reports load-more)',
             ],
             [
               c('load-more'),
-              'Adding months in continuous mode (default button, renderLoadMore’s loadMore(), the auto sentinel, ref.loadMore()); focus moved into the grid when the load-more boundary is reached.',
+              'Months added in continuous mode (the default button, renderLoadMore’s loadMore(), the automatic sentinel element, ref.loadMore()); focus that the calendar moves into the grid when the load-more button disappears at the last loadable month.',
               'loadMore, dayFocusChange',
             ],
             [
               c('prop'),
               <>
-                The parent changed a controlled <code>value</code>, which moved the derived range endpoint.
+                Your app changed a controlled <code>value</code>, and so the end the next click sets changed too (for example you cleared the range).
               </>,
               'activeEndpointChange (uncontrolled endpoint only)',
             ],
@@ -114,15 +124,16 @@ export function EventsReference() {
 
       <Section title="Event order">
         <p>
-          The order below is pinned by the package tests (range mode, uncontrolled value). Steps in parentheses only happen when they apply; derived events
-          that did not change are not emitted at all.
+          Which events one action emits, in order, for a range calendar with an uncontrolled value. Use it when one handler depends on another having
+          run, for example when <code>onSelectionComplete</code> reads state that <code>onChange</code> stored. Steps in parentheses only happen when
+          they apply (for example <code>validationChange</code> only when validity changed).
         </p>
         <DataTable
           caption="Order of events per action"
           head={['Action', 'Events, in order']}
           rows={[
             ['Mount', 'validationChange (cause initial) → visibleMonthsChange → renderedMonthsChange → ready; resize once the ResizeObserver reports'],
-            ['Range start click', 'dateClick → dayFocusChange → change → activeEndpointChange (start → end)'],
+            ['Range start click', 'dateClick → (dayFocusChange) → change → activeEndpointChange (start → end) → (validationChange)'],
             ['Range end click', 'dateClick → (dayFocusChange) → change → selectionComplete → activeEndpointChange (end → start) → (validationChange)'],
             [
               <>
@@ -135,15 +146,16 @@ export function EventsReference() {
             ['Click on the already selected single date', 'dateClick (accepted: true, kind: select) → (dayFocusChange) → selectionComplete; no change'],
             ['ref.select(valid value)', 'change (reason set) → (selectionComplete) → (selectionClear) → (activeEndpointChange) → (validationChange); nothing when the value equals the current one'],
             ['ref.select(invalid value)', 'invalidSelection; nothing else'],
-            ['ref.clear()', 'change (reason clear) → selectionClear → (activeEndpointChange); nothing when the selection is already empty'],
-            ['Page or jump', 'visibleMonthChange → visibleMonthsChange → renderedMonthsChange → (loadingChange); nothing when the month stays the same'],
-            ['Load more', 'loadMore → (visibleMonthsChange) → renderedMonthsChange → (loadingChange)'],
+            ['ref.clear()', 'change (reason clear) → selectionClear → (activeEndpointChange) → (validationChange); nothing when the selection is already empty'],
+            ['Page or jump (paged mode)', 'visibleMonthChange → visibleMonthsChange → renderedMonthsChange → (loadingChange); nothing when the month stays the same'],
+            ['Load more', 'loadMore → (visibleMonthsChange) → renderedMonthsChange → (loadingChange); nothing when no month can be added'],
           ]}
         />
         <Note>
           <code>dayFocusChange</code> appears once per newly focused day. In the tests the click arrives without focus, so it follows <code>dateClick</code>. In
-          browsers that focus a button on pointer down (Chrome, Firefox, Edge) the day is focused first, so <code>dayFocusChange</code> comes before{' '}
-          <code>dateClick</code>. Do not rely on the relative order of these two.
+          Chrome (checked with a real mouse click) the button is focused on pointer down, so <code>dayFocusChange</code> comes before{' '}
+          <code>dateClick</code>; other browsers have not been checked. Do not rely on the relative order of these two. In the same way, in continuous mode{' '}
+          <code>visibleMonthsChange</code> usually arrives a frame later, once the browser reports which months are on screen.
         </Note>
       </Section>
 
@@ -404,8 +416,9 @@ export function EventsReference() {
 
       <Section title="onVisibleMonthChange">
         <p>
-          Fires when the <strong>reference month</strong> is asked to change (the month placed at <code>monthPosition</code> in the window, which{' '}
-          <code>visibleMonth</code> controls):
+          Fires when the user or your code asks the calendar to show another month: the previous/next arrows, keyboard paging, or a controller method.
+          The month it reports is the <strong>reference month</strong>, the month the calendar is positioned on. With several months on screen it is
+          the one at <code>monthPosition</code> (by default the first); it is also the month that <code>visibleMonth</code> sets.
         </p>
         <DataTable
           caption="What emits visibleMonthChange"
@@ -461,6 +474,11 @@ export function EventsReference() {
             ['clamped', 'boolean', 'The request was outside min/max and was moved to the nearest allowed month.'],
           ]}
         />
+        <p>
+          In the example below the month is controlled. Click the arrows: the line under the calendar shows each request with its{' '}
+          <code>reason</code> and <code>source</code>. Untick &quot;Follow the arrows&quot; and the requests are ignored, so the calendar stays on its
+          month. Choosing a month in the list changes the prop directly and emits no event.
+        </p>
         <Example src="events/ControlledMonth" title="Controlled visibleMonth" />
       </Section>
 
@@ -559,7 +577,7 @@ export function EventsReference() {
         <Payload
           caption="LoadingSnapshot"
           rows={[
-            ['initial', 'boolean', <><code>loading</code> is on and the calendar has never been shown without it: days are a skeleton and cannot be selected.</>],
+            ['initial', 'boolean', <><code>loading</code> is on and the calendar has never been shown without it: days are drawn as empty placeholders and, with the default <code>unknownDataPolicy</code> <code>&apos;block&apos;</code>, cannot be selected.</>],
             ['refreshing', 'boolean', <><code>loading</code> is on after data was shown: a background refresh; view, selection and focus are kept.</>],
             ['loadingMonths', 'readonly CalendarMonth[]', <>Rendered months whose status is <code>loading</code>.</>],
             ['errorMonths', 'readonly CalendarMonth[]', <>Rendered months whose status is <code>error</code>.</>],
@@ -757,25 +775,35 @@ export function ControllerReference() {
       title="Controller (ref)"
       lead={
         <>
-          Pass a ref to drive the calendar from your own UI: navigate, select, clear, move focus and read its state. Inside slots the same object is{' '}
-          <code>ctx.actions</code>.
+          The controller lets your own buttons and code drive the calendar: change the month, select or clear dates, move focus and read the current
+          state. You get it through a ref, or as <code>ctx.actions</code> inside the calendar&apos;s slots.
         </>
       }
     >
       <Section title="Getting the controller">
         <p>
-          Create a ref typed <code>CalendarController</code> and pass it to <code>Calendar</code>. It is <code>null</code> before mount and on the server, so
-          call it from event handlers or effects with <code>?.</code>. The object keeps the same identity for the life of the calendar and always works on the
-          latest state, so it is safe to store or pass down.
+          A ref is React&apos;s way to reach a component from outside: you create it with <code>useRef</code> and React fills it in after mount. Create a
+          ref typed <code>CalendarController</code> and pass it to <code>Calendar</code>. It is <code>null</code> before mount and on the server, so call it
+          from event handlers or effects with <code>?.</code> (for example <code>calendar.current?.next()</code>). The object keeps the same identity for
+          the life of the calendar and always works on the latest state, so it is safe to store or pass down.
         </p>
         <p>
-          Slots (<code>renderHeader</code>, <code>renderFooter</code>, <code>renderMonthHeader</code>, <code>renderNavigation</code>,{' '}
-          <code>renderLoading</code>, <code>renderError</code>, <code>renderLoadMore</code>) receive the same controller as <code>ctx.actions</code>, next to
-          the snapshot fields (<code>ctx.phase</code>, <code>ctx.visibleMonths</code>, …), so controls inside the calendar need no ref.
+          Slots are the render props that let you draw parts of the calendar yourself (<code>renderHeader</code>, <code>renderFooter</code>,{' '}
+          <code>renderMonthHeader</code>, <code>renderNavigation</code>, <code>renderLoading</code>, <code>renderError</code>,{' '}
+          <code>renderLoadMore</code>). Each receives the slot context <code>ctx</code>, as the only argument of <code>renderHeader</code> and{' '}
+          <code>renderFooter</code> and as the second argument of the others: the current state (<code>ctx.phase</code>, <code>ctx.visibleMonths</code>,
+          … the same fields as <code>getSnapshot()</code>, plus <code>messages</code>, <code>locale</code> and <code>formatDate</code>) and the same
+          controller as <code>ctx.actions</code>. So a
+          button you render inside the calendar needs no ref.
         </p>
         <p>
           Methods emit the same events as user actions, with <code>source: &apos;programmatic&apos;</code>. With controlled props (<code>value</code>,{' '}
           <code>visibleMonth</code>, <code>activeEndpoint</code>) a method only <em>requests</em> the change through the callback, exactly like a click.
+        </p>
+        <p>
+          In the example below each button calls one method and prints what it returned. Try &quot;In 2 years (clamped)&quot;: the calendar only allows
+          the next 180 days, so the result reports <code>clamped: true</code>. &quot;Starting 2 days ago (rejected)&quot; returns{' '}
+          <code>valid: false</code> and leaves the selection unchanged.
         </p>
         <Example src="events/ControllerButtons" title="Buttons outside the calendar" />
         <Snippet files={controllerCode} label="Controller from a ref and from a slot" />

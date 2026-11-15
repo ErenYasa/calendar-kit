@@ -1,0 +1,22 @@
+/* `unstyled` ile hafta satırları artık ızgara değildir ve gün hücrelerinin
+   boyutu yoktur: bunları sizin sınıflarınız yerleştirmelidir. */
+.u-weekdays,
+.u-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(40px, 1fr));
+}
+.u-cell {
+  position: relative;
+  aspect-ratio: 1;
+}
+.u-day {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+}
+.u-day[data-selected] {
+  background: #111827;
+  color: #fff;
+}

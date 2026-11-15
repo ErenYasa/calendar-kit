@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Calendar } from 'calendar-kit';
 
-// `loading` before any data was shown = initial load: days are a skeleton
-// (no visible text; screen readers get a status message) and cannot be
-// selected. Turned on again later = background refresh: the view, the
-// selection and keyboard focus are kept, only aria-busy is set.
+// Initial load: `loading` is on when the calendar first opens, so empty
+// placeholders replace the dates (screen readers get a status message) and,
+// with the default unknownDataPolicy 'block', no day can be selected.
+// Background refresh: once dates have been shown, turning `loading` on again
+// keeps the view, the selection and keyboard focus; days stay selectable and
+// only aria-busy is set. "Reload" remounts the calendar (new key) to show the
+// initial load again.
 export default function InitialLoad() {
   const [mount, setMount] = useState(0);
   const [loading, setLoading] = useState(true);

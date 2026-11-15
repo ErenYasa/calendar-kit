@@ -1,0 +1,9 @@
+/* Tatil günlerinin altında küçük bir işaret; gün seçiliyken de görünür. */
+.marked-day[data-mod-holiday] .marked-content {
+  text-decoration: underline 2px #d6336c;
+  text-underline-offset: 3px;
+}
+/* Aralığın başlangıç ve bitiş günlerinde sayı daha kalın. */
+.marked-day:is([data-range-start], [data-range-end]) .marked-content {
+  font-weight: 700;
+}

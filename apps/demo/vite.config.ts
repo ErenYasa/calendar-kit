@@ -23,5 +23,13 @@ export default defineConfig({
     ],
   },
   server: { port: 5173, host: '127.0.0.1' },
-  test: { environment: 'jsdom', include: ['test/**/*.test.tsx'] },
+  test: {
+    environment: 'jsdom',
+    include: ['test/**/*.test.tsx'],
+    // The tests discover pages, examples and snippets with import.meta.glob. The
+    // persistent module cache does not notice newly added files, so a cached
+    // test kept an outdated file list (a new example passed locally and failed
+    // on CI). The demo suite is small; transform it fresh every run.
+    fsModuleCache: false,
+  },
 });

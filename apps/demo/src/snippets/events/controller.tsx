@@ -14,7 +14,8 @@ export function QuickPicks() {
   const pick = (nights: number) => {
     const start = addDays(getToday(), 1);
     // Validated like a click: an invalid value is not applied and
-    // onInvalidSelection receives the localised message.
+    // onInvalidSelection receives the localised message (here "1 night" is
+    // rejected by minNights: 2).
     const result = calendar.current?.select({ start, end: addDays(start, nights) });
     if (!result?.valid) return;
     setMessage('');

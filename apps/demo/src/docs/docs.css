@@ -86,7 +86,37 @@ body {
 }
 .docs-menu-button {
   display: none;
+}
+/* EN / TR switch: two toggle buttons (aria-pressed) at the end of the header. */
+.docs-lang {
+  display: inline-flex;
   margin-inline-start: auto;
+  border: 1px solid var(--docs-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.docs-lang-button {
+  font: inherit;
+  font-size: 13px;
+  min-width: 40px;
+  min-height: 32px;
+  padding: 4px 10px;
+  color: var(--docs-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.docs-lang-button + .docs-lang-button {
+  border-inline-start: 1px solid var(--docs-border);
+}
+.docs-lang-button[aria-pressed='true'] {
+  color: var(--docs-text);
+  background: var(--docs-panel);
+  font-weight: 600;
+}
+.docs-lang-button:focus-visible {
+  outline: 2px solid var(--docs-link);
+  outline-offset: -2px;
 }
 .docs-layout {
   display: grid;
@@ -151,7 +181,7 @@ body {
 
 /* Content --------------------------------------------------------------- */
 .docs-page {
-  /* Examples, code and tables use this width; prose is capped at 72ch below. */
+  /* The main content column: prose, examples, code and tables use its full width. */
   max-width: 1200px;
 }
 .docs-page h1 {
@@ -178,19 +208,20 @@ body {
   margin: 24px 0 8px;
   font-size: 16px;
 }
-.docs-page h1,
-.docs-section h2,
-.docs-section h3,
-.docs-page p,
-.docs-page li {
-  max-width: 72ch;
-}
 .docs-page :not(pre) > code {
   padding: 1px 5px;
   border-radius: 5px;
   background: var(--docs-panel);
   border: 1px solid var(--docs-border);
   font-size: 0.88em;
+}
+/* Inside the light example previews (an example's own UI), inline code labels
+   use a light grey chip with dark text; the docs' dark code styles and the
+   View code blocks are unaffected. */
+.docs-preview :not(pre) > code {
+  background: #e9eaee;
+  color: #1f2328;
+  border-color: #d0d4d9;
 }
 .docs-note {
   margin: 16px 0;
@@ -232,6 +263,11 @@ body {
 }
 
 /* Example: live preview + View code ------------------------------------- */
+.docs-untranslated {
+  margin-inline-end: auto;
+  font-size: 13px;
+  color: #ffb86b;
+}
 .docs-example {
   margin: 16px 0 24px;
   border: 1px solid var(--docs-border);
@@ -389,6 +425,10 @@ body {
   .docs-menu-button {
     display: inline-block;
   }
+  .docs-header {
+    gap: 8px;
+    padding: 0 12px;
+  }
   .docs-nav {
     display: none;
     position: fixed;
@@ -426,4 +466,11 @@ body {
   border-radius: 12px;
   background: var(--docs-code-bg);
   color: #e6edf3;
+}
+
+/* Very narrow screens: the version label gives way to the language switch and menu. */
+@media (max-width: 480px) {
+  .docs-version {
+    display: none;
+  }
 }

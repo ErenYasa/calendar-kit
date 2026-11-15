@@ -8,44 +8,50 @@ import { DataTable, Note, Page, PropsTable, Section } from '../ui';
 export function Styling() {
   return (
     <Page
-      title="Styling & Customization"
-      lead="Start with the default theme and go only as far as you need: variables, then classes and state attributes, then custom content, then your own markup."
+      title="Styling & customization"
+      lead="Start with the default theme and go only as far as you need: change CSS variables first, then add your own classes and state selectors, then replace what is inside a day, and only then render the day element yourself."
     >
       <PropsTable
         caption="Which approach?"
         rows={[
-          { name: 'CSS variables', type: 'colours, radius, sizes', description: 'Theming (brand colours, dark mode). Cheapest; no selectors into the markup.' },
-          { name: 'classNames', type: 'parts', description: 'Adding your design system classes to specific parts.' },
-          { name: 'data-* attributes', type: 'state', description: 'Styling states (selected, in range, disabled, your modifiers) from your own CSS.' },
-          { name: 'renderDayContent', type: 'inside the day', description: 'Different content in the default, accessible day button.' },
-          { name: 'renderDay + getDayProps', type: 'whole day', description: 'Your own day element, keeping keyboard, focus, ARIA and selection.' },
-          { name: 'unstyled', type: 'everything', description: 'No default classes at all; you style every part.' },
+          { name: <>CSS variables</>, type: <>colours, corner radius, circle size</>, description: 'Brand colours or a dark theme. The least work: you set a few values on the calendar and write no selectors for its inner elements.' },
+          { name: 'classNames', type: <>parts</>, description: 'Adds your own (design system) classes to specific parts, such as the month title or the day button.' },
+          { name: <><code>data-*</code> attributes</>, type: <>state</>, description: 'Styles days by state (selected, in range, disabled, your own modifiers) from your own CSS.' },
+          { name: 'renderDayContent', type: <>inside the day</>, description: 'Replaces what is shown inside the day button (for example a number plus a dot); the button and its accessibility stay.' },
+          { name: 'renderDay + getDayProps', type: <>whole day</>, description: 'You render the day element yourself; keyboard, focus, ARIA and selection keep working.' },
+          { name: 'unstyled', type: <>everything</>, description: 'The default theme is switched off: no default classes, you style every part yourself.' },
         ]}
       />
       <Section title="Default theme">
         <p>
-          Import <code>calendar-kit/styles.css</code> once, before your own CSS. Everything visual reads CSS variables declared on the calendar root, so
-          most theming needs no selectors at all. No rule uses <code>!important</code>. Today, hover and the loading skeleton are wrapped in{' '}
-          <code>:where()</code> and add no specificity; selected, disabled, unavailable and range-endpoint styles are plain selectors of up to three classes
-          — to change those, use the variables (<code>--cal-accent</code>, <code>--cal-range</code>, …) or a selector of at least the same specificity. See the{' '}
-          <a href="#/styling-reference">Styling reference</a> for every variable, class and attribute.
+          Import <code>calendar-kit/styles.css</code> once, before your own CSS. Every colour and size in the theme comes from a CSS variable declared on
+          the calendar root, so most theming is just new values for those variables. No rule uses <code>!important</code>. The day state rules are
+          written as a class on the cell, a state attribute and a class on the button; the conditions for today, hover and the loading placeholders sit
+          inside <code>:where()</code>, which adds no weight to a selector. To change how a state looks, set its variable (<code>--cal-accent</code>,{' '}
+          <code>--cal-range</code>, …), or write a selector that is at least as specific as the default one. The{' '}
+          <a href="#/styling-reference">Styling reference</a> lists every variable, class and attribute.
         </p>
       </Section>
       <Section title="CSS variables">
         <p>
-          Set variables on the root through <code>className</code> or <code>style</code>. Available: <code>--cal-color</code>, <code>--cal-muted</code>,{' '}
+          Give the calendar a class (<code>className</code>) or inline <code>style</code> and set the variables there; every element of the calendar
+          picks up the new values. Available: <code>--cal-color</code>, <code>--cal-muted</code>,{' '}
           <code>--cal-bg</code>, <code>--cal-accent</code>, <code>--cal-accent-contrast</code>, <code>--cal-range</code>, <code>--cal-preview</code>,{' '}
           <code>--cal-hover</code>, <code>--cal-focus</code>, <code>--cal-today</code>, <code>--cal-ring</code>, <code>--cal-danger</code>,{' '}
           <code>--cal-radius</code>, <code>--cal-circle</code>, <code>--cal-font</code> and the tooltip variables <code>--cal-tooltip-bg</code>,{' '}
-          <code>--cal-tooltip-color</code>, <code>--cal-tooltip-shadow</code>, <code>--cal-tooltip-max-width</code> (copied to the portalled tooltip).
+          <code>--cal-tooltip-color</code>, <code>--cal-tooltip-shadow</code>, <code>--cal-tooltip-max-width</code>. The tooltip is rendered outside the
+          calendar (in <code>document.body</code>), so the calendar copies these four values onto it when it opens. The example below is a complete dark
+          theme made of variables only.
         </p>
         <Example src="styling/CssVariables" title="Dark theme with variables" />
       </Section>
       <Section title="classNames">
         <p>
-          Parts: <code>root, header, footer, viewport, months, month, monthHeader, monthTitle, navigation, navButton, weekdays, weekday, grid, week, dayCell,
+          <code>classNames</code> adds your class next to the default class of a part, for example{' '}
+          <code>classNames=&#123;&#123; monthTitle: &apos;brand-title&apos; &#125;&#125;</code>. Parts: <code>root, header, footer, viewport, months, month, monthHeader, monthTitle, navigation, navButton, weekdays, weekday, grid, week, dayCell,
           dayButton, dayContent, rangeBackground, tooltip, loadMore, loading, error, liveRegion, readOnlyNotice</code>. <code>dayCell</code>,{' '}
-          <code>dayButton</code> and <code>dayContent</code> accept a function of the day&apos;s state.
+          <code>dayButton</code> and <code>dayContent</code> also accept a function that receives the day&apos;s state and returns a class (or{' '}
+          <code>undefined</code>). In the example the month titles are uppercase, and weekday names and weekend day numbers are purple.
         </p>
         <Example src="styling/ClassNames" title="classNames" />
       </Section>
@@ -54,23 +60,35 @@ export function Styling() {
           Day cells and buttons carry <code>data-today</code>, <code>data-past</code>, <code>data-disabled</code>, <code>data-unavailable</code>,{' '}
           <code>data-selected</code>, <code>data-range-start</code>, <code>data-range-end</code>, <code>data-in-range</code>, <code>data-preview</code>,{' '}
           <code>data-focused</code>, <code>data-loading</code>, <code>data-reason</code>, <code>data-mod-*</code> and more; cells also have{' '}
-          <code>data-band=&quot;start | mid | end&quot;</code>. Pair them with your own classes so your CSS does not depend on internal class names.
+          <code>data-band=&quot;start | mid | end&quot;</code>. Pair them with your own classes so your CSS does not depend on internal class names. A
+          modifier is your own named day state: <code>modifiers</code> maps a name to a function of the day, and when it returns true the day gets{' '}
+          <code>data-mod-</code> plus that name. In the example, holidays (and the 15th of every month, so each month shows one) are underlined, and the
+          numbers of a selected range&apos;s start and end are bolder.
         </p>
         <Example src="styling/DataAttributes" title="Modifiers and data attributes" />
       </Section>
       <Section title="renderDayContent">
+        <p>
+          <code>renderDayContent</code> replaces what is shown inside the day button, by default just the day number. The button itself stays the
+          calendar&apos;s: its circle, focus ring, keyboard handling and ARIA label do not change. Use it for small additions such as a price, a dot or a
+          short label. The example adds a dot under every upcoming day: green, or orange on Saturdays (a stand-in for &quot;busy&quot;).
+        </p>
         <Example src="styling/DayContentRender" title="Custom day content" />
       </Section>
       <Section title="renderDay and getDayProps">
         <p>
-          <code>getDayProps</code> merges the ref (tooltip anchor, roving focus), <code>tabIndex</code>, ARIA attributes, <code>data-*</code> state and event
-          handlers with yours. On a <code>&lt;button&gt;</code> call it as <code>getDayProps(yourProps)</code>: it writes <code>type=&quot;button&quot;</code>.
+          With <code>renderDay</code> you render the whole day element yourself. Spread the result of <code>getDayProps</code> on it: it adds what the
+          calendar needs to keep the day working (a ref, so the calendar can move keyboard focus to the element and anchor its tooltip there,{' '}
+          <code>tabIndex</code>, ARIA attributes, <code>data-*</code> state and event handlers) and merges your own props in. On a{' '}
+          <code>&lt;button&gt;</code> call it as <code>getDayProps(yourProps)</code>: it writes <code>type=&quot;button&quot;</code>. The day keeps the
+          default class, so selection, range band, focus ring and disabled look still come from the theme; the example only adds a
+          &quot;wknd&quot; tag under Saturdays and Sundays.
         </p>
         <Example src="styling/RenderDay" title="Custom day element" />
         <p>
           For an element that is not a button (a <code>&lt;div&gt;</code>, a <code>&lt;span&gt;</code>), pass <code>type: null</code>:{' '}
           <code>getDayProps(&#123; type: null &#125;)</code> writes no <code>type</code> attribute and adds <code>role=&quot;button&quot;</code> unless you
-          pass your own <code>role</code>. Focus works exactly as with a button: one day is in the tab order (roving <code>tabIndex</code>) and the arrow,
+          pass your own <code>role</code>. Focus works exactly as with a button: only one day is in the Tab order at a time (a roving <code>tabIndex</code>) and the arrow,
           Page and Home/End keys move between days. Enter and Space select the focused day; on a non-button element the calendar handles those keys
           itself, while a native button turns them into a click.
         </p>
@@ -133,7 +151,7 @@ export function StylingReference() {
             [c('dayContent'), c('cal-day-content'), <>{c('span')} inside the default button, around the number or {c('renderDayContent')}. Accepts a function.</>, <>No {c('renderDay')}.</>],
             [c('tooltip'), c('cal-tooltip'), <>The portalled {c('div[role=tooltip]')} (in {c('document.body')} or {c('tooltip.container')}). {c('tooltip.className')} is added after it. Carries {c('data-placement')}.</>, 'While a day tooltip is open.'],
             [c('loadMore'), c('cal-load-more'), <>Default load-more {c('<button>')} with {c('data-direction')}.</>, <>{c('navigation="continuous"')}, {c('loadMore="button"')}, more months can be loaded, no {c('renderLoadMore')}.</>],
-            [c('loading'), c('cal-loading'), <>Default initial-load indicator with {c('data-scope="initial"')}: a spinner in the months grid while no month is rendered, and a visually hidden status text during the initial {c('loading')}.</>, <>Initial load only, without {c('renderLoading')}. Month and load-more loading have no default element with this class (the days are drawn as a skeleton).</>],
+            [c('loading'), c('cal-loading'), <>Default initial-load indicator with {c('data-scope="initial"')}: a spinner in the months grid while no month is rendered, and a visually hidden status text during the initial {c('loading')}.</>, <>Initial load only, without {c('renderLoading')}. Month and load-more loading have no default element with this class (the days are drawn as loading placeholders).</>],
             [c('error'), c('cal-error'), <>{c('div[role=alert]')} in a month whose data status is {c('error')}, with a {c('cal-retry')} button when {c('onRetry')} is set.</>, <>Month status {c('error')}, no {c('renderError')}.</>],
             [c('liveRegion'), c('cal-live'), 'Visually hidden aria-live region for announcements.', 'Always (kept visually hidden inline, also when unstyled).'],
           ]}
@@ -201,15 +219,15 @@ export function StylingReference() {
             [c('--cal-bg'), c('#fff'), 'Root background, the shared (sticky) weekday row background, and the gap between a focused day and its focus ring.'],
             [c('--cal-accent'), c('#1f2328'), 'Selected day circle, the outline of the previewed range end, day badges.'],
             [c('--cal-accent-contrast'), c('#fff'), 'Number on a selected circle, badge text.'],
-            [c('--cal-range'), c('#eef0f2'), 'Selected range band; also nav button and load-more hover, the shared weekday row border, the footer top border, and the skeleton shimmer.'],
-            [c('--cal-preview'), c('#f4f5f6'), 'Preview band while choosing an end; also the read-only notice background and the skeleton shimmer.'],
+            [c('--cal-range'), c('#eef0f2'), 'Selected range band; also nav button and load-more hover, the shared weekday row border, the footer top border, and the loading placeholders’ shimmer.'],
+            [c('--cal-preview'), c('#f4f5f6'), 'Preview band while choosing an end; also the read-only notice background and the loading placeholders’ shimmer.'],
             [c('--cal-hover'), c('#d0d4d9'), 'Thin outline of a hovered day (not disabled, not selected, not read-only).'],
             [c('--cal-focus'), c('#2563eb'), 'Keyboard focus ring of days, nav buttons, load-more and retry buttons.'],
             [c('--cal-today'), c('#9aa0a6'), <>Thin outline of today’s circle (only while {c('highlightToday')} is on).</>],
             [c('--cal-ring'), c('#c4c7cc'), 'Outer half-ring on the start and end of a multi-day band.'],
             [c('--cal-danger'), c('#b42318'), 'Month error message: text colour, and an 8% tint as its background.'],
             [c('--cal-radius'), c('12px'), 'Rounded band ends where the band breaks at a week or month edge.'],
-            [c('--cal-circle'), c('0.84'), 'Circle size as a fraction of the cell’s shorter side: selection, today, hover and focus circles, band height, end half-rings, label/badge width, skeleton pills.'],
+            [c('--cal-circle'), c('0.84'), 'Circle size as a fraction of the cell’s shorter side: selection, today, hover and focus circles, band height, end half-rings, label/badge width, loading placeholder pills.'],
             [c('--cal-tooltip-bg'), c('#fff'), 'Tooltip and arrow background.'],
             [c('--cal-tooltip-color'), c('#1f2328'), 'Tooltip text colour.'],
             [c('--cal-tooltip-shadow'), c('0 4px 16px rgb(0 0 0 / 0.14)'), 'Tooltip box-shadow.'],
@@ -234,7 +252,7 @@ export function StylingReference() {
             [c('--cal-day-min-h'), <>{c('minDaySize')} height (default 40)</>, 'Minimum day cell height.'],
             [c('--cal-day-max'), <>{c('maxDaySize')} (default 56)</>, 'Maximum day cell height.'],
             [c('--cal-month-gap'), <>{c('monthGap')} (default 32)</>, 'Column gap between months.'],
-            [c('--cal-month-padding'), 'constant 8px', 'Inline padding of each month, the shared weekday row padding, and the position of a month loading indicator.'],
+            [c('--cal-month-padding'), 'constant 8px', 'Inline padding of each month and of the shared weekday row.'],
             [c('--cal-month-min'), 'computed minimum month width', 'Not used by the default theme.'],
             [c('--cal-columns'), 'current number of month columns', 'Not used by the default theme.'],
             [c('--cal-tooltip-arrow'), 'tooltip position (on the tooltip element)', 'Arrow offset along the tooltip edge.'],
@@ -267,8 +285,8 @@ export function StylingReference() {
           head={['Attribute', 'Values', 'Meaning']}
           rows={[
             [c('data-month'), c('YYYY-MM'), 'The month.'],
-            [c('data-status'), c('unknown | loading | error'), <>From {c('getDataStatus')}; absent when {c('loaded')}. The theme draws the days as a skeleton for {c('unknown')} and {c('loading')}.</>],
-            [c('data-skeleton'), yes, <>Initial load ({c('loading')} before the calendar was shown without it): days drawn as a skeleton.</>],
+            [c('data-status'), c('unknown | loading | error'), <>From {c('getDataStatus')}; absent when {c('loaded')}. The theme draws the days as loading placeholders for {c('unknown')} and {c('loading')}.</>],
+            [c('data-skeleton'), yes, <>Initial load ({c('loading')} before the calendar was shown without it): days drawn as loading placeholders.</>],
           ]}
         />
         <DataTable
@@ -355,11 +373,15 @@ export function StylingReference() {
 
       <Section title="Slots and render callbacks">
         <p>
-          Slots replace a region with your content. Most receive the slot&apos;s own props and a <code>SlotContext</code>: the calendar snapshot (
+          A slot is a render prop: a function you pass that returns the content for one region of the calendar (header, footer, month header, …). Each
+          slot receives a <code>SlotContext</code>, written <code>ctx</code> in the table below: <code>renderHeader</code> and <code>renderFooter</code>{' '}
+          receive only <code>ctx</code>; the other slots receive their own props first and <code>ctx</code> second. <code>renderDayTooltip</code> and the
+          day render props (<code>renderDay</code>, <code>renderDayContent</code>) receive no <code>SlotContext</code>. It gives the current calendar
+          state (
           <code>selection</code>, <code>activeEndpoint</code>, <code>phase</code>, <code>validation</code>, <code>referenceMonth</code>,{' '}
           <code>visibleMonths</code>, <code>renderedMonths</code>, <code>layout</code>, <code>focusedDate</code>, <code>today</code>) plus{' '}
-          <code>instanceId</code>, <code>actions</code> (the same controller as the ref), <code>messages</code>, <code>locale</code> and{' '}
-          <code>formatDate</code>.
+          <code>instanceId</code>, <code>actions</code> (the same controller methods as the calendar&apos;s ref, e.g.{' '}
+          <code>ctx.actions.clear()</code>), <code>messages</code>, <code>locale</code> and <code>formatDate</code>.
         </p>
         <PropsTable
           caption="Slots"
@@ -368,7 +390,7 @@ export function StylingReference() {
             { name: 'renderFooter', type: '(ctx) => ReactNode', description: <>Inside {c('div.cal-footer')} ({c('classNames.footer')}), after the months. The theme adds a top border in {c('--cal-range')}.</> },
             { name: 'renderNavigation', type: '(NavigationRenderProps, ctx) => ReactNode', description: <>Paged only. Inside {c('div.cal-navigation')} above the months and replaces the default arrows. Props: {c('canPrevious')}, {c('canNext')}, {c('previous()')}, {c('next()')}, {c('months')}, {c('labels')}.</> },
             { name: 'renderMonthHeader', type: '(MonthHeaderRenderProps, ctx) => ReactNode', description: <>Replaces the whole {c('cal-month-header')} row, without a wrapper. Props: {c('month')}, {c('title')}, {c('index')}, {c('status')} and {c('navigation')}: the default arrows that belong to this header, or {c('null')} (always null with {c('renderNavigation')} or continuous navigation). The month is then labelled with {c('aria-label')}.</> },
-            { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>No wrapper. {c('scope')} {c('initial')}: after the viewport during the initial load; {c('month')}: inside a loading month after its grid (the skeleton stays); {c('load-more')}: in the load-more area while added months load (no default for this one).</> },
+            { name: 'renderLoading', type: '(LoadingRenderProps, ctx) => ReactNode', description: <>No wrapper. {c('scope')} {c('initial')}: after the viewport during the initial load; {c('month')}: inside a loading month after its grid (the placeholders stay); {c('load-more')}: in the load-more area while added months load (no default for this one).</> },
             { name: 'renderError', type: '(ErrorRenderProps, ctx) => ReactNode', description: <>Replaces {c('div.cal-error')} in each month with status {c('error')}. {c('retry()')} calls {c('onRetry([month])')}.</> },
             { name: 'renderLoadMore', type: '(LoadMoreRenderProps, ctx) => ReactNode', description: <>Replaces the default load-more button inside its area (continuous, {c('loadMore="button"')}, directions in {c('loadDirections')}); also called at {c('minDate')}/{c('maxDate')} with {c('canLoad: false')}, where {c('loadMore()')} does nothing. Props: {c('direction')}, {c('canLoad')}, {c('loading')}, {c('loadMore()')}, {c('label')}.</> },
             { name: 'renderDayTooltip', type: '(DayTooltipRenderProps) => ReactNode', description: <>Content of the open tooltip, inside {c('div.cal-tooltip')} before the arrow. Props: {c('day')}, {c('content')} (from {c('getDayTooltip')} or the default reason text), {c('trigger')}, {c('placement')}. No ctx.</> },
@@ -423,9 +445,11 @@ export function StylingReference() {
             never need it.
           </li>
           <li>
-            State rules select <code>.cal-day[data-…] .cal-day-button</code> (and the <code>::before</code> circle). Today, hover and skeleton wrap their
-            state in <code>:where()</code>, so those states add no specificity and the keyboard focus ring, declared last, always wins. Selected, disabled,
-            unavailable, the range rings and the preview end are plain selectors of up to three classes.
+            State rules select <code>.cal-day[data-…] .cal-day-button</code> (and the <code>::before</code> circle): two classes and an attribute,
+            specificity 0,3,0. Today, hover and the loading placeholders put their state conditions inside <code>:where()</code>, so the conditions add
+            no specificity, and the keyboard focus ring (<code>.cal-root .cal-day .cal-day-button:focus-visible::before</code>, declared last) always
+            wins over them. Selected, disabled, unavailable, the range rings and the preview end are plain attribute selectors, mostly 0,3,0; a few (the
+            preview end, the RTL half-rings, the crossed-out number of a closed day) are more specific.
           </li>
           <li>
             Prefer changing a variable over overriding a property: variables are read wherever they are used, so <code>.my-cell[data-selected]</code>{' '}
@@ -433,7 +457,8 @@ export function StylingReference() {
             button; a background on the button itself fills the whole square cell.
           </li>
           <li>
-            To override a property of a state rule, match its specificity, e.g. <code>.my-calendar .my-cell[data-unavailable] .my-day</code>.
+            To override a property of a state rule, use a selector that is more specific, e.g.{' '}
+            <code>.my-calendar .my-cell[data-unavailable] .my-day</code> (0,4,0) beats the default unavailable colour (0,3,0).
           </li>
           <li>
             Select your own classes from <code>classNames</code> plus the data-* attributes. Internal class names (<code>cal-day-number</code>,{' '}

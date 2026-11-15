@@ -6,7 +6,8 @@ import './Recipes.css';
 // later day extends it to a multi-day pass (up to 4 days). Sold-out days are
 // closed; low capacity is shown as the day's label.
 const PRICE = 45;
-const ticketsLeft = (d: CalendarDate) => (Number(d.slice(8)) * 7) % 40;
+// The 9th, 18th and 27th of each month are sold out (0 tickets); other days have 1–39 left.
+const ticketsLeft = (d: CalendarDate) => (Number(d.slice(8)) % 9 === 0 ? 0 : (Number(d.slice(8)) * 7) % 40);
 const rules = dayRangeRules({
   disablePast: true,
   singleDayFirst: true,

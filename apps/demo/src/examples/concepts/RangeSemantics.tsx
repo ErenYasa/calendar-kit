@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar, type DateRange, countDays, countNights, dayRangeRules, stayRules } from 'calendar-kit';
 import './RangeSemantics.css';
 
-// The same two clicks mean different things:
+// The same two clicks give different counts:
 // - a stay excludes the end day (check-out): 13 → 16 = 3 nights
 // - a day range includes it (multi-day ticket): 13 → 16 = 4 days
 const stay = stayRules({});

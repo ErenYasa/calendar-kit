@@ -1,5 +1,10 @@
 .synced {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
   gap: 24px;
+}
+.synced-label {
+  margin: 0 0 8px;
+  font-weight: 600;
 }

@@ -3,7 +3,7 @@ import { Calendar, addMonthsToMonth, getMonth, getToday, stayRules } from 'calen
 import { useAvailability } from '../shared/availability';
 
 // Data per month: the app loads the months the calendar renders and reports
-// each month's status. Loading/unknown months show a skeleton and block
+// each month's status. Loading/unknown months show empty placeholders and block
 // selection; an error shows a retry button. Here the month after the two
 // visible ones fails once: press "next" to see the error and retry it.
 export default function MonthData() {

@@ -328,7 +328,7 @@ export interface DefaultDayData {
   icon?: ReactNode;
   /** Small markers (dots) — each is announced through `description`/`label`. */
   markers?: readonly { color?: string; label?: string; className?: string }[];
-  /** Accessible description appended to the day's label. */
+  /** The day's accessible description (aria-describedby): screen readers read it after the label. */
   description?: string;
 }
 
@@ -633,7 +633,17 @@ export interface CalendarBaseProps<TDayData = unknown, TContext = unknown> exten
   /** Max block size of the months viewport (enables internal vertical scroll). */
   maxBlockSize?: number | string;
   navigation?: NavigationMode;
-  /** Months moved by previous/next in paged mode. Default 1. */
+  /**
+   * How many months one previous/next step moves. Default 1; a value that is
+   * not a finite number ≥ 1 falls back to 1, fractions are floored.
+   * - `navigation="paged"`: the default arrows, `renderNavigation`'s
+   *   `previous()`/`next()` and the controller's `previous()`/`next()` move the
+   *   window of shown months by this many months (clamped to minDate/maxDate).
+   * - `navigation="continuous"`: there are no arrows; the controller's
+   *   `previous()`/`next()` move the reference month by this many months and
+   *   scroll to it. It does not change how many months a load adds
+   *   (`monthsPerLoad`).
+   */
   stepMonths?: number;
   loadMore?: LoadMoreMode;
   /** Content of the default load-more buttons (keeps the button, its behaviour and a11y). */

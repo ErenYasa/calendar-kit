@@ -27,7 +27,8 @@ describe.each(['2026-01-15T10:00:00', '2026-11-20T10:00:00', '2026-12-31T23:30:0
   it('every example renders and offers selectable days', async () => {
     at(now);
     for (const [path, load] of Object.entries(examples)) {
-      const name = path.replace('../src/examples/', '').replace('.tsx', '');
+      // Turkish variants (Name.tr.tsx) follow the same expectations as their original.
+      const name = path.replace('../src/examples/', '').replace(/(\.tr)?\.tsx$/, '');
       const { default: Example } = await load();
       const { container, unmount } = render(<Example />);
       await act(async () => {
