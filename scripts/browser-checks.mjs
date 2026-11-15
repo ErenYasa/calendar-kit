@@ -14,7 +14,8 @@ const demo = fileURLToPath(new URL('../apps/demo/', import.meta.url));
 const server = await createServer({ root: demo, configFile: `${demo}vite.config.ts`, server: { port: 5199, strictPort: false, host: '127.0.0.1' }, logLevel: 'error' });
 await server.listen();
 const base = server.resolvedUrls.local[0];
-const browser = await chromium.launch({ channel: 'chrome', headless: true });
+// BROWSER_CHANNEL=msedge runs the same checks in Microsoft Edge (Chromium). Default: Google Chrome.
+const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL ?? 'chrome', headless: true });
 const results = [];
 
 async function check(id, title, fn) {
