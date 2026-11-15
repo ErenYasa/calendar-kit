@@ -1373,8 +1373,18 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       // The shared row never widens the page; it follows the months' scroll.
       style={asGridRow ? undefined : { overflow: 'hidden' }}
     >
-      {weekdays.map((w) => (
-        <span key={w.weekday} role={asGridRow ? 'columnheader' : undefined} aria-label={w.long} className={cx(p('weekday'), cn?.weekday)} title={w.long}>
+      {weekdays.map((w, i) => (
+        <span
+          key={w.weekday}
+          role={asGridRow ? 'columnheader' : undefined}
+          // Explicit column positions: the hidden empty cells before day 1 are
+          // not in the accessibility tree, so without them the first day would
+          // be exposed under the first column header (S04).
+          aria-colindex={asGridRow ? i + 1 : undefined}
+          aria-label={w.long}
+          className={cx(p('weekday'), cn?.weekday)}
+          title={w.long}
+        >
           {props.formatWeekday ? props.formatWeekday(w.weekday, locale) : w.short}
         </span>
       ))}
@@ -1490,6 +1500,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         {header}
         <div
           role="grid"
+          aria-colcount={7}
           aria-labelledby={props.renderMonthHeader ? undefined : titleId}
           aria-label={props.renderMonthHeader ? title : undefined}
           aria-readonly={mode === 'readonly' || undefined}
