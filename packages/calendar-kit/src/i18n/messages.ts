@@ -42,6 +42,18 @@ export interface CalendarMessages {
   dayReasons: Record<string, string>;
 }
 
+/**
+ * Text for 'conflicting-rules': the clashing length options in reading order,
+ * e.g. "at least 5 nights and at most 3 nights". Used by every bundle.
+ */
+export function conflictParts(p: IssueParams, unitText: (n: unknown, u: unknown) => string, w: { exactly: string; atLeast: string; atMost: string; and: string }): string {
+  const parts: string[] = [];
+  if (p.length != null) parts.push(`${w.exactly} ${unitText(p.length, p.unit)}`);
+  if (p.min != null) parts.push(`${w.atLeast} ${unitText(p.min, p.unit)}`);
+  if (p.max != null) parts.push(`${w.atMost} ${unitText(p.max, p.unit)}`);
+  return parts.join(` ${w.and} `);
+}
+
 const unitEn = (n: unknown, unit: unknown) => `${n} ${unit === 'nights' ? (n === 1 ? 'night' : 'nights') : n === 1 ? 'day' : 'days'}`;
 
 export const messagesEn: CalendarMessages = {
@@ -83,6 +95,8 @@ export const messagesEn: CalendarMessages = {
     'min-length': (p) => `Minimum ${unitEn(p.min, p.unit)}`,
     'max-length': (p) => `Maximum ${unitEn(p.max, p.unit)}`,
     'fixed-length': (p) => `Exactly ${unitEn(p.length, p.unit)}`,
+    'conflicting-rules': (p) =>
+      `No ${p.unit === 'nights' ? 'stay' : 'range'} fits these rules: ${conflictParts(p, unitEn, { exactly: 'exactly', atLeast: 'at least', atMost: 'at most', and: 'and' })}`,
     'same-day': () => 'Start and end cannot be the same day',
     'end-before-start': () => 'End is before start',
     'max-selections': (p) => `You can select up to ${p.max} dates`,
@@ -143,6 +157,8 @@ export const messagesTr: CalendarMessages = {
     'min-length': (p) => `Minimum ${unitTr(p.min, p.unit)}`,
     'max-length': (p) => `Maksimum ${unitTr(p.max, p.unit)}`,
     'fixed-length': (p) => `Tam olarak ${unitTr(p.length, p.unit)}`,
+    'conflicting-rules': (p) =>
+      `Bu kurallara uyan ${p.unit === 'nights' ? 'konaklama' : 'aralık'} yok: ${conflictParts(p, unitTr, { exactly: 'tam olarak', atLeast: 'en az', atMost: 'en fazla', and: 've' })}`,
     'same-day': () => 'Başlangıç ve bitiş aynı gün olamaz',
     'end-before-start': () => 'Bitiş başlangıçtan önce',
     'max-selections': (p) => `En fazla ${p.max} tarih seçebilirsiniz`,

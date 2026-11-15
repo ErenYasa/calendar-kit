@@ -339,8 +339,8 @@ export function LoadMore() {
         </p>
         <p>
           Sayfayı hafif tutmak için liste <code>maxRenderedMonths</code> (varsayılan 24) aya indirilir: her eklemeden sonra eklenen yere en uzak aylar
-          kaldırılır. Klavye odağını tutan ay kaldırılmaz; odak orada kaldığı sürece liste bu sayıyı aşabilir ve odak ayrıldıktan sonraki ilk eklemede
-          kırpılır. Her ekleme — klavye odağı listenin sonunu geçtiğinde yapılanlar da —{' '}
+          kaldırılır; liste hiçbir zaman bundan fazla ay tutmaz. Klavye odağındaki gün kaldırılan bir aydaysa odak önce, kalan aylardan ekranda görünen
+          ve kaldırılana en yakın aydaki aynı güne taşınır; böylece odak takvimde kalır ve sayfa kaymaz. Her ekleme — klavye odağı listenin sonunu geçtiğinde yapılanlar da —{' '}
           <code>onLoadMore</code> ve <code>onRenderedMonthsChange</code>’i çağırır (verinizi orada yükleyin). Referans ay değişmez, bu yüzden{' '}
           <code>onVisibleMonthChange</code> çağrılmaz. Sayfalı gezinme (varsayılan) farklı çalışır: oklar gösterilen ayları değiştirir — bkz.{' '}
           <a href="#/orientation">Yön ve ay sayısı</a>.
@@ -407,7 +407,7 @@ export function LoadMore() {
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Liste uçlarında düğmeler, bir uç görünür alana girince otomatik yükleme ya da yalnızca kodunuzdan.' },
           { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Yerleşik kontrol veya otomatik yükleme alan liste uçları. ref.loadMore(direction) her durumda iki yönde de çalışır.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Her yüklemede eklenen ay sayısı.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Render edilmiş tutulan ay sayısı (asla numberOfMonths’tan az değil); en uzaktakiler kaldırılır, klavye odağını tutan ay hariç.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Render edilmiş tutulan en fazla ay sayısı (asla numberOfMonths’tan az değil); en uzaktakiler kaldırılır, kaldırılan aydaki odak kalan bir güne taşınır.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Varsayılan düğmelerin içeriği.' },
           { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Her yön için kendi kontrolünüz.' },
         ]}
@@ -495,7 +495,7 @@ export function DayContent() {
           { name: 'label', type: 'ReactNode', description: 'Sayının altında kısa metin, ör. bir fiyat.' },
           { name: 'badge', type: 'ReactNode', description: 'Üst bitiş köşesinde küçük bir badge.' },
           { name: 'icon', type: 'ReactNode', description: 'Üst başlangıç köşesinde küçük bir simge; sayıyı veya etiketi kaydırmaz.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Küçük renkli noktalar; ekran okuyuculardan gizlenir. Varsayılan gün içeriği label’ı kullanmaz; anlamını description’a yazın.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Küçük renkli noktalar. Noktalar ekran okuyuculardan gizlenir; her label günün erişilebilir açıklamasına eklenir (description’dan sonra, tekrar etmeden).' },
           { name: 'description', type: 'string', description: 'Ekran okuyucuların günün etiketinden sonra okuduğu ek metin (aria-describedby).' },
         ]}
       />
@@ -668,7 +668,7 @@ export function Placement() {
       </Section>
       <Section title="Diyalogda">
         <p>
-          <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar, Escape ile kapanır ve kapanınca odağı geri verir.
+          <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar ve Escape ile kapanır. Kapanınca tarayıcı odağı, açılmadan önce odakta olan öğeye geri verir; ancak Safari tıklanan bir düğmeye odaklanmadığı için örnekler odağı <code>onClose</code> içinde tetikleyiciye açıkça geri taşır.
           Modal bir diyalog tarayıcının üst katmanında (top layer), her şeyin üstünde çizilir; bu yüzden sayfa gövdesine render edilen bir tooltip onun
           arkasında kalır: tooltip’i <code>tooltip.container</code> ile diyaloğun içine render edin.
         </p>
@@ -792,6 +792,10 @@ export function Accessibility() {
           <code>aria-disabled</code> kullanır ve odaklanabilir kalır.
         </li>
         <li>Seçimler, reddedilen seçimler ve yükleme bir canlı bölgeye (live region: değiştiğinde ekran okuyucuların okuduğu, aria-live özellikli görünmez bir alan) yazılır.</li>
+        <li>
+          Her gün hücresi ve hafta günü başlığı sütun konumunu (<code>aria-colindex</code>) taşır; böylece ayın 1’inden önceki boş hücreler yardımcı
+          teknolojiden gizlense de her gün kendi hafta günü başlığının altında kalır.
+        </li>
         <li>Odağı gösterilen ayların ötesine taşımak ayı değiştirir; ay eklemek veya kaldırmak odağı asla kaybettirmez.</li>
         <li>Odağı bir diyalogda tutmak ve kapanınca geri vermek uygulamanın işidir; takvim odağı yalnızca kendi ızgarasının içinde taşır.</li>
       </ul>

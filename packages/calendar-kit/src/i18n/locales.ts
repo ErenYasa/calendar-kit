@@ -1,4 +1,4 @@
-import type { CalendarMessages } from './messages.js';
+import { type CalendarMessages, conflictParts } from './messages.js';
 
 /**
  * Additional UI message bundles. Month and weekday names always come from
@@ -41,6 +41,7 @@ export const messagesDe = bundle(
     'blocked-in-range': () => 'Der Zeitraum enthält nicht verfügbare Tage',
     'weekday-start': () => 'An diesem Wochentag kein Beginn möglich', 'weekday-end': () => 'An diesem Wochentag kein Ende möglich',
     'min-length': (p) => `Mindestens ${de(p.min, p.unit)}`, 'max-length': (p) => `Höchstens ${de(p.max, p.unit)}`, 'fixed-length': (p) => `Genau ${de(p.length, p.unit)}`,
+    'conflicting-rules': (p) => `${p.unit === 'nights' ? 'Kein Aufenthalt passt' : 'Kein Zeitraum passt'} zu diesen Regeln: ${conflictParts(p, de, { exactly: 'genau', atLeast: 'mindestens', atMost: 'höchstens', and: 'und' })}`,
     'same-day': () => 'Beginn und Ende dürfen nicht auf denselben Tag fallen', 'end-before-start': () => 'Das Ende liegt vor dem Beginn',
     'max-selections': (p) => `Sie können höchstens ${count(p.max, 'Datum', 'Daten')} auswählen`,
     'data-unknown': () => 'Verfügbarkeit noch nicht geladen', 'data-loading': () => 'Verfügbarkeit wird geladen…', 'data-error': () => 'Verfügbarkeit konnte nicht geladen werden',
@@ -68,6 +69,7 @@ export const messagesFr = bundle(
     'blocked-in-range': () => 'La période contient des jours indisponibles',
     'weekday-start': () => 'Impossible de commencer ce jour de la semaine', 'weekday-end': () => 'Impossible de terminer ce jour de la semaine',
     'min-length': (p) => `Minimum ${fr(p.min, p.unit)}`, 'max-length': (p) => `Maximum ${fr(p.max, p.unit)}`, 'fixed-length': (p) => `Exactement ${fr(p.length, p.unit)}`,
+    'conflicting-rules': (p) => `${p.unit === 'nights' ? 'Aucun séjour ne respecte' : 'Aucune période ne respecte'} ces règles : ${conflictParts(p, fr, { exactly: 'exactement', atLeast: 'au moins', atMost: 'au plus', and: 'et' })}`,
     'same-day': () => 'Le début et la fin ne peuvent pas être le même jour', 'end-before-start': () => 'La fin précède le début',
     'max-selections': (p) => `Vous pouvez sélectionner jusqu'à ${count(p.max, 'date', 'dates')}`,
     'data-unknown': () => 'Disponibilités pas encore chargées', 'data-loading': () => 'Chargement des disponibilités…', 'data-error': () => 'Impossible de charger les disponibilités',
@@ -95,6 +97,7 @@ export const messagesEs = bundle(
     'blocked-in-range': () => 'El rango contiene días no disponibles',
     'weekday-start': () => 'No se puede empezar en este día de la semana', 'weekday-end': () => 'No se puede terminar en este día de la semana',
     'min-length': (p) => `Mínimo ${es(p.min, p.unit)}`, 'max-length': (p) => `Máximo ${es(p.max, p.unit)}`, 'fixed-length': (p) => `Exactamente ${es(p.length, p.unit)}`,
+    'conflicting-rules': (p) => `${p.unit === 'nights' ? 'Ninguna estancia cumple' : 'Ningún periodo cumple'} estas reglas: ${conflictParts(p, es, { exactly: 'exactamente', atLeast: 'al menos', atMost: 'como máximo', and: 'y' })}`,
     'same-day': () => 'El inicio y el fin no pueden ser el mismo día', 'end-before-start': () => 'El fin es anterior al inicio',
     'max-selections': (p) => `Puedes seleccionar hasta ${count(p.max, 'fecha', 'fechas')}`,
     'data-unknown': () => 'Disponibilidad aún no cargada', 'data-loading': () => 'Cargando disponibilidad…', 'data-error': () => 'No se pudo cargar la disponibilidad',
@@ -122,6 +125,7 @@ export const messagesIt = bundle(
     'blocked-in-range': () => "L'intervallo contiene giorni non disponibili",
     'weekday-start': () => 'Impossibile iniziare in questo giorno della settimana', 'weekday-end': () => 'Impossibile terminare in questo giorno della settimana',
     'min-length': (p) => `Minimo ${it(p.min, p.unit)}`, 'max-length': (p) => `Massimo ${it(p.max, p.unit)}`, 'fixed-length': (p) => `Esattamente ${it(p.length, p.unit)}`,
+    'conflicting-rules': (p) => `${p.unit === 'nights' ? 'Nessun soggiorno rispetta' : 'Nessun periodo rispetta'} queste regole: ${conflictParts(p, it, { exactly: 'esattamente', atLeast: 'almeno', atMost: 'al massimo', and: 'e' })}`,
     'same-day': () => "L'inizio e la fine non possono cadere nello stesso giorno", 'end-before-start': () => "La fine precede l'inizio",
     'max-selections': (p) => `Puoi selezionare fino a ${count(p.max, 'data', 'date')}`,
     'data-unknown': () => 'Disponibilità non ancora caricata', 'data-loading': () => 'Caricamento della disponibilità…', 'data-error': () => 'Impossibile caricare la disponibilità',
@@ -149,6 +153,7 @@ export const messagesNl = bundle(
     'blocked-in-range': () => 'De periode bevat onbeschikbare dagen',
     'weekday-start': () => 'Kan niet op deze weekdag beginnen', 'weekday-end': () => 'Kan niet op deze weekdag eindigen',
     'min-length': (p) => `Minimaal ${nl(p.min, p.unit)}`, 'max-length': (p) => `Maximaal ${nl(p.max, p.unit)}`, 'fixed-length': (p) => `Precies ${nl(p.length, p.unit)}`,
+    'conflicting-rules': (p) => `${p.unit === 'nights' ? 'Geen verblijf past' : 'Geen periode past'} bij deze regels: ${conflictParts(p, nl, { exactly: 'precies', atLeast: 'minimaal', atMost: 'maximaal', and: 'en' })}`,
     'same-day': () => 'Begin en einde kunnen niet op dezelfde dag vallen', 'end-before-start': () => 'Het einde ligt vóór het begin',
     'max-selections': (p) => `Je kunt maximaal ${count(p.max, 'datum', 'datums')} selecteren`,
     'data-unknown': () => 'Beschikbaarheid nog niet geladen', 'data-loading': () => 'Beschikbaarheid wordt geladen…', 'data-error': () => 'Beschikbaarheid kon niet worden geladen',
@@ -191,6 +196,7 @@ export const messagesAr = bundle(
     'blocked-in-range': () => 'يحتوي النطاق على أيام غير متاحة',
     'weekday-start': () => 'لا يمكن البدء في هذا اليوم من الأسبوع', 'weekday-end': () => 'لا يمكن الانتهاء في هذا اليوم من الأسبوع',
     'min-length': (p) => `الحد الأدنى ${ar(p.min, p.unit)}`, 'max-length': (p) => `الحد الأقصى ${ar(p.max, p.unit)}`, 'fixed-length': (p) => `${ar(p.length, p.unit)} بالضبط`,
+    'conflicting-rules': (p) => `${p.unit === 'nights' ? 'لا توجد إقامة تطابق' : 'لا توجد فترة تطابق'} هذه القواعد: ${conflictParts(p, ar, { exactly: 'بالضبط', atLeast: 'على الأقل', atMost: 'على الأكثر', and: 'و' })}`,
     'same-day': () => 'لا يمكن أن تكون البداية والنهاية في اليوم نفسه', 'end-before-start': () => 'النهاية تسبق البداية',
     'max-selections': (p) => `يمكنك تحديد ${arCount(p.max, ['تاريخ واحد', 'تاريخين', 'تواريخ', 'تاريخًا', 'تاريخ'])} كحد أقصى`,
     'data-unknown': () => 'لم يتم تحميل التوفر بعد', 'data-loading': () => 'جارٍ تحميل التوفر…', 'data-error': () => 'تعذر تحميل التوفر',

@@ -50,12 +50,32 @@ export interface StayRulesOptions<TContext = unknown> extends BaseRules<TContext
 export type StayReason = 'booked' | 'closed' | 'check-in-only' | 'check-out-only';
 
 /**
+ * Rejects length options that no range can satisfy (F52), naming the options,
+ * e.g. "stayRules: minNights (5) is greater than maxNights (3)". The engine
+ * also reports such a conflict (reason 'conflicting-rules') when rule sets are
+ * combined; the adapters stop it where it is configured.
+ */
+function assertLengths(adapter: string, noun: string, names: [string, string, string], min?: number, max?: number, fixed?: number) {
+  const [minName, maxName, fixedName] = names;
+  if (min != null && max != null && min > max)
+    throw new RangeError(`${adapter}: ${minName} (${min}) is greater than ${maxName} (${max}), so no ${noun} can be selected.`);
+  if (fixed != null && min != null && fixed < min)
+    throw new RangeError(`${adapter}: ${fixedName} (${fixed}) is less than ${minName} (${min}), so no ${noun} can be selected.`);
+  if (fixed != null && max != null && fixed > max)
+    throw new RangeError(`${adapter}: ${fixedName} (${fixed}) is greater than ${maxName} (${max}), so no ${noun} can be selected.`);
+}
+
+/**
  * Overnight stays with `[start, end)` semantics: `end` is the check-out day and
  * is not included. 13 → 20 Nov = 7 nights. Every night in the stay is validated,
  * the check-out day only needs to allow departures.
+ *
+ * @throws RangeError when `minNights` > `maxNights`, or `fixedNights` is outside
+ *   them: no stay could ever be selected.
  */
 export function stayRules<TContext = unknown>(options: StayRulesOptions<TContext> = {}): SelectionRules<TContext> {
   const { getDayStatus, minNights, maxNights, fixedNights, allowSameDay, checkInWeekdays, checkOutWeekdays, availableWeekdays, ...base } = options;
+  assertLengths('stayRules', 'stay', ['minNights', 'maxNights', 'fixedNights'], minNights, maxNights, fixedNights);
   const rules: SelectionRules<TContext> = {
     ...base,
     rangeSemantics: 'exclusive',
@@ -123,9 +143,12 @@ export interface DayRangeRulesOptions<TContext = unknown> extends BaseRules<TCon
 /**
  * Day-based bookings (boat days, multi-day events, rentals) with `[start, end]`
  * semantics: 13 → 20 Nov = 8 days. Picking the same day twice gives a 1-day range.
+ *
+ * @throws RangeError when `minDays` > `maxDays`, or `fixedDays` is outside them.
  */
 export function dayRangeRules<TContext = unknown>(options: DayRangeRulesOptions<TContext> = {}): SelectionRules<TContext> {
   const { getDayStatus, minDays, maxDays, fixedDays, startWeekdays, endWeekdays, availableWeekdays, singleDayFirst, ...base } = options;
+  assertLengths('dayRangeRules', 'range', ['minDays', 'maxDays', 'fixedDays'], minDays, maxDays, fixedDays);
   const rules: SelectionRules<TContext> = { ...base, rangeSemantics: 'inclusive', allowSameDay: true, requireReachableEnd: true };
   if (minDays != null) rules.minLength = minDays;
   if (maxDays != null) rules.maxLength = maxDays;

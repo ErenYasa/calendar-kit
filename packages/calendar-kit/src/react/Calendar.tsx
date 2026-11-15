@@ -106,6 +106,29 @@ function toSelection(mode: Selection['mode'], value: unknown): Selection {
   return { mode, value: (value as CalendarDate | null) ?? null };
 }
 
+/**
+ * The day's accessible description (aria-describedby): `description`, then —
+ * when the default day content draws the markers — every marker label that is
+ * not already part of it (F53). Labels are compared case-insensitively, so the
+ * same text is never read twice; markers without a label add nothing.
+ */
+function dayDescription(data: unknown, defaultContent: boolean): string {
+  if (!data || typeof data !== 'object') return '';
+  const { description, markers } = data as { description?: unknown; markers?: unknown };
+  const base = typeof description === 'string' ? description.trim() : '';
+  if (!defaultContent || !Array.isArray(markers)) return base;
+  const parts = base ? [base] : [];
+  const known = [base.toLocaleLowerCase()];
+  for (const m of markers) {
+    const label = m && typeof m === 'object' && typeof (m as { label?: unknown }).label === 'string' ? (m as { label: string }).label.trim() : '';
+    const key = label.toLocaleLowerCase();
+    if (!label || known.some((k) => k.includes(key))) continue;
+    parts.push(label);
+    known.push(key);
+  }
+  return parts.join(', ');
+}
+
 const SILENT_TOOLTIP_CODES = new Set(['past', 'future', 'before-min', 'after-max', 'invalid-date', 'data-unknown', 'data-loading']);
 
 function issueEquals(a: ValidationResult | null, b: ValidationResult): boolean {
@@ -725,20 +748,27 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       if (minMonth && first < minMonth) first = minMonth;
     }
     const added = dir === 'next' ? eachMonth(addMonthsToMonth(lastRendered, 1), diffMonths(lastRendered, last)) : eachMonth(first, diffMonths(first, firstRendered));
-    // Bound the DOM: drop months from the opposite end. A month holding DOM
-    // focus is never dropped (trimming stops at it until focus leaves).
+    // Bound the DOM: drop months from the opposite end, always (the list never
+    // exceeds maxRenderedMonths). If the day holding keyboard focus is in a
+    // dropped month, focus moves first to the same day of the month in the
+    // nearest kept month that is on screen, so focus stays in the grid and the
+    // page does not jump.
     const total = diffMonths(first, last) + 1;
+    let refocus: CalendarDate | null = null;
     if (total > maxRenderedMonths) {
       const excess = total - maxRenderedMonths;
+      if (dir === 'next') first = addMonthsToMonth(first, excess);
+      else last = addMonthsToMonth(last, -excess);
       const focusMonth = hasFocus && focusedDate ? getMonth(focusedDate) : null;
-      if (dir === 'next') {
-        const nf = addMonthsToMonth(first, excess);
-        first = focusMonth && focusMonth < nf ? (focusMonth > first ? focusMonth : first) : nf;
-      } else {
-        const nl = addMonthsToMonth(last, -excess);
-        last = focusMonth && focusMonth > nl ? (focusMonth < last ? focusMonth : last) : nl;
+      if (focusedDate && focusMonth && (focusMonth < first || focusMonth > last)) {
+        const keptOnScreen = visibleMonths.filter((m) => m >= first && m <= last);
+        const month = keptOnScreen.length ? (dir === 'next' ? keptOnScreen[0]! : keptOnScreen[keptOnScreen.length - 1]!) : dir === 'next' ? first : last;
+        const { year, month: mm } = getMonthParts(month);
+        const day = Math.min(Number(focusedDate.slice(8)), daysInMonth(year, mm));
+        refocus = clampDate(addDays(firstDayOfMonth(month), day - 1), rules.minDate, rules.maxDate);
       }
     }
+    if (refocus) requestFocus(refocus, 'load-more');
     // Remember a month that stays rendered so its position can be preserved.
     const keep = dir === 'previous' ? firstRendered : first;
     const keepEl = monthRefs.current.get(keep);
@@ -1343,8 +1373,18 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       // The shared row never widens the page; it follows the months' scroll.
       style={asGridRow ? undefined : { overflow: 'hidden' }}
     >
-      {weekdays.map((w) => (
-        <span key={w.weekday} role={asGridRow ? 'columnheader' : undefined} aria-label={w.long} className={cx(p('weekday'), cn?.weekday)} title={w.long}>
+      {weekdays.map((w, i) => (
+        <span
+          key={w.weekday}
+          role={asGridRow ? 'columnheader' : undefined}
+          // Explicit column positions: the hidden empty cells before day 1 are
+          // not in the accessibility tree, so without them the first day would
+          // be exposed under the first column header (S04).
+          aria-colindex={asGridRow ? i + 1 : undefined}
+          aria-label={w.long}
+          className={cx(p('weekday'), cn?.weekday)}
+          title={w.long}
+        >
           {props.formatWeekday ? props.formatWeekday(w.weekday, locale) : w.short}
         </span>
       ))}
@@ -1406,7 +1446,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
             if (!d) return <div key={`e${c}`} role="gridcell" aria-hidden="true" className={p('day-empty')} />;
             const day = dayStates.get(d)!;
             const data = dayData.get(d);
-            const description = data && typeof data === 'object' && 'description' in data && typeof (data as { description?: unknown }).description === 'string' ? (data as { description: string }).description : '';
+            const description = dayDescription(data, !props.renderDay && !props.renderDayContent);
             const ariaLabel = [
               day.label,
               day.today && messages.today,
@@ -1460,6 +1500,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
         {header}
         <div
           role="grid"
+          aria-colcount={7}
           aria-labelledby={props.renderMonthHeader ? undefined : titleId}
           aria-label={props.renderMonthHeader ? title : undefined}
           aria-readonly={mode === 'readonly' || undefined}

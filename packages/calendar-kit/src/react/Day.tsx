@@ -151,6 +151,7 @@ function DayCellImpl<TDayData>(props: DayCellProps<TDayData>) {
   return (
     <div
       role="gridcell"
+      aria-colindex={day.column + 1}
       aria-selected={day.readOnly ? undefined : day.selected || day.inRange}
       className={cx(p('day'), resolve(classNames?.dayCell, day))}
       {...dayDataAttributes(day)}

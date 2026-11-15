@@ -19,6 +19,9 @@ export default function SyncedEverywhere() {
 
   // Modal: the dialog lives in the top layer, so the tooltip is portaled into it.
   const dialog = useRef<HTMLDialogElement>(null);
+  // Safari does not focus a button when it is clicked, so <dialog> would have
+  // nothing to return focus to: on close, focus goes back to the trigger explicitly.
+  const dialogTrigger = useRef<HTMLButtonElement>(null);
   const [dialogContent, setDialogContent] = useState<HTMLDivElement | null>(null);
 
   // Popover: positioning is the app's job (same approach as the Popover example).
@@ -81,7 +84,7 @@ export default function SyncedEverywhere() {
       <Calendar mode="range" {...shared} aria-label="Inline" />
 
       <div className="synced-everywhere-actions">
-        <button type="button" onClick={() => dialog.current?.showModal()}>
+        <button ref={dialogTrigger} type="button" onClick={() => dialog.current?.showModal()}>
           Edit in a dialog
         </button>
         <button ref={trigger} type="button" aria-expanded={open} aria-haspopup="dialog" onClick={() => (open ? closePopover() : setOpen(true))}>
@@ -89,7 +92,7 @@ export default function SyncedEverywhere() {
         </button>
       </div>
 
-      <dialog ref={dialog} className="synced-everywhere-dialog" aria-label="Edit dates">
+      <dialog ref={dialog} onClose={() => dialogTrigger.current?.focus({ preventScroll: true })} className="synced-everywhere-dialog" aria-label="Edit dates">
         <div ref={setDialogContent}>
           <Calendar mode="range" {...shared} numberOfMonths={2} tooltip={{ container: dialogContent }} aria-label="In dialog" />
           <form method="dialog" className="synced-everywhere-dialog-actions">

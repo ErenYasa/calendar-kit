@@ -442,7 +442,8 @@ export function RulesReference() {
             Bitiş: aynı gün kontrolleri, ardından <code>closed</code>, <code>end-not-allowed</code>, <code>weekday-end</code>.
           </li>
           <li>
-            Uzunluk: <code>fixed-length</code>, <code>min-length</code>, <code>max-length</code>.
+            Uzunluk: uzunluk seçenekleri birbiriyle çelişiyorsa <code>conflicting-rules</code> (aşağıya bakın), ardından <code>fixed-length</code>,{' '}
+            <code>min-length</code>, <code>max-length</code>.
           </li>
           <li>
             Aradaki günler (uçlar hariç), başlangıçtan ileriye doğru: engelli ilk gün <code>blocked-in-range</code> (veya kendi <code>data-*</code> kodunu) verir.
@@ -942,8 +943,12 @@ export function RulesReference() {
         </Note>
         <Note>
           <p>
-            <strong>Sabit uzunluk ve minimum/maksimum.</strong> <code>fixedLength</code>, <code>minLength</code>/<code>maxLength</code>’in yerine geçmez; üçü de
-            uygulanır. Sabit uzunluğu bu sınırların içinde tutun.
+            <strong>Çelişen uzunluklar.</strong> <code>fixedLength</code>, <code>minLength</code>/<code>maxLength</code>’in yerine geçmez; üçü de uygulanır.
+            Hiçbir uzunluk bunları sağlayamıyorsa (minimum maksimumdan büyükse ya da sabit uzunluk bu sınırların dışındaysa) hiçbir aralık seçilemez:{' '}
+            <code>stayRules</code> ve <code>dayRangeRules</code> çakışan seçenekleri adıyla söyleyen bir <code>RangeError</code> fırlatır (örneğin
+            “stayRules: minNights (5) is greater than maxNights (3), so no stay can be selected.”). Yalnızca <code>combineRules</code> ile birleşince
+            çelişen kural setlerinde (biri minimumu, diğeri maksimumu belirliyorsa) hata fırlatılmaz; o zaman hiçbir gün aralık başlangıcı olarak seçilemez
+            ve sebep <code>conflicting-rules</code> olur (“Bu kurallara uyan konaklama yok: en az 5 gece ve en fazla 3 gece”).
           </p>
         </Note>
         <Note>
