@@ -13,6 +13,7 @@ import type {
   DataStatus,
   DateRange,
   DayAvailability,
+  IssueParams,
   RangeEndpoint,
   RangeSemantics,
   RuleContext,
@@ -127,11 +128,30 @@ function nextEndpoint(selection: Selection): RangeEndpoint {
  * Results are memoised per day for the lifetime of the engine, so create a new
  * engine whenever any input changes (React does this once per render).
  */
+/**
+ * Length options that no range can satisfy: a minimum above the maximum, or a
+ * fixed length outside the minimum/maximum (also when combineRules merged them
+ * from separate rule sets). Returns the clashing values for the message.
+ */
+function lengthConflict(rules: SelectionRules<never>, unit: 'nights' | 'days'): IssueParams | null {
+  const { minLength: min, maxLength: max, fixedLength: length } = rules;
+  if (length != null) {
+    const belowMin = min != null && length < min;
+    const aboveMax = max != null && length > max;
+    if (belowMin || aboveMax) return { length, ...(belowMin ? { min } : {}), ...(aboveMax ? { max } : {}), unit };
+  }
+  if (min != null && max != null && min > max) return { min, max, unit };
+  return null;
+}
+
 export function createSelectionEngine<TContext = unknown>(input: SelectionEngineInput<TContext>): SelectionEngine {
   const { rules, state, today } = input;
   const semantics: RangeSemantics = rules.rangeSemantics ?? 'inclusive';
   const allowSameDay = rules.allowSameDay ?? semantics === 'inclusive';
   const unit = semantics === 'exclusive' ? 'nights' : 'days';
+  // F52: with conflicting length options no range can ever be completed, so no
+  // range may start either; the reason names the clashing values.
+  const conflict = lengthConflict(rules as SelectionRules<never>, unit);
   const ctx: RuleContext<TContext> = {
     mode: state.selection.mode,
     selection: state.selection,
@@ -246,6 +266,7 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
   }
 
   function lengthIssue(start: CalendarDate, end: CalendarDate): ValidationIssue | null {
+    if (conflict) return { code: 'conflicting-rules', date: end, params: conflict };
     const len = getRangeLength({ start, end }, semantics)!;
     if (rules.fixedLength != null && len !== rules.fixedLength)
       return { code: 'fixed-length', date: end, params: { length: rules.fixedLength, actual: len, unit } };
@@ -318,7 +339,9 @@ export function createSelectionEngine<TContext = unknown>(input: SelectionEngine
 
   function checkStart(date: CalendarDate): ValidationIssue | null {
     if (startIssueCache.has(date)) return startIssueCache.get(date)!;
-    const issue = checkStartBasic(date) ?? (state.selection.mode === 'range' ? reachableEndIssue(date) : null);
+    const issue =
+      checkStartBasic(date) ??
+      (state.selection.mode === 'range' ? (conflict ? { code: 'conflicting-rules' as const, date, params: conflict } : reachableEndIssue(date)) : null);
     startIssueCache.set(date, issue);
     return issue;
   }
