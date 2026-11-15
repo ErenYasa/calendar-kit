@@ -20,8 +20,8 @@ const base = server.resolvedUrls.local[0];
 // a Safari or iPhone result. Default: Google Chrome.
 const engine = process.env.BROWSER_ENGINE ?? 'chromium';
 const isChromium = engine === 'chromium';
-// WebKit follows Safari's default: Tab skips buttons and links, Option+Tab reaches them.
-const TAB = engine === 'webkit' ? 'Alt+Tab' : 'Tab';
+// WebKit on macOS follows Safari's default: Tab skips buttons and links, Option+Tab reaches them.
+const TAB = engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
 const browser = isChromium
   ? await chromium.launch({ channel: process.env.BROWSER_CHANNEL ?? 'chrome', headless: true })
   : await { firefox, webkit }[engine].launch({ headless: true });

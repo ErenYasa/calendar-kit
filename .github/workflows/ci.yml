@@ -51,3 +51,26 @@ jobs:
       - run: google-chrome --version
       - name: Browser regression checks
         run: npm run test:browser
+
+  browser-engines:
+    # The same checks in Playwright's Firefox and WebKit builds (WebKit is not
+    # Safari: it is the engine Safari uses, built by Playwright for Linux).
+    name: Browser checks (${{ matrix.engine }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install ${{ matrix.engine }}
+        run: npx playwright-core install --with-deps ${{ matrix.engine }}
+      - name: Browser regression checks
+        run: npm run test:browser
+        env:
+          BROWSER_ENGINE: ${{ matrix.engine }}
