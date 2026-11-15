@@ -668,7 +668,7 @@ export function Placement() {
       </Section>
       <Section title="Diyalogda">
         <p>
-          <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar, Escape ile kapanır ve kapanınca odağı geri verir.
+          <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar ve Escape ile kapanır. Kapanınca tarayıcı odağı, açılmadan önce odakta olan öğeye geri verir; ancak Safari tıklanan bir düğmeye odaklanmadığı için örnekler odağı <code>onClose</code> içinde tetikleyiciye açıkça geri taşır.
           Modal bir diyalog tarayıcının üst katmanında (top layer), her şeyin üstünde çizilir; bu yüzden sayfa gövdesine render edilen bir tooltip onun
           arkasında kalır: tooltip’i <code>tooltip.container</code> ile diyaloğun içine render edin.
         </p>

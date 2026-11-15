@@ -20,6 +20,9 @@ export default function SyncedEverywhere() {
 
   // Modal: diyalog üst katmanda (top layer) yer alır, bu yüzden tooltip portal ile onun içine konur.
   const dialog = useRef<HTMLDialogElement>(null);
+  // Safari bir düğmeye tıklanınca ona odaklanmaz; <dialog> kapanırken odağı
+  // geri verecek öğe olmaz. Bu yüzden odak kapanışta tetikleyiciye açıkça döner.
+  const dialogTrigger = useRef<HTMLButtonElement>(null);
   const [dialogContent, setDialogContent] = useState<HTMLDivElement | null>(null);
 
   // Popover: konumlandırma uygulamanın işidir (Popover örneğiyle aynı yaklaşım).
@@ -82,7 +85,7 @@ export default function SyncedEverywhere() {
       <Calendar mode="range" {...shared} aria-label="Sayfa içi" />
 
       <div className="synced-everywhere-actions">
-        <button type="button" onClick={() => dialog.current?.showModal()}>
+        <button ref={dialogTrigger} type="button" onClick={() => dialog.current?.showModal()}>
           Diyalogda düzenle
         </button>
         <button ref={trigger} type="button" aria-expanded={open} aria-haspopup="dialog" onClick={() => (open ? closePopover() : setOpen(true))}>
@@ -90,7 +93,7 @@ export default function SyncedEverywhere() {
         </button>
       </div>
 
-      <dialog ref={dialog} className="synced-everywhere-dialog" aria-label="Tarihleri düzenle">
+      <dialog ref={dialog} onClose={() => dialogTrigger.current?.focus({ preventScroll: true })} className="synced-everywhere-dialog" aria-label="Tarihleri düzenle">
         <div ref={setDialogContent}>
           <Calendar mode="range" {...shared} numberOfMonths={2} tooltip={{ container: dialogContent }} aria-label="Diyalogda" />
           <form method="dialog" className="synced-everywhere-dialog-actions">

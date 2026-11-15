@@ -665,7 +665,7 @@ export function Placement() {
       </Section>
       <Section title="In a dialog">
         <p>
-          A native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code> keeps focus inside, closes on Escape and returns focus when it closes.
+          A native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code> keeps focus inside and closes on Escape. On close the browser returns focus to the element focused before it opened, but Safari does not focus a button when it is clicked, so the examples move focus back to the trigger in <code>onClose</code>.
           A modal dialog is drawn in the browser&apos;s top layer, above everything else, so a tooltip rendered into the page body would sit behind it:
           render the tooltip into the dialog with <code>tooltip.container</code>.
         </p>

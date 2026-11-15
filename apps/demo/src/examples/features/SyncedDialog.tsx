@@ -7,6 +7,9 @@ import './SyncedDialog.css';
 // visible in the other. Closing the dialog unmounts nothing shared.
 export default function SyncedDialog() {
   const dialog = useRef<HTMLDialogElement>(null);
+  // Safari does not focus a button when it is clicked, so <dialog> would have
+  // nothing to return focus to: on close, focus goes back to the trigger explicitly.
+  const trigger = useRef<HTMLButtonElement>(null);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [endpoint, setEndpoint] = useState<RangeEndpoint>('start');
@@ -15,11 +18,11 @@ export default function SyncedDialog() {
     <div>
       <Calendar mode="range" {...shared} aria-label="Inline" />
       <p>
-        <button type="button" onClick={() => dialog.current?.showModal()}>
+        <button ref={trigger} type="button" onClick={() => dialog.current?.showModal()}>
           Edit in a dialog
         </button>
       </p>
-      <dialog ref={dialog} className="synced-dialog" aria-label="Edit dates">
+      <dialog ref={dialog} onClose={() => trigger.current?.focus({ preventScroll: true })} className="synced-dialog" aria-label="Edit dates">
         <div ref={setHost}>
           <Calendar mode="range" {...shared} numberOfMonths={2} tooltip={{ container: host }} aria-label="In dialog" />
           <form method="dialog" className="synced-dialog-actions">
