@@ -792,6 +792,10 @@ export function Accessibility() {
           <code>aria-disabled</code> kullanır ve odaklanabilir kalır.
         </li>
         <li>Seçimler, reddedilen seçimler ve yükleme bir canlı bölgeye (live region: değiştiğinde ekran okuyucuların okuduğu, aria-live özellikli görünmez bir alan) yazılır.</li>
+        <li>
+          Her gün hücresi ve hafta günü başlığı sütun konumunu (<code>aria-colindex</code>) taşır; böylece ayın 1’inden önceki boş hücreler yardımcı
+          teknolojiden gizlense de her gün kendi hafta günü başlığının altında kalır.
+        </li>
         <li>Odağı gösterilen ayların ötesine taşımak ayı değiştirir; ay eklemek veya kaldırmak odağı asla kaybettirmez.</li>
         <li>Odağı bir diyalogda tutmak ve kapanınca geri vermek uygulamanın işidir; takvim odağı yalnızca kendi ızgarasının içinde taşır.</li>
       </ul>

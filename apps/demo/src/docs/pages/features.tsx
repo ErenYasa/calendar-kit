@@ -787,6 +787,10 @@ export function Accessibility() {
           <code>aria-disabled</code> and stay focusable.
         </li>
         <li>Selections, rejected picks and loading are written to a live region (an invisible aria-live area that screen readers read out when it changes).</li>
+        <li>
+          Each day cell and weekday header carries its column position (<code>aria-colindex</code>), so a day stays under its own weekday header even
+          though the empty cells before the 1st are hidden from assistive technology.
+        </li>
         <li>Moving focus past the months shown changes the month; adding or removing months never loses focus.</li>
         <li>Trapping focus in a dialog and returning focus when it closes are the app&apos;s job; the calendar only moves focus inside its own grid.</li>
       </ul>
