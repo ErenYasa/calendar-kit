@@ -9,20 +9,20 @@ Durum: `açık` · `düzeltildi` · `sözleşme` (davranış belgelendi, kod de�
 `yeniden üretilemedi` · `doğrulanamadı`.
 Kanıt: `kanıtlandı` (test/ölçüm ile) · `şüphe`.
 
-## Sayım (çakışmasız: 54 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 57 madde; + 8 şüphe/gözlem; S04 iki alt maddeye bölündü)
+## Sayım (çakışmasız: 55 bulgu kimliği, F39 ve F50 alt maddelere bölündü → 58 madde; + 8 şüphe/gözlem; S04 iki alt maddeye bölündü)
 
 Her madde tam olarak bir grupta sayılır.
 
 | Grup | Sayı | Maddeler |
 |---|---|---|
-| Düzeltildi | 53 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51, F52, F53, F54, S04a |
+| Düzeltildi | 54 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51, F52, F53, F54, F55, S04a |
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 5 | F27, F29, F31, F47, F50b |
 | Beklenen davranış (gerekçe ve kanıt aşağıda) | 4 | S03, S05, S06, S07 |
 | Doğrulama engeli (gereken ortam ve adımlar aşağıda) | 2 | S04b (ekran okuyucu), S08 (yeniden üretilemeyen geliştirme hatası) |
 | Açık | 0 | — |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
-F52, F53, F54 ve S04a `fix/open-findings` branch’inde düzeltildi (ayrı PR). Ortam
+F52, F53, F54, F55 ve S04a `fix/open-findings` branch’inde düzeltildi (PR #4). Ortam
 kontrollerinin durumu en sonda, “Ortam matrisi” bölümünde.
 
 Ek (bulgu değil, kullanıcı isteği): `calendar-kit/client` (`'use client'`) ve
@@ -236,6 +236,14 @@ Yeniden üretim (düzeltme öncesi): `navigation="continuous"`, `numberOfMonths=
 
 Düzeltme: 3277094 — sınır her yüklemede uygulanır. Odaktaki gün kaldırılan bir aydaysa odak önce, kalan aylardan ekranda görünen ve kaldırılana en yakın aydaki aynı güne (ay uzunluğuna ve min/max’a sıkıştırılmış) taşınır; odak sayfadan kaybolmaz. Testler: `test/max-rendered-months.test.tsx` (iki yön, ay sonu sıkıştırma, korunan ay, klavye, odak ayrılınca) ve güncellenen F04 testi. Gerçek tarayıcı: Chrome 157 ve Edge 157’de (geçici test sayfası, `loadMore="auto"`, `maxBlockSize`) tekerlekle 25’er kez aşağı/yukarı kaydırma, 6× PageDown ve 900→360 px yeniden boyutlandırmada liste hiçbir an 3 ayı aşmadı, odak hep ızgarada kaldı.
 
+Tarayıcılar arası doğrulama (2026-11-15, geçici test sayfası: sürekli, `maxRenderedMonths={3}`, `maxBlockSize`): Chrome 157, Playwright Firefox 157 ve Playwright WebKit 27.2’de düğmelerle 4× sonraki → liste Oca–Mar, odak 10 Kas → 10 Oca; 6× önceki → Tem–Eyl, odak 10 Eyl; tekerlekle 20’şer aşağı/yukarı kaydırma, 6× PageDown ve 360 px’e küçültmede liste hiçbir an 3 ayı aşmadı, odak hep ızgarada kaldı. WebKit sonucu Safari veya iPhone sonucu değildir.
+
+Ay yükleme süresi (production build, Chrome 157, 20 yükleme, düzeltme öncesi 3fc8c69 → sonrası): odak listede değilken medyanlar ±1 ms; odak listedeyken 4× yavaş CPU’da sonraki ay işleme 8.5 → 6.3 ms (öncesinde liste sınırı aşıp büyüyordu); sonraki kare medyanları her durumda 17 ms altında.
+
+### F55 (düzeltildi, `fix/open-findings`): modal örneklerinde kapanışta odak tetikleyiciye dönmüyordu (Safari/WebKit)
+
+Bulunduğu yer: Playwright WebKit’te tarayıcı kontrolü D11. Yeniden üretim: Yerleşim sayfası → “Calendar in a dialog” düğmesine fareyle tıklayın → bir güne gidin → Escape ×2: diyalog kapanır ama odak `<body>`’ye gider. Neden: WebKit (Safari gibi) tıklanan düğmeye odaklanmaz; `<dialog>` kapanırken geri dönecek öğe bulamaz. Düzeltme: 07bf2a2 — Modal, SyncedDialog ve SyncedEverywhere (EN/TR) `onClose` içinde tetikleyiciye odaklanır. Regresyon: D11 artık CI’da WebKit ve Firefox işinde de çalışır.
+
 ### Şüphe ve gözlemlerin sonuçları (2026-11-15)
 
 - **S03 — beklenen davranış.** Chrome 157’de (`--hide-scrollbars` kapalı) `.cal-viewport::-webkit-scrollbar` ile 17 px yer kaplayan klasik scrollbar zorlandı. LoadMoreDefault ve Vertical örneklerinde (dikey taşma, scrollbar 17 px) yatay taşma yok, son sütun kesilmiyor. Layout lab’de sürekli + yatay + 2 ay, `maxBlockSize` 480: kutu 760→560 px, 4 px adımlarla 51 ölçüm; iki aydan bire geçiş scrollbar’sız 630 px, scrollbar’la 646 px (yer kaplayan çubuk hesaba katılıyor); hiçbir genişlikte yatay taşma veya kesilen sütun yok. Gerçek klasik scrollbar (Windows/Linux veya macOS “her zaman göster”) denenmedi: bu bir emülasyondur.
@@ -244,7 +252,7 @@ Düzeltme: 3277094 — sınır her yüklemede uygulanır. Odaktaki gün kaldır�
 - **S05 — beklenen davranış.** Chrome 157’de iki gerçek fare tıklaması arada bekleme olmadan (`page.mouse.click` × 2) aralığı doğru seçti (6–9 Kasım). Yalnızca aynı JS görevinde art arda iki `element.click()` ilkini kaybeder (sonuç: yalnızca 9 Kasım): her tıklama son render edilen durumu okur ve iki çağrı arasında render olmaz. Gerçek girdi olaylarında her tıklama ayrı görevdir. Betik ve testler tıklamalar arasında render’ı beklemelidir (`await`, `act`).
 - **S06 — beklenen davranış.** Gün tıklaması bir `update` ve bir `nested-update` commit’i üretir (layout effect’ten durum güncellemesi). Etkisi ölçüldü (`npm run perf`, Chrome 157, 2026-11-15): 2 ay için tıklama render + işleme 6× yavaş CPU’da bile bir karenin (16 ms) altında; 12 ayda 4×–6× yavaşlamada bitiş tıklaması bir kareyi aşar (README’deki öneri: uzun listelerde sürekli mod + küçük `maxRenderedMonths`). Ölçülmüş bir kullanıcı etkisi olmadan yeniden yapılandırma yapılmadı.
 - **S07 — beklenen davranış.** `element.click()` ve bir düğmede Enter/Space ile tetiklenen tıklama aynı olaydır: UI Events’e göre klavye etkinleştirmesiyle oluşan `click` olayının `detail` değeri 0’dır; `element.click()` de `detail: 0` üretir. Takvim ikisini ayırt edemez ve `source: 'keyboard'` raporlar; gerçek fare tıklaması `detail ≥ 1` ile `pointer` olarak raporlanır (paket testleri tıklamaları `detail: 1` ile gönderir).
-- **S08 — doğrulama engeli.** Gereken: hatanın görüldüğü koşulun kendisi — tarayıcı kontrolleri Vite dev sunucusunda çalışırken paket kaynaklarının aynı anda düzenlenmesi (HMR). Temiz koşullarda yeniden üretilemedi: statik hook denetimi, production build ve yeni dev sunucusunda 3’er tur gezinme, HMR ile hook ekleme denemesi, art arda 3 `test:browser` çalıştırması ve bu turdaki Chrome ve Edge çalıştırmaları (21/21). Yeniden görülürse: tam console çıktısını (bileşen yığını), çalışma sırasında değişen dosyaları ve zaman damgalarını kaydedin.
+- **S08 — doğrulama engeli (2026-11-15 hedefli tekrar: yeniden üretilmedi).** Temiz dev oturumu (önbelleği sıfırlanmış yeni Vite sunucusu), dört sayfada gezinme ve tıklama, ardından sayfalar açıkken sırayla: `Calendar.tsx` ortasına `useRef` ekleme, layout effect ekleme, ikisini geri alma, dosyayı yarım yazma (yalnızca beklenen Vite sözdizimi hatası) ve tamamlama, `Day.tsx`’e hook ekleme ve geri alma, `engine.ts` düzenleme ve geri alma; her adımdan sonra dört sayfada etkileşim. Hiçbir adımda hook sırası mesajı yok. Gereken: hatanın görüldüğü koşulun kendisi — tarayıcı kontrolleri Vite dev sunucusunda çalışırken paket kaynaklarının aynı anda düzenlenmesi (HMR). Temiz koşullarda yeniden üretilemedi: statik hook denetimi, production build ve yeni dev sunucusunda 3’er tur gezinme, HMR ile hook ekleme denemesi, art arda 3 `test:browser` çalıştırması ve bu turdaki Chrome ve Edge çalıştırmaları (21/21). Yeniden görülürse: tam console çıktısını (bileşen yığını), çalışma sırasında değişen dosyaları ve zaman damgalarını kaydedin.
 
 ### Ortam matrisi (2026-11-15)
 
@@ -254,9 +262,10 @@ Düzeltme: 3277094 — sınır her yüklemede uygulanır. Odaktaki gün kaldır�
 | Microsoft Edge 157 (Chromium), macOS | gerçek tarayıcı: `BROWSER_CHANNEL=msedge` ile tarayıcı kontrolleri 21/21, F54 ölçümü |
 | Dokunmatik mobil (390×844, `isMobile`, `hasTouch`) | **emülasyon** (Chrome): dokunma ile seçim ve tooltip, sayfa taşması yok; gerçek cihaz yok |
 | Klasik scrollbar | **emülasyon** (Chrome, `::-webkit-scrollbar`): S03 |
-| Firefox | kurulu (Firefox.app) ama otomatikleştirilemedi: Playwright yalnızca kendi Firefox derlemesini sürer (indirme gerekir) veya geckodriver gerekir — **yapılmadı** |
-| Safari / WebKit | Safari kurulu; `safaridriver --enable` (yönetici izni) veya Playwright WebKit derlemesi (indirme) gerekir — **yapılmadı** |
-| Gerçek mobil cihaz | yok — **yapılmadı** |
+| Firefox (Playwright derlemesi 157) | tarayıcı kontrolleri 21/21 (pano içeriği okunmaz, yalnızca duyuru), F54; CI’da ayrı iş. Kurulu Firefox.app ile ayrıca denenmedi |
+| Playwright WebKit 27.2 (macOS) | tarayıcı kontrolleri 21/21, F54; F55 burada bulundu; CI’da ayrı iş. **Safari veya iPhone sonucu değildir** |
+| Safari (gerçek) | **yapılmadı** — `safaridriver --enable` yönetici izni gerektirir; manuel adımlar aşağıda |
+| Gerçek iPhone Safari | **yapılmadı** — cihaz yok; manuel adımlar aşağıda |
 | Ekran okuyucu (VoiceOver, NVDA) | otomatikleştirilemedi (VoiceOver’ın AppleScript ile denetimi sistem ayarı gerektirir) — **yapılmadı** (S04b) |
 
 ### Dokümantasyon sırasında görülen diğer gözlemler (hata olarak kanıtlanmadı)
@@ -270,3 +279,21 @@ Düzeltme: 3277094 — sınır her yüklemede uygulanır. Odaktaki gün kaldır�
   - HMR denemesi: dev sunucusu açıkken `Calendar.tsx`'e bileşenin ortasına `useRef` ve ayrı bir layout effect eklendi; React Refresh güncellemeyi aynı belgede hatasız uyguladı.
   - `npm run test:browser` düzenleme olmadan üç kez art arda: 17/17, hook uyarısı yok.
   Yeniden görülürse: tam console çıktısını (bileşen yığını) ve o anda değişen dosyaları kaydedin.
+
+### Manuel test listesi: ekran okuyucu (S04a, S04b, F53)
+
+Ortam: macOS VoiceOver (Cmd+F5) + Safari, veya Windows NVDA + Chrome/Firefox. Sayfa: dokümantasyonda “Seçim modları” ve “Günlerde etiket, badge ve simge”. Her maddeyi ayrı kaydedin (okunan metni olduğu gibi).
+
+1. **Sütun (S04a).** “Seçim modları” → tekli takvimde sonraki aya geçin; ayın 1’i salı olan bir aya gelin (ör. Aralık 2026). Ok tuşlarıyla 1’ine gidin. VoiceOver: tablo gezinmesinde (VO+Shift+↑ ile sütun başlığı) veya NVDA: Ctrl+Alt+↑ ile sütun başlığı okutun. Beklenen: “Salı/Tuesday” sütunu; hata: “Pazar/Sunday”.
+2. **Seçili bilgisinin tekrarı (S04b).** Aynı takvimde bir güne Enter ile seçin, sonra okla başka güne gidip geri dönün. Okunan metinde “seçili/selected”, “basılı/pressed” ve “seçildi/selected (grid)” ifadelerinin kaç kez geçtiğini yazın. Aynısını aralık modunda başlangıç, bitiş ve aradaki bir gün için yapın.
+3. **Nokta etiketi (F53).** “Günlerde etiket, badge ve simge” → kırmızı noktalı (“Partly booked” / “Kısmen dolu”) bir güne odaklanın. Beklenen: gün etiketi okunduktan sonra (kısa bir duraklamayla, açıklama olarak) “Partly booked”; ayın 5/15/25’inde “20% discount, Partly booked” gibi. Okunmuyorsa VoiceOver’da VO+Shift+H (ipucu/açıklama) ile deneyin ve sonucu yazın.
+
+### Manuel test listesi: gerçek iPhone Safari
+
+1. Dokümantasyonu iPhone Safari’de açın (Vercel önizleme bağlantısı). “Seçim modları” → aralık takvimi: bir güne dokunun, sonra başka bir güne dokunun. Beklenen: aralık seçilir; ilk dokunuşta günün tooltip’i açılabilir, sayfa yatay kaymaz.
+2. “Tooltip” sayfası: tooltip’i olan bir güne dokunun → tooltip açılır; başka yere dokunun → kapanır.
+3. “Daha fazla ay yükleme”: takvimin içinde parmakla aşağı kaydırın (iç kaydırma alanı) → yeni aylar eklenir, sayfanın kendisi gereksiz zıplamaz; “Show earlier dates” (örnekteki takvim İngilizcedir) ile önceki ay eklenince parmağın altındaki tarih yerinde kalır.
+4. “Satır içinde, diyalogda veya popover’da”: diyaloğu açıp bir tarih seçin, “Done” ile kapatın; popover’ı açın, dışarı dokunun → kapanır.
+5. Ekranı yatay çevirin ve geri çevirin: seçim korunur, yatay taşma yok.
+Her adımda iOS sürümünü, sonucu ve varsa ekran görüntüsünü kaydedin.
+
