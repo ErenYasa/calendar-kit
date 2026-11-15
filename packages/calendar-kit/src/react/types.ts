@@ -326,9 +326,13 @@ export interface DefaultDayData {
   label?: ReactNode;
   badge?: ReactNode;
   icon?: ReactNode;
-  /** Small markers (dots) — each is announced through `description`/`label`. */
+  /**
+   * Small markers (dots), hidden from assistive technology. With the default
+   * day content each `label` is added to the day's accessible description
+   * (after `description`, skipped when already part of it).
+   */
   markers?: readonly { color?: string; label?: string; className?: string }[];
-  /** The day's accessible description (aria-describedby): screen readers read it after the label. */
+  /** The day's accessible description (aria-describedby): screen readers read it after the label. Marker labels are appended to it. */
   description?: string;
 }
 

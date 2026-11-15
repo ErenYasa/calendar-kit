@@ -106,6 +106,29 @@ function toSelection(mode: Selection['mode'], value: unknown): Selection {
   return { mode, value: (value as CalendarDate | null) ?? null };
 }
 
+/**
+ * The day's accessible description (aria-describedby): `description`, then —
+ * when the default day content draws the markers — every marker label that is
+ * not already part of it (F53). Labels are compared case-insensitively, so the
+ * same text is never read twice; markers without a label add nothing.
+ */
+function dayDescription(data: unknown, defaultContent: boolean): string {
+  if (!data || typeof data !== 'object') return '';
+  const { description, markers } = data as { description?: unknown; markers?: unknown };
+  const base = typeof description === 'string' ? description.trim() : '';
+  if (!defaultContent || !Array.isArray(markers)) return base;
+  const parts = base ? [base] : [];
+  const known = [base.toLocaleLowerCase()];
+  for (const m of markers) {
+    const label = m && typeof m === 'object' && typeof (m as { label?: unknown }).label === 'string' ? (m as { label: string }).label.trim() : '';
+    const key = label.toLocaleLowerCase();
+    if (!label || known.some((k) => k.includes(key))) continue;
+    parts.push(label);
+    known.push(key);
+  }
+  return parts.join(', ');
+}
+
 const SILENT_TOOLTIP_CODES = new Set(['past', 'future', 'before-min', 'after-max', 'invalid-date', 'data-unknown', 'data-loading']);
 
 function issueEquals(a: ValidationResult | null, b: ValidationResult): boolean {
@@ -1406,7 +1429,7 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
             if (!d) return <div key={`e${c}`} role="gridcell" aria-hidden="true" className={p('day-empty')} />;
             const day = dayStates.get(d)!;
             const data = dayData.get(d);
-            const description = data && typeof data === 'object' && 'description' in data && typeof (data as { description?: unknown }).description === 'string' ? (data as { description: string }).description : '';
+            const description = dayDescription(data, !props.renderDay && !props.renderDayContent);
             const ariaLabel = [
               day.label,
               day.today && messages.today,
