@@ -748,20 +748,27 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       if (minMonth && first < minMonth) first = minMonth;
     }
     const added = dir === 'next' ? eachMonth(addMonthsToMonth(lastRendered, 1), diffMonths(lastRendered, last)) : eachMonth(first, diffMonths(first, firstRendered));
-    // Bound the DOM: drop months from the opposite end. A month holding DOM
-    // focus is never dropped (trimming stops at it until focus leaves).
+    // Bound the DOM: drop months from the opposite end, always (the list never
+    // exceeds maxRenderedMonths). If the day holding keyboard focus is in a
+    // dropped month, focus moves first to the same day of the month in the
+    // nearest kept month that is on screen, so focus stays in the grid and the
+    // page does not jump.
     const total = diffMonths(first, last) + 1;
+    let refocus: CalendarDate | null = null;
     if (total > maxRenderedMonths) {
       const excess = total - maxRenderedMonths;
+      if (dir === 'next') first = addMonthsToMonth(first, excess);
+      else last = addMonthsToMonth(last, -excess);
       const focusMonth = hasFocus && focusedDate ? getMonth(focusedDate) : null;
-      if (dir === 'next') {
-        const nf = addMonthsToMonth(first, excess);
-        first = focusMonth && focusMonth < nf ? (focusMonth > first ? focusMonth : first) : nf;
-      } else {
-        const nl = addMonthsToMonth(last, -excess);
-        last = focusMonth && focusMonth > nl ? (focusMonth < last ? focusMonth : last) : nl;
+      if (focusedDate && focusMonth && (focusMonth < first || focusMonth > last)) {
+        const keptOnScreen = visibleMonths.filter((m) => m >= first && m <= last);
+        const month = keptOnScreen.length ? (dir === 'next' ? keptOnScreen[0]! : keptOnScreen[keptOnScreen.length - 1]!) : dir === 'next' ? first : last;
+        const { year, month: mm } = getMonthParts(month);
+        const day = Math.min(Number(focusedDate.slice(8)), daysInMonth(year, mm));
+        refocus = clampDate(addDays(firstDayOfMonth(month), day - 1), rules.minDate, rules.maxDate);
       }
     }
+    if (refocus) requestFocus(refocus, 'load-more');
     // Remember a month that stays rendered so its position can be preserved.
     const keep = dir === 'previous' ? firstRendered : first;
     const keepEl = monthRefs.current.get(keep);
