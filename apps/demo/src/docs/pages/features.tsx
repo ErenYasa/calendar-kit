@@ -336,8 +336,8 @@ export function LoadMore() {
         </p>
         <p>
           To keep the page light, the list is trimmed to <code>maxRenderedMonths</code> (default 24) months: after each addition the months farthest from
-          it are removed. A month that holds keyboard focus is not removed; while it keeps focus the list can grow past that number, and it is trimmed at
-          the next addition after focus has left. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
+          it are removed, so the list never holds more. If the day with keyboard focus is in a removed month, focus first moves to the same day of the
+          month in the nearest kept month that is on screen, so focus stays in the calendar and the page does not jump. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
           <code>onLoadMore</code> and <code>onRenderedMonthsChange</code> (load your data there). The reference month does not change, so{' '}
           <code>onVisibleMonthChange</code> is not called. Paged navigation (the default) works differently: the arrows replace the months shown — see{' '}
           <a href="#/orientation">Orientation &amp; months</a>.
@@ -404,7 +404,7 @@ export function LoadMore() {
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons at the list ends, automatic loading when an end scrolls into view, or only from your code.' },
           { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'List ends that get built-in controls or automatic loading. ref.loadMore(direction) works in both directions regardless.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Months added per load.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Months kept rendered (never fewer than numberOfMonths); the farthest are removed, except a month holding keyboard focus.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Most months kept rendered (never fewer than numberOfMonths); the farthest are removed, and focus in a removed month moves to a kept day.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Content of the default buttons.' },
           { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Your own control for each direction.' },
         ]}
@@ -492,7 +492,7 @@ export function DayContent() {
           { name: 'label', type: 'ReactNode', description: 'Short text under the number, e.g. a price.' },
           { name: 'badge', type: 'ReactNode', description: 'A small badge in the top end corner.' },
           { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner; it does not move the number or the label.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots, hidden from screen readers. The default day content does not use label; put the meaning in description.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots. The dots are hidden from screen readers; each label is added to the day’s accessible description (after description, not repeated).' },
           { name: 'description', type: 'string', description: 'Extra text that screen readers read after the day’s label (aria-describedby).' },
         ]}
       />

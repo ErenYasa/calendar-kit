@@ -544,9 +544,9 @@ export function PropsReference() {
               default: '24',
               description: (
                 <>
-                  Continuous only: how many months the list is trimmed to. Above it, each load removes months from the opposite end of the list, except a
-                  month holding keyboard focus (while it keeps focus the list can be longer; it is trimmed at the next load after focus has left); never
-                  below {c('numberOfMonths')}. Lower it for long lists on slow devices. No live example; see {to('load-more', 'Loading more months')}.
+                  Continuous only: the most months kept in the page. Above it, each load removes months from the opposite end of the list; if the day with
+                  keyboard focus is in a removed month, focus moves to the same day of the nearest kept month on screen. Never below{' '}
+                  {c('numberOfMonths')}. Lower it for long lists on slow devices. No live example; see {to('load-more', 'Loading more months')}.
                 </>
               ),
             },

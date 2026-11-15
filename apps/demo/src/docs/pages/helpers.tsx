@@ -577,6 +577,7 @@ export function MessagesReference() {
             [<code key="a">before-min / after-max</code>, <code key="b">{'{ min } / { max }'}</code>],
             [<code key="a">past / future</code>, <code key="b">{'{ today }'}</code>],
             [<code key="a">min-length / max-length / fixed-length</code>, <code key="b">{"{ min | max | length, unit: 'nights' | 'days', actual? }"}</code>],
+            [<code key="a">conflicting-rules</code>, <code key="b">{"{ min?, max?, length?, unit: 'nights' | 'days' }"}</code>],
             [<code key="a">end-before-start</code>, <code key="b">{'{ start }'}</code>],
             [<code key="a">max-selections</code>, <code key="b">{'{ max, actual }'}</code>],
             [<code key="a">invalid-date</code>, <code key="b">{"{ value, field?: 'start' | 'end' }"}</code>],

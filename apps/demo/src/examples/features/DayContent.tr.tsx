@@ -15,9 +15,9 @@ export default function DayContent() {
       badge: deal ? '-%20' : undefined,
       icon: date.endsWith('-01') || date.endsWith('-15') ? '★' : undefined, // ayın 15’i: fiyat, simge ve badge bir arada
       markers: info.status === 'booked' ? [{ color: '#d6336c', label: 'Kısmen dolu' }] : undefined,
-      // Noktalar ekran okuyuculardan gizlenir ve varsayılan içerik noktanın label’ını
-      // kullanmaz; bu yüzden anlamı description’a da yazılır.
-      description: [deal && '%20 indirim', info.status === 'booked' && 'Kısmen dolu'].filter(Boolean).join(', ') || undefined,
+      // Noktanın label’ını takvim günün erişilebilir açıklamasına kendisi ekler
+      // (bu description’dan sonra); bu yüzden burada tekrar yazılmaz.
+      description: deal ? '%20 indirim' : undefined,
     };
   };
   // Küçük bir hücrede daireden uzun bir badge üç noktayla kısaltılır. Tam metne
