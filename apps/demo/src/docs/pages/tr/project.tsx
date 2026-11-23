@@ -11,7 +11,7 @@ export function Testing() {
             { name: 'npm run check', type: <>tümü</>, description: 'Tür denetimi, paket derlemesi, paket ve demo testleri, derlenmiş paketin SSR duman testi (smoke test).' },
             { name: 'npm run typecheck', type: <>tipler</>, description: 'Kütüphane kaynağı (ortam/ambient türleri olmadan), paket testleri ve yapılandırması (Node türleriyle), demo (tüm doküman örnekleri dahil) ve demonun Vite yapılandırması.' },
             { name: 'npm test', type: <>birim</>, description: 'Paket ve demo için Vitest + jsdom.' },
-            { name: 'npm run test:browser', type: 'Chrome', description: 'Doküman sitesinde gerçek bir Chrome’da regresyon testleri: CSS cascade’i, yerleşim, tooltip konumu, yükleme durumları.' },
+            { name: 'npm run test:browser', type: <>tarayıcı</>, description: 'Doküman sitesinde regresyon testleri: CSS cascade’i, yerleşim, tooltip konumu, yükleme durumları, diyaloglar ve popover’lar. Varsayılan olarak kurulu Google Chrome’da çalışır; BROWSER_CHANNEL=msedge Microsoft Edge’i, BROWSER_ENGINE=firefox veya webkit Playwright’ın Firefox veya WebKit derlemesini kullanır.' },
             { name: 'npm run smoke:ssr -w calendar-kit', type: 'SSR', description: 'Derlenmiş paketi (dist) bir uygulamanın yaptığı gibi exports alanı üzerinden içe aktarır ve sunucuda bir takvim render eder.' },
             { name: 'npm run size', type: <>paket boyutu</>, description: 'Paket boyutları: küçültülmüş (minified), gzip ve brotli.' },
             { name: 'npm run perf', type: <>zamanlama</>, description: 'Chrome’da etkileşim süreleri; isteğe bağlı olarak yavaşlatılmış bir CPU ile (CPU throttling).' },
@@ -37,7 +37,8 @@ export function Testing() {
       <Section title="Sürekli entegrasyon">
         <p>
           GitHub Actions, pull request’lerde ve <code>development</code> ile <code>master</code> dallarına yapılan push’larda çalışır (Node 22,{' '}
-          <code>npm ci</code>): tür denetimi, derlemeler, testler ve SSR duman testi; ayrı bir job’da da iş akışının kurduğu Google Chrome’da tarayıcı testleri.
+          <code>npm ci</code>): tür denetimi, derlemeler, testler ve SSR duman testi. Ayrı job’lar tarayıcı testlerini iş akışının kurduğu Google Chrome’da ve
+          Linux’ta Playwright’ın Firefox ve WebKit derlemelerinde çalıştırır. Bu Playwright derlemeleri Firefox ve Safari uygulamaları değildir.
         </p>
       </Section>
       <Section title="Yalnızca yerelde doğrulananlar">
@@ -47,14 +48,27 @@ export function Testing() {
             kullanan sunucu sayfası, sunucuda core yardımcıları), düz TypeScript (bundler, node16, nodenext).
           </li>
           <li>Etkileşim performansı ölçümleri (macOS, Chrome).</li>
+          <li>
+            <strong>Gerçek Safari 26.6.2</strong>, macOS 26.6.2 (2026-11-24): gerçek fare ve klavye olaylarıyla (safaridriver) yapılan tek seferlik bir
+            çalıştırmada 9 kullanım kontrolünün 9’u geçti: tekli ve aralık seçimi, fare ve klavyeyle tooltip, modal ve popover örneklerinin kapanması ve
+            odağın tetikleyiciye dönmesi, önceki ve sonraki ayların yüklenmesi, odak gösterilen bir günde kalırken <code>maxRenderedMonths</code> sınırı.
+          </li>
+          <li>Ekran okuyucu: macOS 26.6.2’de Safari 26.6.2 ile VoiceOver (bkz. <a href="#/accessibility">Klavye ve erişilebilirlik</a>).</li>
+          <li>
+            macOS’ta <strong>Playwright WebKit 27.2</strong> ve Playwright Firefox 157 derlemeleri: tarayıcı testleri 21’de 21 (CI’da Linux’ta da). Bu,
+            yukarıdaki Safari sonucundan ayrı bir sonuçtur: Playwright WebKit derlemesi Safari değildir.
+          </li>
+          <li>macOS’ta Microsoft Edge 157: tarayıcı testleri 21’de 21.</li>
         </ul>
       </Section>
       <Section title="Henüz doğrulanmayanlar">
         <Note>
           <p>
-            Safari, Firefox, gerçek mobil cihazlar (dokunmatik) ve ekran okuyucular (VoiceOver, NVDA, TalkBack) test edilmedi. Stil dosyası container query
-            birimlerine ve <code>color-mix()</code>’e ihtiyaç duyduğundan, kabaca Chrome/Edge 111, Safari 16.2 ve Firefox 113’ten eski tarayıcıların çalışması
-            beklenmez; Safari ve Firefox’un daha yeni sürümleri de test edilmedi; çalıştıkları doğrulanmış değildir.
+            Gerçek iPhone Safari ve diğer gerçek mobil cihazlar (dokunmatik) henüz test edilmedi; ne Playwright WebKit ne de Chrome’daki dokunmatik
+            emülasyon cihaz sonucu sayılır. Firefox uygulaması (Playwright derlemesi değil) ve 26.6.2 dışındaki Safari sürümleri test edilmedi. Ekran
+            okuyucular: iOS VoiceOver, NVDA, JAWS ve TalkBack test edilmedi (bkz. <a href="#/accessibility">Klavye ve erişilebilirlik</a>). Stil dosyası
+            container query birimlerine ve <code>color-mix()</code>’e ihtiyaç duyduğundan, kabaca Chrome/Edge 111, Safari 16.2 ve Firefox 113’ten eski
+            tarayıcıların çalışması beklenmez.
           </p>
         </Note>
       </Section>

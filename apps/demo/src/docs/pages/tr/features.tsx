@@ -339,8 +339,8 @@ export function LoadMore() {
         </p>
         <p>
           Sayfayı hafif tutmak için liste <code>maxRenderedMonths</code> (varsayılan 24) aya indirilir: her eklemeden sonra eklenen yere en uzak aylar
-          kaldırılır. Klavye odağını tutan ay kaldırılmaz; odak orada kaldığı sürece liste bu sayıyı aşabilir ve odak ayrıldıktan sonraki ilk eklemede
-          kırpılır. Her ekleme — klavye odağı listenin sonunu geçtiğinde yapılanlar da —{' '}
+          kaldırılır; liste hiçbir zaman bundan fazla ay tutmaz. Klavye odağındaki gün kaldırılan bir aydaysa odak önce, kalan aylardan ekranda görünen
+          ve kaldırılana en yakın aydaki aynı güne taşınır; böylece odak takvimde kalır ve sayfa kaymaz. Her ekleme — klavye odağı listenin sonunu geçtiğinde yapılanlar da —{' '}
           <code>onLoadMore</code> ve <code>onRenderedMonthsChange</code>’i çağırır (verinizi orada yükleyin). Referans ay değişmez, bu yüzden{' '}
           <code>onVisibleMonthChange</code> çağrılmaz. Sayfalı gezinme (varsayılan) farklı çalışır: oklar gösterilen ayları değiştirir — bkz.{' '}
           <a href="#/orientation">Yön ve ay sayısı</a>.
@@ -407,7 +407,7 @@ export function LoadMore() {
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Liste uçlarında düğmeler, bir uç görünür alana girince otomatik yükleme ya da yalnızca kodunuzdan.' },
           { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'Yerleşik kontrol veya otomatik yükleme alan liste uçları. ref.loadMore(direction) her durumda iki yönde de çalışır.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Her yüklemede eklenen ay sayısı.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Render edilmiş tutulan ay sayısı (asla numberOfMonths’tan az değil); en uzaktakiler kaldırılır, klavye odağını tutan ay hariç.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Render edilmiş tutulan en fazla ay sayısı (asla numberOfMonths’tan az değil); en uzaktakiler kaldırılır, kaldırılan aydaki odak kalan bir güne taşınır.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Varsayılan düğmelerin içeriği.' },
           { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Her yön için kendi kontrolünüz.' },
         ]}
@@ -495,7 +495,7 @@ export function DayContent() {
           { name: 'label', type: 'ReactNode', description: 'Sayının altında kısa metin, ör. bir fiyat.' },
           { name: 'badge', type: 'ReactNode', description: 'Üst bitiş köşesinde küçük bir badge.' },
           { name: 'icon', type: 'ReactNode', description: 'Üst başlangıç köşesinde küçük bir simge; sayıyı veya etiketi kaydırmaz.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Küçük renkli noktalar; ekran okuyuculardan gizlenir. Varsayılan gün içeriği label’ı kullanmaz; anlamını description’a yazın.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Küçük renkli noktalar. Noktalar ekran okuyuculardan gizlenir; her label günün erişilebilir açıklamasına eklenir (description’dan sonra, tekrar etmeden).' },
           { name: 'description', type: 'string', description: 'Ekran okuyucuların günün etiketinden sonra okuduğu ek metin (aria-describedby).' },
         ]}
       />
@@ -668,7 +668,7 @@ export function Placement() {
       </Section>
       <Section title="Diyalogda">
         <p>
-          <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar, Escape ile kapanır ve kapanınca odağı geri verir.
+          <code>showModal()</code> ile açılan yerel bir <code>&lt;dialog&gt;</code> odağı içinde tutar ve Escape ile kapanır. Kapanınca tarayıcı odağı, açılmadan önce odakta olan öğeye geri verir; ancak Safari tıklanan bir düğmeye odaklanmadığı için örnekler odağı <code>onClose</code> içinde tetikleyiciye açıkça geri taşır.
           Modal bir diyalog tarayıcının üst katmanında (top layer), her şeyin üstünde çizilir; bu yüzden sayfa gövdesine render edilen bir tooltip onun
           arkasında kalır: tooltip’i <code>tooltip.container</code> ile diyaloğun içine render edin.
         </p>
@@ -788,16 +788,46 @@ export function Accessibility() {
           bir günün <code>tabIndex</code> değeri 0’dır (gezici sekme sırası, roving tab index); bu yüzden Tab takvime tek adımda girer ve çıkar.
         </li>
         <li>
-          Bir günün etiketi tam tarihi, bugün, başlangıç, bitiş veya seçili olup olmadığını ve neden seçilemediğini içerir. Bu tür günler{' '}
-          <code>aria-disabled</code> kullanır ve odaklanabilir kalır.
+          Bir günün etiketi tam tarihi, bugün olup olmadığını, aralığın başlangıcı veya bitişi olup olmadığını ve neden seçilemediğini içerir. Bu tür
+          günler <code>aria-disabled</code> kullanır ve odaklanabilir kalır. Seçili gün durumunu <code>aria-pressed</code> ile bildirir; bu yüzden
+          seçili olduğu etikete ayrıca yazılmaz.
         </li>
         <li>Seçimler, reddedilen seçimler ve yükleme bir canlı bölgeye (live region: değiştiğinde ekran okuyucuların okuduğu, aria-live özellikli görünmez bir alan) yazılır.</li>
+        <li>
+          Ayın 1’inden önceki boş hücreler ızgarada boş hücre olarak kalır; böylece her gün kendi hafta günü başlığının altında durur. Gün hücreleri ve
+          hafta günü başlıkları ayrıca sütun konumunu (<code>aria-colindex</code>) taşır.
+        </li>
         <li>Odağı gösterilen ayların ötesine taşımak ayı değiştirir; ay eklemek veya kaldırmak odağı asla kaybettirmez.</li>
         <li>Odağı bir diyalogda tutmak ve kapanınca geri vermek uygulamanın işidir; takvim odağı yalnızca kendi ızgarasının içinde taşır.</li>
       </ul>
-      <Note>
-        <p>Gerçek ekran okuyucularla davranış (VoiceOver, NVDA, TalkBack) henüz test edilmedi; işaretleme ARIA ızgara (grid) desenini izler.</p>
-      </Note>
+      <Section title="Ekran okuyucu uyumluluğu">
+        <p>
+          <strong>Gerçek ekran okuyucuyla test edildi:</strong> macOS 26.6.2, Safari 26.6.2 ve VoiceOver (Türkçe ses), 2026-11-24. Aşağıdaki sonuçlar
+          VoiceOver’ın gerçekten söylediği metne dayanır:
+        </p>
+        <ul>
+          <li>
+            Tarih seçimi: tekli tarihler ve aralıklar fareyle seçildi, sonra ok tuşlarıyla üzerlerine gelindi. Seçili gün bir kez seçili olarak
+            duyurulur; aralığın başlangıcı ve bitişi &quot;start date&quot; ve &quot;end date&quot;, aradaki günler &quot;in selected range&quot; diye okunur.
+          </li>
+          <li>
+            Sütunlar: bir günden yukarı çıkınca, ayın ilk haftasında da, günün kendi hafta günü başlığına gelinir (1 Aralık 2026’dan
+            &quot;Tuesday&quot;).
+          </li>
+          <li>Marker açıklamaları: etiketli marker’ı olan bir gün, etiket açıklama olarak okunarak duyurulur (ör. &quot;Partly booked&quot;).</li>
+        </ul>
+        <Note>
+          <p>
+            <strong>Henüz test edilmedi:</strong> iOS Safari ile VoiceOver, NVDA, JAWS ve TalkBack. Bu ortamlarda doğrulanmış bir uyumluluk yoktur:
+            işaretleme ARIA ızgara (grid) desenini izler, ancak bu ekran okuyucuların ne duyurduğu kontrol edilmedi.
+          </p>
+        </Note>
+        <p>
+          <strong>Otomatik DOM/ARIA testleri</strong> (paketin test takımı, jsdom’da çalışır) yalnızca işaretlemeyi kontrol eder, ekran okuyucunun ne
+          söylediğini değil: her satır yedi hücreyi hafta günü sırasıyla ve <code>aria-colindex</code> ile sunar, seçili gün <code>aria-pressed</code>
+          taşır ve etiketinde ayrıca &quot;selected&quot; kelimesi yoktur, marker etiketleri günün <code>aria-describedby</code> açıklamasının parçasıdır.
+        </p>
+      </Section>
     </Page>
   );
 }

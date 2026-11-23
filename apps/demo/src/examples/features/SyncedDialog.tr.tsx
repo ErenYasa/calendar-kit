@@ -7,6 +7,9 @@ import './SyncedDialog.css';
 // diğerinde de görünür. Diyaloğu kapatmak paylaşılan hiçbir şeyi kaldırmaz.
 export default function SyncedDialog() {
   const dialog = useRef<HTMLDialogElement>(null);
+  // Safari bir düğmeye tıklanınca ona odaklanmaz; <dialog> kapanırken odağı
+  // geri verecek öğe olmaz. Bu yüzden odak kapanışta tetikleyiciye açıkça döner.
+  const trigger = useRef<HTMLButtonElement>(null);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [range, setRange] = useState<DateRange>({ start: null, end: null });
   const [endpoint, setEndpoint] = useState<RangeEndpoint>('start');
@@ -15,11 +18,11 @@ export default function SyncedDialog() {
     <div>
       <Calendar mode="range" {...shared} aria-label="Sayfa içi" />
       <p>
-        <button type="button" onClick={() => dialog.current?.showModal()}>
+        <button ref={trigger} type="button" onClick={() => dialog.current?.showModal()}>
           Diyalogda düzenle
         </button>
       </p>
-      <dialog ref={dialog} className="synced-dialog" aria-label="Tarihleri düzenle">
+      <dialog ref={dialog} onClose={() => trigger.current?.focus({ preventScroll: true })} className="synced-dialog" aria-label="Tarihleri düzenle">
         <div ref={setHost}>
           <Calendar mode="range" {...shared} numberOfMonths={2} tooltip={{ container: host }} aria-label="Diyalogda" />
           <form method="dialog" className="synced-dialog-actions">

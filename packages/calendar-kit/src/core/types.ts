@@ -80,6 +80,8 @@ export type ReasonCode =
   | 'min-length'
   | 'max-length'
   | 'fixed-length'
+  /** Length options no range can satisfy (e.g. minLength 5 > maxLength 3); params name the values. */
+  | 'conflicting-rules'
   | 'same-day'
   | 'end-before-start'
   | 'max-selections'

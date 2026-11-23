@@ -11,7 +11,7 @@ export function Testing() {
             { name: 'npm run check', type: <>all</>, description: 'Typecheck, package build, package + demo tests, SSR smoke test of the built package.' },
             { name: 'npm run typecheck', type: <>types</>, description: 'Library source without ambient types, package tests/config with Node types, demo (including every docs example) and its Vite config.' },
             { name: 'npm test', type: <>unit</>, description: 'Vitest + jsdom for the package and the demo.' },
-            { name: 'npm run test:browser', type: 'Chrome', description: 'Regression checks in a real Chrome on the docs site: CSS cascade, layout, tooltip position, loading states.' },
+            { name: 'npm run test:browser', type: <>browser</>, description: 'Regression checks on the docs site: CSS cascade, layout, tooltip position, loading states, dialogs and popovers. Runs in the installed Google Chrome by default; BROWSER_CHANNEL=msedge uses Microsoft Edge, BROWSER_ENGINE=firefox or webkit uses the Playwright Firefox or WebKit build.' },
             { name: 'npm run smoke:ssr -w calendar-kit', type: 'SSR', description: 'Imports the built package (dist) through its exports field, the way an app does, and renders a calendar on the server.' },
             { name: 'npm run size', type: <>bundle</>, description: 'Bundle sizes: minified, gzip and brotli.' },
             { name: 'npm run perf', type: <>timing</>, description: 'Interaction timings in Chrome, optionally with a slowed-down CPU (CPU throttling).' },
@@ -31,21 +31,35 @@ export function Testing() {
       <Section title="Continuous integration">
         <p>
           GitHub Actions runs on pull requests and on pushes to <code>development</code> and <code>master</code> (Node 22, <code>npm ci</code>): typecheck, builds,
-          tests and the SSR smoke test, and in a separate job the browser checks in Google Chrome installed by the workflow.
+          tests and the SSR smoke test. Separate jobs run the browser checks in Google Chrome installed by the workflow and in the Playwright Firefox and WebKit
+          builds on Linux. These Playwright builds are not the Firefox and Safari apps.
         </p>
       </Section>
       <Section title="Verified only locally">
         <ul>
           <li>The packed tarball in clean consumer apps: Vite + React 19, Vite + React 18, Next.js App Router (server page with <code>calendar-kit/client</code>, core helpers on the server), plain TypeScript (bundler, node16, nodenext).</li>
           <li>Interaction performance measurements (macOS, Chrome).</li>
+          <li>
+            <strong>Real Safari 26.6.2</strong> on macOS 26.6.2 (2026-11-24): 9 of 9 usage checks passed in a one-off run with real mouse and keyboard
+            events (safaridriver): single and range selection, tooltip by mouse and keyboard, closing the modal and popover examples with focus back on
+            their trigger, loading earlier and later months, and the <code>maxRenderedMonths</code> bound with focus kept on a shown day.
+          </li>
+          <li>Screen reader: VoiceOver with Safari 26.6.2 on macOS 26.6.2 (see <a href="#/accessibility">Keyboard &amp; accessibility</a>).</li>
+          <li>
+            <strong>Playwright WebKit 27.2</strong> and Playwright Firefox 157 builds on macOS: browser checks 21 of 21 (and in CI on Linux). This is a
+            separate result from the Safari one above: a Playwright WebKit build is not Safari.
+          </li>
+          <li>Microsoft Edge 157 on macOS: browser checks 21 of 21.</li>
         </ul>
       </Section>
       <Section title="Not verified yet">
         <Note>
           <p>
-            Safari, Firefox, real mobile devices (touch) and screen readers (VoiceOver, NVDA, TalkBack) have not been tested. The stylesheet needs container query
-            units and <code>color-mix()</code>, so browsers older than roughly Chrome/Edge 111, Safari 16.2 and Firefox 113 are not expected to work; newer
-            versions of Safari and Firefox are untested, not confirmed.
+            Real iPhone Safari and other real mobile devices (touch) have not been tested yet; neither Playwright WebKit nor touch emulation in Chrome
+            counts as a device result. The Firefox app (as opposed to the Playwright build) and Safari versions other than 26.6.2 have not been tested.
+            Screen readers: iOS VoiceOver, NVDA, JAWS and TalkBack have not been tested (see <a href="#/accessibility">Keyboard &amp; accessibility</a>).
+            The stylesheet needs container query units and <code>color-mix()</code>, so browsers older than roughly Chrome/Edge 111, Safari 16.2 and
+            Firefox 113 are not expected to work.
           </p>
         </Note>
       </Section>

@@ -336,8 +336,8 @@ export function LoadMore() {
         </p>
         <p>
           To keep the page light, the list is trimmed to <code>maxRenderedMonths</code> (default 24) months: after each addition the months farthest from
-          it are removed. A month that holds keyboard focus is not removed; while it keeps focus the list can grow past that number, and it is trimmed at
-          the next addition after focus has left. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
+          it are removed, so the list never holds more. If the day with keyboard focus is in a removed month, focus first moves to the same day of the
+          month in the nearest kept month that is on screen, so focus stays in the calendar and the page does not jump. Every addition — also when keyboard focus moves past the end of the list — calls{' '}
           <code>onLoadMore</code> and <code>onRenderedMonthsChange</code> (load your data there). The reference month does not change, so{' '}
           <code>onVisibleMonthChange</code> is not called. Paged navigation (the default) works differently: the arrows replace the months shown — see{' '}
           <a href="#/orientation">Orientation &amp; months</a>.
@@ -404,7 +404,7 @@ export function LoadMore() {
           { name: 'loadMore', type: "'button' | 'auto' | 'manual'", default: "'button'", description: 'Buttons at the list ends, automatic loading when an end scrolls into view, or only from your code.' },
           { name: 'loadDirections', type: "'next' | 'previous' | 'both'", default: "'next'", description: 'List ends that get built-in controls or automatic loading. ref.loadMore(direction) works in both directions regardless.' },
           { name: 'monthsPerLoad', type: 'number', default: 'numberOfMonths', description: 'Months added per load.' },
-          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Months kept rendered (never fewer than numberOfMonths); the farthest are removed, except a month holding keyboard focus.' },
+          { name: 'maxRenderedMonths', type: 'number', default: '24', description: 'Most months kept rendered (never fewer than numberOfMonths); the farthest are removed, and focus in a removed month moves to a kept day.' },
           { name: 'loadMoreLabels', type: '{ previous?, next?: ReactNode }', description: 'Content of the default buttons.' },
           { name: 'renderLoadMore', type: '(props, ctx) => ReactNode', description: 'Your own control for each direction.' },
         ]}
@@ -492,7 +492,7 @@ export function DayContent() {
           { name: 'label', type: 'ReactNode', description: 'Short text under the number, e.g. a price.' },
           { name: 'badge', type: 'ReactNode', description: 'A small badge in the top end corner.' },
           { name: 'icon', type: 'ReactNode', description: 'A small icon in the top start corner; it does not move the number or the label.' },
-          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots, hidden from screen readers. The default day content does not use label; put the meaning in description.' },
+          { name: 'markers', type: '{ color?, label?, className? }[]', description: 'Small coloured dots. The dots are hidden from screen readers; each label is added to the day’s accessible description (after description, not repeated).' },
           { name: 'description', type: 'string', description: 'Extra text that screen readers read after the day’s label (aria-describedby).' },
         ]}
       />
@@ -665,7 +665,7 @@ export function Placement() {
       </Section>
       <Section title="In a dialog">
         <p>
-          A native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code> keeps focus inside, closes on Escape and returns focus when it closes.
+          A native <code>&lt;dialog&gt;</code> opened with <code>showModal()</code> keeps focus inside and closes on Escape. On close the browser returns focus to the element focused before it opened, but Safari does not focus a button when it is clicked, so the examples move focus back to the trigger in <code>onClose</code>.
           A modal dialog is drawn in the browser&apos;s top layer, above everything else, so a tooltip rendered into the page body would sit behind it:
           render the tooltip into the dialog with <code>tooltip.container</code>.
         </p>
@@ -783,16 +783,46 @@ export function Accessibility() {
           <code>tabIndex</code> 0 at a time (roving tab index), so Tab enters and leaves the calendar in one step.
         </li>
         <li>
-          A day&apos;s label contains the full date, whether it is today, the start, the end or selected, and why it cannot be picked. Such days use{' '}
-          <code>aria-disabled</code> and stay focusable.
+          A day&apos;s label contains the full date, whether it is today, the start or the end of a range, and why it cannot be picked. Such days
+          use <code>aria-disabled</code> and stay focusable. A selected day reports its state with <code>aria-pressed</code>, so it is not also
+          written into the label.
         </li>
         <li>Selections, rejected picks and loading are written to a live region (an invisible aria-live area that screen readers read out when it changes).</li>
+        <li>
+          The empty cells before the 1st stay in the grid as empty cells, so a day sits under its own weekday header; day cells and weekday headers
+          also carry their column position (<code>aria-colindex</code>).
+        </li>
         <li>Moving focus past the months shown changes the month; adding or removing months never loses focus.</li>
         <li>Trapping focus in a dialog and returning focus when it closes are the app&apos;s job; the calendar only moves focus inside its own grid.</li>
       </ul>
-      <Note>
-        <p>Behaviour with real screen readers (VoiceOver, NVDA, TalkBack) has not been tested yet; the markup follows the ARIA grid pattern.</p>
-      </Note>
+      <Section title="Screen reader compatibility">
+        <p>
+          <strong>Tested with a real screen reader:</strong> macOS 26.6.2, Safari 26.6.2 and VoiceOver (Turkish voice), on 2026-11-24. The results
+          below are what VoiceOver actually said:
+        </p>
+        <ul>
+          <li>
+            Selecting dates: single dates and ranges were selected with the mouse, then reached with the arrow keys. A selected day is announced as
+            selected once; a range start and end are read as &quot;start date&quot; and &quot;end date&quot;, the days between as &quot;in selected range&quot;.
+          </li>
+          <li>
+            Columns: moving up from a day reaches its own weekday header, also in the first week of a month (from December 1, 2026 to
+            &quot;Tuesday&quot;).
+          </li>
+          <li>Marker descriptions: a day with a labelled marker is read with the label as its description (for example &quot;Partly booked&quot;).</li>
+        </ul>
+        <Note>
+          <p>
+            <strong>Not tested yet:</strong> iOS Safari with VoiceOver, NVDA, JAWS and TalkBack. No compatibility is verified in these environments: the
+            markup follows the ARIA grid pattern, but what these screen readers announce has not been checked.
+          </p>
+        </Note>
+        <p>
+          <strong>Automated DOM/ARIA tests</strong> (the package test suite, run in jsdom) check the markup only, not what a screen reader says: every
+          row exposes seven cells in weekday order with <code>aria-colindex</code>, a selected day has <code>aria-pressed</code> and no extra
+          &quot;selected&quot; word in its label, and marker labels are part of the day&apos;s <code>aria-describedby</code> description.
+        </p>
+      </Section>
     </Page>
   );
 }

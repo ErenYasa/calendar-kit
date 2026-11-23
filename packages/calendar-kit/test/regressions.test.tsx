@@ -94,15 +94,18 @@ describe('F04 maxRenderedMonths keeps bounding the DOM after interaction', () =>
     expect(months()).toEqual(['2027-02', '2027-03', '2027-04']);
   });
 
-  it('never drops the month holding DOM focus, but still trims up to it', () => {
+  it('keeps the bound while a day has focus; focus moves to a kept day instead of being lost', () => {
+    // Since the maxRenderedMonths fix the bound always holds (it used to stop at
+    // the focused month, letting the list grow past the limit).
     const ref = setup();
     act(() => ref.current!.loadMore('next'));
     act(() => ref.current!.loadMore('next')); // Oct..Dec
     const day = document.querySelector<HTMLElement>('button[data-date="2026-11-10"]')!;
     act(() => day.focus());
     for (let i = 0; i < 3; i++) act(() => ref.current!.loadMore('next'));
-    expect(months()[0]).toBe('2026-11'); // October trimmed, November kept
-    expect(document.activeElement).toBe(document.querySelector('button[data-date="2026-11-10"]'));
+    expect(months()).toEqual(['2027-01', '2027-02', '2027-03']);
+    // November was dropped: focus is on the 10th of the nearest kept month, still in the grid.
+    expect(document.activeElement).toBe(document.querySelector('button[data-date="2027-01-10"]'));
     act(() => document.querySelector<HTMLElement>('input')!.focus());
     act(() => ref.current!.loadMore('next'));
     expect(months()).toHaveLength(3);

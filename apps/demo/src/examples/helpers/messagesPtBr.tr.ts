@@ -62,6 +62,14 @@ export const messagesPtBr: CalendarMessages = {
     'min-length': (p) => `Mínimo de ${length(p.min, p.unit)}`,
     'max-length': (p) => `Máximo de ${length(p.max, p.unit)}`,
     'fixed-length': (p) => `Exatamente ${length(p.length, p.unit)}`,
+    'conflicting-rules': (p) =>
+      `${p.unit === 'nights' ? 'Nenhuma estadia atende' : 'Nenhum período atende'} a estas regras: ${[
+        p.length != null && `exatamente ${length(p.length, p.unit)}`,
+        p.min != null && `pelo menos ${length(p.min, p.unit)}`,
+        p.max != null && `no máximo ${length(p.max, p.unit)}`,
+      ]
+        .filter(Boolean)
+        .join(' e ')}`,
     'same-day': () => 'O início e o término não podem ser no mesmo dia',
     'end-before-start': () => 'O término é anterior ao início',
     'max-selections': (p) => `Você pode selecionar até ${count(p.max, 'data', 'datas')}`,

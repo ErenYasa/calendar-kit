@@ -431,7 +431,8 @@ export function RulesReference() {
             The end: the same day checks, then <code>closed</code>, <code>end-not-allowed</code>, <code>weekday-end</code>.
           </li>
           <li>
-            Length: <code>fixed-length</code>, <code>min-length</code>, <code>max-length</code>.
+            Length: <code>conflicting-rules</code> when the length options contradict each other (see below), then <code>fixed-length</code>,{' '}
+            <code>min-length</code>, <code>max-length</code>.
           </li>
           <li>
             The days strictly between, from the start forward: the first blocked day gives <code>blocked-in-range</code> (or its <code>data-*</code> code).
@@ -920,8 +921,12 @@ export function RulesReference() {
         </Note>
         <Note>
           <p>
-            <strong>Fixed length vs. minimum/maximum.</strong> <code>fixedLength</code> does not replace <code>minLength</code>/<code>maxLength</code>; all
-            three apply. Keep the fixed length inside them.
+            <strong>Contradicting lengths.</strong> <code>fixedLength</code> does not replace <code>minLength</code>/<code>maxLength</code>; all three
+            apply. When no length can satisfy them (a minimum above the maximum, or a fixed length outside them), no range can be selected:{' '}
+            <code>stayRules</code> and <code>dayRangeRules</code> throw a <code>RangeError</code> that names the options (for example “stayRules: minNights
+            (5) is greater than maxNights (3), so no stay can be selected.”). Rule sets that only contradict after <code>combineRules</code> (one sets the
+            minimum, another the maximum) are not thrown on; every day is then disabled for starting a range, with the reason{' '}
+            <code>conflicting-rules</code> (“No stay fits these rules: at least 5 nights and at most 3 nights”).
           </p>
         </Note>
         <Note>

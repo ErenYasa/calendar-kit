@@ -550,8 +550,8 @@ export function PropsReference() {
               default: '24',
               description: (
                 <>
-                  Yalnızca sürekli modda: listenin indirildiği ay sayısı. Bu sayı aşılınca her yükleme listenin karşı ucundan ay kaldırır, klavye odağını tutan
-                  ay hariç (odak orada kaldığı sürece liste daha uzun olabilir; odak ayrıldıktan sonraki ilk yüklemede kırpılır); sınır hiçbir zaman {c('numberOfMonths')}’un altına inmez. Yavaş cihazlardaki uzun listeler için düşürün. Canlı örneği yok; bkz.{' '}
+                  Yalnızca sürekli modda: sayfada tutulan en fazla ay sayısı. Bu sayı aşılınca her yükleme listenin karşı ucundan ay kaldırır; klavye
+                  odağındaki gün kaldırılan bir aydaysa odak, ekranda görünen en yakın kalan aydaki aynı güne taşınır. Sınır hiçbir zaman {c('numberOfMonths')}’un altına inmez. Yavaş cihazlardaki uzun listeler için düşürün. Canlı örneği yok; bkz.{' '}
                   {to('load-more', 'Daha fazla ay yükleme')}.
                 </>
               ),

@@ -6,7 +6,7 @@
 //   npm run test:browser            (all checks)
 //   npm run test:browser -- F30     (only checks whose id matches)
 import { createServer } from 'vite';
-import { chromium } from 'playwright-core';
+import { chromium, firefox, webkit } from 'playwright-core';
 import { fileURLToPath } from 'node:url';
 
 const only = process.argv.slice(2);
@@ -14,7 +14,17 @@ const demo = fileURLToPath(new URL('../apps/demo/', import.meta.url));
 const server = await createServer({ root: demo, configFile: `${demo}vite.config.ts`, server: { port: 5199, strictPort: false, host: '127.0.0.1' }, logLevel: 'error' });
 await server.listen();
 const base = server.resolvedUrls.local[0];
-const browser = await chromium.launch({ channel: 'chrome', headless: true });
+// BROWSER_CHANNEL=msedge runs the same checks in Microsoft Edge (Chromium).
+// BROWSER_ENGINE=firefox or webkit uses Playwright's own Firefox/WebKit builds
+// (`npx playwright-core install firefox webkit`); a Playwright WebKit run is not
+// a Safari or iPhone result. Default: Google Chrome.
+const engine = process.env.BROWSER_ENGINE ?? 'chromium';
+const isChromium = engine === 'chromium';
+// WebKit on macOS follows Safari's default: Tab skips buttons and links, Option+Tab reaches them.
+const TAB = engine === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab';
+const browser = isChromium
+  ? await chromium.launch({ channel: process.env.BROWSER_CHANNEL ?? 'chrome', headless: true })
+  : await { firefox, webkit }[engine].launch({ headless: true });
 const results = [];
 
 async function check(id, title, fn) {
@@ -44,7 +54,7 @@ await check('F06', 'focus ring visible on today', async (page) => {
   await open(page, 'selection-modes', 'ex-features-modesingle');
   await page.focus('#ex-features-modesingle .cal-nav-button');
   for (let i = 0; i < 4; i++) {
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(TAB);
     if (await page.evaluate(() => document.activeElement?.closest('.cal-day')?.hasAttribute('data-today'))) break;
   }
   await page.waitForTimeout(250);
@@ -408,7 +418,7 @@ await check('D09', 'language switch: English first, EN/TR toggle keeps the page,
   assert(first.lang === 'en' && first.pressed === 'EN' && first.title.startsWith('Tooltip'), `first visit: ${JSON.stringify(first)}`);
   // Keyboard: Tab from EN to TR and press Enter; focus stays on TR.
   await page.focus('.docs-lang-button[lang="en"]');
-  await page.keyboard.press('Tab');
+  await page.keyboard.press(TAB);
   await page.keyboard.press('Enter');
   await page.waitForSelector('[data-page="tooltip"][data-lang="tr"] .docs-page h1');
   await page.waitForSelector('#ex-features-tooltip .cal-root[data-measured]');
@@ -509,7 +519,7 @@ const tipState = (page) =>
   });
 async function keyboardToToday(page) {
   // Programmatic focus is not keyboard focus: step away and back with the arrows.
-  for (let i = 0; i < 6 && !(await tipState(page)).day; i++) await page.keyboard.press('Tab');
+  for (let i = 0; i < 6 && !(await tipState(page)).day; i++) await page.keyboard.press(TAB);
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowLeft');
   for (let i = 0; i < 45; i++) {
@@ -609,7 +619,7 @@ await check('D12', 'day badge: full in wide cells, never over the icon, inside i
   // Keyboard: the full badge text is in the day's label and in its tooltip.
   const date = wide[0].date;
   await page.focus('#ex-features-daycontent .cal-nav-button');
-  for (let i = 0; i < 4 && !(await page.evaluate(() => document.activeElement?.dataset?.date)); i++) await page.keyboard.press('Tab');
+  for (let i = 0; i < 4 && !(await page.evaluate(() => document.activeElement?.dataset?.date)); i++) await page.keyboard.press(TAB);
   for (let i = 0; i < 40; i++) {
     const cur = await page.evaluate(() => document.activeElement?.dataset?.date);
     if (cur === date) break;
@@ -630,7 +640,8 @@ await check('D12', 'day badge: full in wide cells, never over the icon, inside i
 
 await check('D06','sidebar: the last item is reachable and clickable at short heights (desktop and mobile)', async (page) => {
   // Slow CPU (as on CI runners): navigation must not close a menu opened right after it.
-  await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 6 });
+  // CPU throttling needs the Chrome DevTools Protocol (Chromium only).
+  if (isChromium) await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 6 });
   const out = [];
   for (const [w, h] of [[1280, 900], [1280, 420], [1000, 360], [375, 560], [375, 420]]) {
     await page.setViewportSize({ width: w, height: h });
@@ -736,8 +747,25 @@ await check('D08', 'popover follows its trigger on scroll/resize, flips, closes 
   await settle();
   await page.setViewportSize({ width: 900, height: 700 });
   await settle();
+  // The narrower page reflows, so the trigger can move down (it does with the Linux
+  // fonts in CI). The popover must take the side the example's rule picks for the
+  // trigger's new position and stay attached to it on that side.
   const g4 = await geo();
-  assert(g4 && g4.below === 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize: ${JSON.stringify(g4)}`);
+  const want4 = await page.evaluate((sel) => {
+    const t = document.querySelector(sel).getBoundingClientRect();
+    const el = document.querySelector('.popover');
+    const below = innerHeight - t.bottom - 16;
+    const above = t.top - 16;
+    const height = el.scrollHeight + el.offsetHeight - el.clientHeight;
+    return height > below && above > below ? 'top' : 'bottom';
+  }, trigger);
+  const gap4 = want4 === 'top' ? g4?.above : g4?.below;
+  assert(g4 && g4.side === want4 && gap4 === 8 && g4.top >= 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize (${want4}): ${JSON.stringify(g4)}`);
+  // After the resize the popover still follows a scroll.
+  await at(150);
+  await settle();
+  const g4b = await geo();
+  assert(g4b && g4b.side === 'bottom' && g4b.below === 8 && g4b.bottom <= g4b.vh - 8, `resize then scroll: ${JSON.stringify(g4b)}`);
   // Narrow screen: the popover fits the viewport horizontally.
   await page.setViewportSize({ width: 380, height: 800 });
   await settle();
@@ -772,7 +800,9 @@ await check('D08', 'popover follows its trigger on scroll/resize, flips, closes 
 });
 
 await check('D04', 'View code: file tabs, keyboard, copy with an announced result', async (page) => {
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+  // Reading the clipboard back needs Chromium's clipboard permissions; in Firefox and
+  // WebKit only the announced result is checked.
+  if (isChromium) await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
   await open(page, 'slots', 'ex-features-slots');
   const ex = '#ex-features-slots';
   await page.click(`${ex} .docs-example-bar button`);
@@ -783,18 +813,21 @@ await check('D04', 'View code: file tabs, keyboard, copy with an announced resul
   const selected = await page.$eval(`${ex} [role=tab][aria-selected=true]`, (t) => t.textContent);
   await page.click(`${ex} .docs-copy`);
   await page.waitForTimeout(100);
-  const r = await page.evaluate(async (ex) => ({
+  const readBack = isChromium;
+  const r = await page.evaluate(async ([ex, readBack]) => ({
     status: document.querySelector(`${ex} [role=status]`).textContent,
-    clip: await navigator.clipboard.readText(),
+    clip: readBack ? await navigator.clipboard.readText() : null,
     shown: document.querySelector(`${ex} pre code`).textContent,
     expanded: document.querySelector(`${ex} .docs-example-bar button`).getAttribute('aria-expanded'),
-  }), ex);
+  }), [ex, readBack]);
   assert(tabs.join() === 'Slots.tsx,Slots.css' && selected === 'Slots.css', `tabs: ${tabs} / ${selected}`);
-  assert(r.status === 'Copied Slots.css to the clipboard' && r.clip === r.shown && r.clip.includes('.slot-row') && r.expanded === 'true', JSON.stringify({ ...r, clip: r.clip.slice(0, 40), shown: r.shown.slice(0, 40) }));
-  return `${tabs.join(' + ')}; copied ${r.clip.length} chars`;
+  assert(r.status === 'Copied Slots.css to the clipboard' && r.expanded === 'true', JSON.stringify({ ...r, clip: r.clip?.slice(0, 40), shown: r.shown.slice(0, 40) }));
+  if (readBack) assert(r.clip === r.shown && r.clip.includes('.slot-row'), `clipboard: ${r.clip?.slice(0, 40)}`);
+  return `${tabs.join(' + ')}; ${readBack ? `copied ${r.clip.length} chars` : 'copy announced (clipboard not read back in this engine)'}`;
 });
 
 await browser.close();
 await server.close();
+console.log(`${engine} ${browser.version()}`);
 console.table(results.map((r) => ({ id: r.id, ok: r.ok ? 'PASS' : 'FAIL', title: r.title, detail: r.detail })));
 process.exit(results.every((r) => r.ok) ? 0 : 1);
