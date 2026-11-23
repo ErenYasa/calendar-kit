@@ -38,7 +38,7 @@ Dokümantasyon / demo: **http://127.0.0.1:5173** (hash rotaları, ör. `#/toolti
 | `npm run build` | Paket + demo production build'i. |
 | `npm run size` | Minify + gzip/brotli boyut ölçümü. |
 | `npm run check` | typecheck + paket build + testler (paket testleri build edilmiş `dist`i de denetler) + dist üzerinden SSR duman testi. CI (`.github/workflows/ci.yml`) aynı scriptleri çalıştırır. |
-| `npm run test:browser` | Gerçek Chrome'da (playwright-core, sistem Chrome'u) görsel/cascade regresyon kontrolleri. |
+| `npm run test:browser` | Görsel/cascade regresyon kontrolleri (playwright-core): varsayılan olarak sistem Chrome'u; `BROWSER_CHANNEL=msedge` ile Edge, `BROWSER_ENGINE=firefox` veya `webkit` ile Playwright'ın Firefox/WebKit derlemesi. |
 | `npm run perf` | Gerçek Chrome'da etkileşim ölçümü (render / işleme / sonraki kare, CPU yavaşlatmalı). |
 
 Demo production önizleme: `npm run build -w demo` ardından `npx vite preview` (`apps/demo` içinde). React Profiler süreleriyle production ölçümü için `PROFILE=1 npm run build -w demo`.
@@ -467,7 +467,7 @@ Yorum: 1–3 ay için 6× yavaş CPU'da bile render ve işleme bir karenin (16 m
 
 - `dist/index.js`, `dist/core.js`, `dist/client.js` (ESM, sourcemap), `dist/types/**/*.d.ts`, `dist/styles.css` (+ `styles.css.d.ts`). `exports`: `"."`, `"./core"`, `"./client"`, `"./styles.css"`. `sideEffects: ["*.css"]`. React/ReactDOM bundle'a dahil değil.
 - React: peer `>=18.2` (`useId`, `useSyncExternalStore` gerekir). Paket testleri React 19.3 ile çalışır; `npm pack` çıktısı React 18.3 ve 19.2 tüketicilerinde yalnızca yerelde denendi (`docs/verification-findings.md`).
-- Tarayıcı gereksinimi (container query `cqmin` + `color-mix`): Chrome/Edge 111+, Safari 16.2+, Firefox 113+. Yalnızca Chrome otomatik olarak test edilir; Safari, Firefox ve mobil cihazlar doğrulanmadı.
+- Tarayıcı gereksinimi (container query `cqmin` + `color-mix`): Chrome/Edge 111+, Safari 16.2+, Firefox 113+. Tarayıcı testleri CI'da Chrome'da ve Playwright'ın Firefox ve WebKit derlemelerinde (Linux) çalışır; Playwright WebKit Safari değildir. Gerçek Safari 26.6.2 (macOS 26.6.2) tek seferlik bir çalıştırmada 9 kullanım kontrolünün 9'unu geçti. Firefox uygulaması, gerçek iPhone Safari ve diğer gerçek mobil cihazlar doğrulanmadı.
 - Lisans: MIT (varsayım — yayın öncesi onaylanmalı; `LICENSE`).
 
 ## 22. Desteklenen davranışlar ve bilinen sınırlar

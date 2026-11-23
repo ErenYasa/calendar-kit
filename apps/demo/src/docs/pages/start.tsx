@@ -73,7 +73,9 @@ export function Introduction() {
             <a href="#/react-nextjs">React &amp; Next.js</a>).
           </li>
           <li>
-            Browsers: the automated tests run in Google Chrome only. Safari, Firefox and real mobile devices have not been tested yet; of the screen readers, only VoiceOver on macOS has been tested — see{' '}
+            Browsers: the automated browser checks run in Google Chrome and, in CI, in the Playwright Firefox and WebKit builds. Real Safari 26.6.2 on macOS
+            passed 9 of 9 usage checks in a one-off run. Real iPhone Safari and other real mobile devices have not been tested yet; of the screen readers,
+            only VoiceOver on macOS has been tested — see{' '}
             <a href="#/testing">Testing &amp; compatibility</a>.
           </li>
         </ul>

@@ -75,7 +75,9 @@ export function Introduction() {
             <code>calendar-kit/client</code> ve <code>calendar-kit/core</code> giriş noktaları üzerinden Next.js App Router (bkz. <a href="#/react-nextjs">React ve Next.js</a>).
           </li>
           <li>
-            Tarayıcılar: otomatik testler yalnızca Google Chrome’da çalışır. Safari, Firefox ve gerçek mobil cihazlar henüz test edilmedi; ekran okuyuculardan yalnızca macOS’ta VoiceOver test edildi —
+            Tarayıcılar: otomatik tarayıcı testleri Google Chrome’da ve CI’da Playwright’ın Firefox ve WebKit derlemelerinde çalışır. macOS’ta gerçek Safari
+            26.6.2, tek seferlik bir çalıştırmada 9 kullanım kontrolünün 9’unu geçti. Gerçek iPhone Safari ve diğer gerçek mobil cihazlar henüz test
+            edilmedi; ekran okuyuculardan yalnızca macOS’ta VoiceOver test edildi —
             bkz. <a href="#/testing">Test ve uyumluluk</a>.
           </li>
         </ul>
