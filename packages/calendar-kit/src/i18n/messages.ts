@@ -23,6 +23,11 @@ export interface CalendarMessages {
   todayLabel: string;
   /** Caption shown above read-only calendars ('' hides it). */
   readOnlyNotice: string;
+  /**
+   * @deprecated No longer read. A selected day reports its state with `aria-pressed`
+   * (screen readers announce it); adding this word to the label made VoiceOver say it
+   * twice. The key stays so existing full `CalendarMessages` objects keep compiling.
+   */
   selected: string;
   rangeStart: string;
   rangeEnd: string;

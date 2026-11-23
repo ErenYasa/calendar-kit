@@ -1455,7 +1455,8 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
               day.today && messages.today,
               day.selectedStart && messages.rangeStart,
               day.selectedEnd && messages.rangeEnd,
-              day.selectedSingle && messages.selected,
+              // No "selected" word: the day button exposes the state with aria-pressed
+              // and VoiceOver read it twice ("selected seçildi", S04b).
               day.inRange && messages.inRange,
               (day.disabled || day.unavailable) && (day.reasonText ?? messages.unavailable),
             ]
