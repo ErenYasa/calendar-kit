@@ -747,8 +747,25 @@ await check('D08', 'popover follows its trigger on scroll/resize, flips, closes 
   await settle();
   await page.setViewportSize({ width: 900, height: 700 });
   await settle();
+  // The narrower page reflows, so the trigger can move down (it does with the Linux
+  // fonts in CI). The popover must take the side the example's rule picks for the
+  // trigger's new position and stay attached to it on that side.
   const g4 = await geo();
-  assert(g4 && g4.below === 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize: ${JSON.stringify(g4)}`);
+  const want4 = await page.evaluate((sel) => {
+    const t = document.querySelector(sel).getBoundingClientRect();
+    const el = document.querySelector('.popover');
+    const below = innerHeight - t.bottom - 16;
+    const above = t.top - 16;
+    const height = el.scrollHeight + el.offsetHeight - el.clientHeight;
+    return height > below && above > below ? 'top' : 'bottom';
+  }, trigger);
+  const gap4 = want4 === 'top' ? g4?.above : g4?.below;
+  assert(g4 && g4.side === want4 && gap4 === 8 && g4.top >= 8 && g4.right <= g4.vw - 8 && g4.bottom <= g4.vh - 8, `resize (${want4}): ${JSON.stringify(g4)}`);
+  // After the resize the popover still follows a scroll.
+  await at(150);
+  await settle();
+  const g4b = await geo();
+  assert(g4b && g4b.side === 'bottom' && g4b.below === 8 && g4b.bottom <= g4b.vh - 8, `resize then scroll: ${JSON.stringify(g4b)}`);
   // Narrow screen: the popover fits the viewport horizontally.
   await page.setViewportSize({ width: 380, height: 800 });
   await settle();
