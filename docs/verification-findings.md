@@ -15,14 +15,14 @@ Her madde tam olarak bir grupta sayılır.
 
 | Grup | Sayı | Maddeler |
 |---|---|---|
-| Düzeltildi | 54 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51, F52, F53, F54, F55, S04a |
+| Düzeltildi | 55 | F01–F26, F28, F30, F32–F38, F39a, F39b, F40–F46, F48, F49, F50a, F50c, F51, F52, F53, F54, F55, S04a, S04b |
 | Yalnızca belgelendi (davranış bilinçli olarak aynı) | 5 | F27, F29, F31, F47, F50b |
 | Beklenen davranış (gerekçe ve kanıt aşağıda) | 4 | S03, S05, S06, S07 |
-| Doğrulama engeli (gereken ortam ve adımlar aşağıda) | 2 | S04b (ekran okuyucu), S08 (yeniden üretilemeyen geliştirme hatası) |
+| Doğrulama engeli (gereken ortam ve adımlar aşağıda) | 1 | S08 (yeniden üretilemeyen geliştirme hatası) |
 | Açık | 0 | — |
 | Bulguya dönüştü (ayrıca sayılmaz) | 2 | S01 → F35, S02 → F34 |
 
-F52, F53, F54, F55 ve S04a `fix/open-findings` branch’inde düzeltildi (PR #4). Ortam
+F52, F53, F54, F55, S04a ve S04b `fix/open-findings` branch’inde düzeltildi (PR #4). Ortam
 kontrollerinin durumu en sonda, “Ortam matrisi” bölümünde.
 
 Ek (bulgu değil, kullanıcı isteği): `calendar-kit/client` (`'use client'`) ve
@@ -71,7 +71,7 @@ Ek (bulgu değil, kullanıcı isteği): `calendar-kit/client` (`'use client'`) v
 | S01 | şüphe | `transform` içeren portal container'da tooltip kayması | yeniden üretildi → F35 | F35'e taşındı |
 | S02 | şüphe | 304 px'ten dar continuous görünümde ortak hafta günü satırının taşması | yeniden üretildi → F34 | F34'e taşındı |
 | S03 | şüphe | `maxBlockSize` scrollbar'ı eklenince viewport genişliğinin yeniden ölçülmemesi | Chrome 157’de zorlanmış 17 px klasik scrollbar ile ölçüldü (ayrıntı aşağıda) | beklenen davranış |
-| S04 | şüphe | (a) boş hücrelerin kolon indeksini kaydırması; (b) `aria-selected` + `aria-pressed` ile durumun iki kez okunması | (a) Chrome erişilebilirlik ağacında kanıtlandı; (b) ekran okuyucu gerektirir | (a) düzeltildi, (b) doğrulama engeli |
+| S04 | şüphe | (a) boş hücrelerin kolon indeksini kaydırması; (b) `aria-selected` + `aria-pressed` ile durumun iki kez okunması | (a) Chrome erişilebilirlik ağacında ve gerçek VoiceOver’da kanıtlandı; (b) gerçek VoiceOver’da kanıtlandı | (a) düzeltildi, (b) düzeltildi |
 
 ## F32 (b): uncontrolled mod değişiminde sıfırlama (uygulandı)
 
@@ -217,7 +217,7 @@ Beklenen (öneri, karar verilmedi): çelişkili uzunluk sınırları hiçbir ba�
 
 ### F53 (düzeltildi, `fix/open-findings`): `DefaultDayData.markers[].label` hiçbir yerde kullanılmıyordu
 
-Bulunduğu yer: dokümantasyon doğrulaması (2026-11-15). Düzeltme: 3fc8c69 — varsayılan gün içeriğinde etiketler günün erişilebilir açıklamasına eklenir (`description`’dan sonra, büyük/küçük harf duyarsız tekrar yok, etiketsiz noktalar eklenmez; `renderDay`/`renderDayContent` ile eklenmez). DOM bağlantısı `test/f53-marker-labels.test.tsx` ile doğrulandı (`aria-describedby` var olan öğeye bağlanıyor); gerçek ekran okuyucu sonucu doğrulanmadı.
+Bulunduğu yer: dokümantasyon doğrulaması (2026-11-15). Düzeltme: 3fc8c69 — varsayılan gün içeriğinde etiketler günün erişilebilir açıklamasına eklenir (`description`’dan sonra, büyük/küçük harf duyarsız tekrar yok, etiketsiz noktalar eklenmez; `renderDay`/`renderDayContent` ile eklenmez). DOM bağlantısı `test/f53-marker-labels.test.tsx` ile doğrulandı (`aria-describedby` var olan öğeye bağlanıyor). Gerçek ekran okuyucu (2026-11-24, macOS 26.6.2, Safari 26.6.2, VoiceOver Türkçe): okla 3 Kasım’a gelince VoiceOver “Tuesday, November 3, 2026 Partly booked aç veya kapat düğmesi” dedi; etiket açıklama olarak okunuyor. NVDA/JAWS denenmedi.
 
 Yeniden üretim: `getDayData={() => ({ markers: [{ color: 'red', label: 'Partly booked' }] })}` ile bir takvim render edin.
 
@@ -238,6 +238,8 @@ Düzeltme: 3277094 — sınır her yüklemede uygulanır. Odaktaki gün kaldır�
 
 Tarayıcılar arası doğrulama (2026-11-15, geçici test sayfası: sürekli, `maxRenderedMonths={3}`, `maxBlockSize`): Chrome 157, Playwright Firefox 157 ve Playwright WebKit 27.2’de düğmelerle 4× sonraki → liste Oca–Mar, odak 10 Kas → 10 Oca; 6× önceki → Tem–Eyl, odak 10 Eyl; tekerlekle 20’şer aşağı/yukarı kaydırma, 6× PageDown ve 360 px’e küçültmede liste hiçbir an 3 ayı aşmadı, odak hep ızgarada kaldı. WebKit sonucu Safari veya iPhone sonucu değildir.
 
+Gerçek Safari 26.6.2 (macOS 26.6.2, `safaridriver` ile gerçek fare/klavye olayları, 2026-11-24, aynı tür geçici sayfa): düğmelerle 4× sonraki → Oca–Mar, 6× önceki → Tem–Eyl; 4× PageDown → Oca–Mar, odak 10 Mar; 8× PageUp → Tem–Eyl, odak 10 Tem; `loadMore="auto"` ile tekerlekle 20’şer aşağı/yukarı → odak 10 Tem ve 10 Ağu, hep kalan bir ayda. Liste hiçbir an 3 ayı aşmadı. Not: Safari tıklanan düğmeye odaklanmadığı için, yükleme düğmesine fareyle tıklamak odaktaki günü daha hiçbir ay kaldırılmadan `<body>`’ye düşürür (tek tıklamada da, ay kaldırılmadan da aynı); bu Safari’nin düğme davranışıdır, F54 ile ilgili değildir. Klavye ve kaydırma yollarında odak doğru taşınır.
+
 Ay yükleme süresi (production build, Chrome 157, 20 yükleme, düzeltme öncesi 3fc8c69 → sonrası): odak listede değilken medyanlar ±1 ms; odak listedeyken 4× yavaş CPU’da sonraki ay işleme 8.5 → 6.3 ms (öncesinde liste sınırı aşıp büyüyordu); sonraki kare medyanları her durumda 17 ms altında.
 
 ### F55 (düzeltildi, `fix/open-findings`): modal örneklerinde kapanışta odak tetikleyiciye dönmüyordu (Safari/WebKit)
@@ -247,14 +249,14 @@ Bulunduğu yer: Playwright WebKit’te tarayıcı kontrolü D11. Yeniden üretim
 ### Şüphe ve gözlemlerin sonuçları (2026-11-15)
 
 - **S03 — beklenen davranış.** Chrome 157’de (`--hide-scrollbars` kapalı) `.cal-viewport::-webkit-scrollbar` ile 17 px yer kaplayan klasik scrollbar zorlandı. LoadMoreDefault ve Vertical örneklerinde (dikey taşma, scrollbar 17 px) yatay taşma yok, son sütun kesilmiyor. Layout lab’de sürekli + yatay + 2 ay, `maxBlockSize` 480: kutu 760→560 px, 4 px adımlarla 51 ölçüm; iki aydan bire geçiş scrollbar’sız 630 px, scrollbar’la 646 px (yer kaplayan çubuk hesaba katılıyor); hiçbir genişlikte yatay taşma veya kesilen sütun yok. Gerçek klasik scrollbar (Windows/Linux veya macOS “her zaman göster”) denenmedi: bu bir emülasyondur.
-- **S04a — düzeltildi** (2861f5d). Chrome 157 erişilebilirlik ağacında Aralık 2026’nın ilk satırı 5 hücreydi; “Tuesday, December 1” satırın ilk hücresi olarak “Sunday” sütun başlığının altında görünüyordu (boş hücreler `aria-hidden`). Gün hücreleri ve başlıklar artık `aria-colindex`, ızgara `aria-colcount=7` taşır (`test/s04-column-index.test.tsx`, `firstDayOfWeek` dahil). Chrome CDP erişilebilirlik API’si `colindex` raporlamadığı için platform tarafındaki sonuç ve gerçek okuma doğrulanmadı.
-- **S04b — doğrulama engeli.** Seçili bir gün üç yoldan “seçili” bilgisini taşır: hücrede `aria-selected="true"`, düğmede `aria-pressed="true"` ve etiketin sonunda “selected” (`messages.selected`). Gereken: VoiceOver (macOS/iOS) ve NVDA veya JAWS (Windows). Adımlar: Seçim modları sayfası → tekli takvimde bir gün seçin → okları kullanarak o güne dönün → okunan metinde “seçili/selected/pressed” bilgisinin kaç kez geçtiğini kaydedin; aynı şeyi aralık modunda başlangıç, bitiş ve aradaki bir gün için yapın.
+- **S04a — düzeltildi** (2861f5d, gerçek VoiceOver’dan sonra c77c709). Chrome 157 erişilebilirlik ağacında Aralık 2026’nın ilk satırı 5 hücreydi; “Tuesday, December 1” satırın ilk hücresi olarak “Sunday” sütun başlığının altında görünüyordu (boş hücreler `aria-hidden`). İlk düzeltme (2861f5d) gün hücrelerine ve başlıklara `aria-colindex`, ızgaraya `aria-colcount=7` ekledi. **Gerçek VoiceOver bunun yetmediğini gösterdi** (2026-11-24, macOS 26.6.2, Safari 26.6.2, VoiceOver Türkçe, VO+↑ AppleScript ile, okunan metin `last phrase` ile alındı): VoiceOver `aria-colindex`’i yok sayıyor; 1 Aralık’tan yukarı “satır 1 / 6 Sunday Sun”, 3 Aralık’tan (perşembe) yukarı “Tuesday Tue”, 8 Aralık’tan yukarı 3 Aralık okundu (ilk satır iki sütun kaymış). Düzeltme c77c709: boş hücreler artık `aria-hidden` değil, `aria-colindex` taşıyan boş gridcell. Sonrasında VoiceOver: 1 Aralık’tan yukarı “Tuesday Tue”, 3 Aralık’tan yukarı “Thursday Thu”, 8 Aralık’tan yukarı 1 Aralık, boş pazartesi hücresi “Monday Mon sütun 2 / 7”. Regresyon testi: `test/s04-column-index.test.tsx` (her satırda erişilebilirlik ağacındaki sıra = sütun, `firstDayOfWeek` 0 ve 1). Gözlem (düzeltilmedi): VoiceOver sütun başlığını “Tuesday Tue” diye, `aria-label` ve görünen kısaltmayla birlikte okuyor. Kısaltmayı `aria-hidden` yapmak denendi; VoiceOver başlığı bu kez “boş” okudu, değişiklik geri alındı. NVDA/JAWS denenmedi.
+- **S04b — düzeltildi** (25321de). Gerçek VoiceOver (aynı ortam) seçili günü “Tuesday, December 8, 2026, selected seçildi aç veya kapat düğmesi” diye okudu: etiketteki “selected” (`messages.selected`) ve VoiceOver’ın `aria-pressed` için kendi dilinde söylediği “seçildi”. Hücredeki `aria-selected` ayrıca okunmadı (aralıktaki günlerde “seçildi” yok). Düzeltme: etikete “selected” eklenmez; `aria-pressed` ve `aria-selected` kalır, aralık ifadeleri (start date, end date, in selected range) değişmedi. `messages.selected` kullanımdan kaldırıldı (`@deprecated`, okunmuyor; tam `CalendarMessages` nesneleri derlenmeye devam etsin diye anahtar duruyor). Sonrasında VoiceOver: “Tuesday, December 8, 2026 seçildi aç veya kapat düğmesi”; aralıkta “…, start date seçildi”, “…, end date seçildi”, “…, in selected range”. Regresyon testi: `test/s04b-selected-once.test.tsx`. NVDA/JAWS denenmedi: NVDA’nın artık “pressed/basılı” demesi beklenir, doğrulanmadı.
 - **S05 — beklenen davranış.** Chrome 157’de iki gerçek fare tıklaması arada bekleme olmadan (`page.mouse.click` × 2) aralığı doğru seçti (6–9 Kasım). Yalnızca aynı JS görevinde art arda iki `element.click()` ilkini kaybeder (sonuç: yalnızca 9 Kasım): her tıklama son render edilen durumu okur ve iki çağrı arasında render olmaz. Gerçek girdi olaylarında her tıklama ayrı görevdir. Betik ve testler tıklamalar arasında render’ı beklemelidir (`await`, `act`).
 - **S06 — beklenen davranış.** Gün tıklaması bir `update` ve bir `nested-update` commit’i üretir (layout effect’ten durum güncellemesi). Etkisi ölçüldü (`npm run perf`, Chrome 157, 2026-11-15): 2 ay için tıklama render + işleme 6× yavaş CPU’da bile bir karenin (16 ms) altında; 12 ayda 4×–6× yavaşlamada bitiş tıklaması bir kareyi aşar (README’deki öneri: uzun listelerde sürekli mod + küçük `maxRenderedMonths`). Ölçülmüş bir kullanıcı etkisi olmadan yeniden yapılandırma yapılmadı.
 - **S07 — beklenen davranış.** `element.click()` ve bir düğmede Enter/Space ile tetiklenen tıklama aynı olaydır: UI Events’e göre klavye etkinleştirmesiyle oluşan `click` olayının `detail` değeri 0’dır; `element.click()` de `detail: 0` üretir. Takvim ikisini ayırt edemez ve `source: 'keyboard'` raporlar; gerçek fare tıklaması `detail ≥ 1` ile `pointer` olarak raporlanır (paket testleri tıklamaları `detail: 1` ile gönderir).
 - **S08 — doğrulama engeli (2026-11-15 hedefli tekrar: yeniden üretilmedi).** Temiz dev oturumu (önbelleği sıfırlanmış yeni Vite sunucusu), dört sayfada gezinme ve tıklama, ardından sayfalar açıkken sırayla: `Calendar.tsx` ortasına `useRef` ekleme, layout effect ekleme, ikisini geri alma, dosyayı yarım yazma (yalnızca beklenen Vite sözdizimi hatası) ve tamamlama, `Day.tsx`’e hook ekleme ve geri alma, `engine.ts` düzenleme ve geri alma; her adımdan sonra dört sayfada etkileşim. Hiçbir adımda hook sırası mesajı yok. Gereken: hatanın görüldüğü koşulun kendisi — tarayıcı kontrolleri Vite dev sunucusunda çalışırken paket kaynaklarının aynı anda düzenlenmesi (HMR). Temiz koşullarda yeniden üretilemedi: statik hook denetimi, production build ve yeni dev sunucusunda 3’er tur gezinme, HMR ile hook ekleme denemesi, art arda 3 `test:browser` çalıştırması ve bu turdaki Chrome ve Edge çalıştırmaları (21/21). Yeniden görülürse: tam console çıktısını (bileşen yığını), çalışma sırasında değişen dosyaları ve zaman damgalarını kaydedin.
 
-### Ortam matrisi (2026-11-15)
+### Ortam matrisi (2026-11-15, gerçek Safari ve VoiceOver 2026-11-24)
 
 | Ortam | Durum |
 |---|---|
@@ -264,9 +266,10 @@ Bulunduğu yer: Playwright WebKit’te tarayıcı kontrolü D11. Yeniden üretim
 | Klasik scrollbar | **emülasyon** (Chrome, `::-webkit-scrollbar`): S03 |
 | Firefox (Playwright derlemesi 157) | tarayıcı kontrolleri 21/21 (pano içeriği okunmaz, yalnızca duyuru), F54; CI’da ayrı iş. Kurulu Firefox.app ile ayrıca denenmedi |
 | Playwright WebKit 27.2 (macOS) | tarayıcı kontrolleri 21/21, F54; F55 burada bulundu; CI’da ayrı iş. **Safari veya iPhone sonucu değildir** |
-| Safari (gerçek) | **yapılmadı** — `safaridriver --enable` yönetici izni gerektirir; manuel adımlar aşağıda |
-| Gerçek iPhone Safari | **yapılmadı** — cihaz yok; manuel adımlar aşağıda |
-| Ekran okuyucu (VoiceOver, NVDA) | otomatikleştirilemedi (VoiceOver’ın AppleScript ile denetimi sistem ayarı gerektirir) — **yapılmadı** (S04b) |
+| Safari 26.6.2 (gerçek, macOS 26.6.2) | 2026-11-24, `safaridriver` ile gerçek fare/klavye olayları: tekli ve aralık seçimi, tooltip (fare ve klavye, Escape), modal/popover kapatma (Escape, “Done”, dışarı tıklama, seçim) ve odağın tetikleyiciye dönmesi, iki yönde ay yükleme, 3 ay sınırı ve odak taşıma — 9/9 |
+| VoiceOver (gerçek, macOS 26.6.2 + Safari 26.6.2, Türkçe) | 2026-11-24, okunan metin AppleScript `last phrase` ve `keyboard cursor` ile alındı: S04a (düzeltme sonrası doğru sütun), S04b (düzeltme sonrası “seçildi” bir kez), F53 (“Partly booked” okunuyor) |
+| NVDA, JAWS (Windows) | **yapılmadı** — Windows yok; manuel adımlar aşağıda |
+| Gerçek iPhone Safari (iOS VoiceOver dahil) | **yapılmadı** — cihaz yok; emülasyon ve Playwright WebKit bunun yerine sayılmaz; manuel adımlar aşağıda |
 
 ### Dokümantasyon sırasında görülen diğer gözlemler (hata olarak kanıtlanmadı)
 
@@ -280,13 +283,13 @@ Bulunduğu yer: Playwright WebKit’te tarayıcı kontrolü D11. Yeniden üretim
   - `npm run test:browser` düzenleme olmadan üç kez art arda: 17/17, hook uyarısı yok.
   Yeniden görülürse: tam console çıktısını (bileşen yığını) ve o anda değişen dosyaları kaydedin.
 
-### Manuel test listesi: ekran okuyucu (S04a, S04b, F53)
+### Manuel test listesi: NVDA (S04a, S04b, F53)
 
-Ortam: macOS VoiceOver (Cmd+F5) + Safari, veya Windows NVDA + Chrome/Firefox. Sayfa: dokümantasyonda “Seçim modları” ve “Günlerde etiket, badge ve simge”. Her maddeyi ayrı kaydedin (okunan metni olduğu gibi).
+macOS VoiceOver ile yapıldı (yukarıda). Kalan: Windows NVDA + Chrome veya Firefox. Okunan metni olduğu gibi kaydedin.
 
-1. **Sütun (S04a).** “Seçim modları” → tekli takvimde sonraki aya geçin; ayın 1’i salı olan bir aya gelin (ör. Aralık 2026). Ok tuşlarıyla 1’ine gidin. VoiceOver: tablo gezinmesinde (VO+Shift+↑ ile sütun başlığı) veya NVDA: Ctrl+Alt+↑ ile sütun başlığı okutun. Beklenen: “Salı/Tuesday” sütunu; hata: “Pazar/Sunday”.
-2. **Seçili bilgisinin tekrarı (S04b).** Aynı takvimde bir güne Enter ile seçin, sonra okla başka güne gidip geri dönün. Okunan metinde “seçili/selected”, “basılı/pressed” ve “seçildi/selected (grid)” ifadelerinin kaç kez geçtiğini yazın. Aynısını aralık modunda başlangıç, bitiş ve aradaki bir gün için yapın.
-3. **Nokta etiketi (F53).** “Günlerde etiket, badge ve simge” → kırmızı noktalı (“Partly booked” / “Kısmen dolu”) bir güne odaklanın. Beklenen: gün etiketi okunduktan sonra (kısa bir duraklamayla, açıklama olarak) “Partly booked”; ayın 5/15/25’inde “20% discount, Partly booked” gibi. Okunmuyorsa VoiceOver’da VO+Shift+H (ipucu/açıklama) ile deneyin ve sonucu yazın.
+1. **Sütun (S04a).** “Seçim modları” → tekli takvimde Aralık 2026’ya geçin, okla 1’ine gidin, Ctrl+Alt+↑ ile sütun başlığına çıkın. Beklenen: “Tuesday”; hata: “Sunday”.
+2. **Seçili bilgisi (S04b).** Bir günü Enter ile seçin, okla ayrılıp geri dönün. “selected/seçili” ve “pressed/basılı” kaç kez okunuyor, yazın. Aralık modunda başlangıç, bitiş ve aradaki bir gün için de yapın.
+3. **Nokta etiketi (F53).** “Günlerde etiket, badge ve simge” → kırmızı noktalı bir güne odaklanın. Beklenen: “Partly booked” açıklama olarak okunur.
 
 ### Manuel test listesi: gerçek iPhone Safari
 

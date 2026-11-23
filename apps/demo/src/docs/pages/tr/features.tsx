@@ -788,13 +788,14 @@ export function Accessibility() {
           bir günün <code>tabIndex</code> değeri 0’dır (gezici sekme sırası, roving tab index); bu yüzden Tab takvime tek adımda girer ve çıkar.
         </li>
         <li>
-          Bir günün etiketi tam tarihi, bugün, başlangıç, bitiş veya seçili olup olmadığını ve neden seçilemediğini içerir. Bu tür günler{' '}
-          <code>aria-disabled</code> kullanır ve odaklanabilir kalır.
+          Bir günün etiketi tam tarihi, bugün olup olmadığını, aralığın başlangıcı veya bitişi olup olmadığını ve neden seçilemediğini içerir. Bu tür
+          günler <code>aria-disabled</code> kullanır ve odaklanabilir kalır. Seçili gün durumunu <code>aria-pressed</code> ile bildirir; bu yüzden
+          seçili olduğu etikete ayrıca yazılmaz.
         </li>
         <li>Seçimler, reddedilen seçimler ve yükleme bir canlı bölgeye (live region: değiştiğinde ekran okuyucuların okuduğu, aria-live özellikli görünmez bir alan) yazılır.</li>
         <li>
-          Her gün hücresi ve hafta günü başlığı sütun konumunu (<code>aria-colindex</code>) taşır; böylece ayın 1’inden önceki boş hücreler yardımcı
-          teknolojiden gizlense de her gün kendi hafta günü başlığının altında kalır.
+          Ayın 1’inden önceki boş hücreler ızgarada boş hücre olarak kalır; böylece her gün kendi hafta günü başlığının altında durur. Gün hücreleri ve
+          hafta günü başlıkları ayrıca sütun konumunu (<code>aria-colindex</code>) taşır.
         </li>
         <li>Odağı gösterilen ayların ötesine taşımak ayı değiştirir; ay eklemek veya kaldırmak odağı asla kaybettirmez.</li>
         <li>Odağı bir diyalogda tutmak ve kapanınca geri vermek uygulamanın işidir; takvim odağı yalnızca kendi ızgarasının içinde taşır.</li>

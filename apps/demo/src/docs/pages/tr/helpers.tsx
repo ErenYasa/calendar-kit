@@ -384,7 +384,7 @@ const MESSAGE_KEYS = [
   { name: 'today', type: 'string', description: 'Ekran okuyucular için bugünün gün etiketine eklenir.' },
   { name: 'todayLabel', type: 'string', description: <><code>highlightToday</code> açıkken ve günün başka bir tooltip’i yoksa bugünün varsayılan tooltip’i.</> },
   { name: 'readOnlyNotice', type: 'string', description: <>Salt okunur bir takvimin üstündeki açıklama. <code>''</code> onu gizler.</> },
-  { name: 'selected', type: 'string', description: 'Seçili günün etiketine eklenir (tekli ve çoklu modlar).' },
+  { name: 'selected', type: 'string', description: 'Kullanımdan kaldırıldı, artık okunmuyor. Seçili gün durumunu aria-pressed ile bildirir; etiketteki kelime ekran okuyucuların bunu iki kez söylemesine yol açıyordu. Tam mesaj nesneleri derlenmeye devam etsin diye anahtar duruyor.' },
   { name: 'rangeStart / rangeEnd', type: 'string', description: 'Aralığın başlangıç ve bitiş günlerinin etiketlerine eklenir.' },
   { name: 'inRange', type: 'string', description: 'Aralık uçları arasındaki günlerin etiketlerine eklenir.' },
   { name: 'unavailable', type: 'string', description: 'Sebep metni olmayan, devre dışı veya müsait olmayan bir günün etiketine eklenir.' },

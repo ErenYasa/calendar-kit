@@ -380,7 +380,7 @@ const MESSAGE_KEYS = [
   { name: 'today', type: 'string', description: "Appended to today's day label for screen readers." },
   { name: 'todayLabel', type: 'string', description: <>Default tooltip on today when <code>highlightToday</code> is on and the day has no other tooltip.</> },
   { name: 'readOnlyNotice', type: 'string', description: <>Caption above a read-only calendar. <code>''</code> hides it.</> },
-  { name: 'selected', type: 'string', description: 'Appended to the label of the selected day (single and multiple modes).' },
+  { name: 'selected', type: 'string', description: 'Deprecated, no longer read. A selected day reports its state with aria-pressed; the word in the label made screen readers say it twice. Kept so full message objects still compile.' },
   { name: 'rangeStart / rangeEnd', type: 'string', description: 'Appended to the labels of the range start and end days.' },
   { name: 'inRange', type: 'string', description: 'Appended to the labels of days between the range ends.' },
   { name: 'unavailable', type: 'string', description: 'Appended to the label of a disabled or unavailable day that has no reason text.' },

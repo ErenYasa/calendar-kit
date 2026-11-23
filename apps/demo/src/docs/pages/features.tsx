@@ -783,13 +783,14 @@ export function Accessibility() {
           <code>tabIndex</code> 0 at a time (roving tab index), so Tab enters and leaves the calendar in one step.
         </li>
         <li>
-          A day&apos;s label contains the full date, whether it is today, the start, the end or selected, and why it cannot be picked. Such days use{' '}
-          <code>aria-disabled</code> and stay focusable.
+          A day&apos;s label contains the full date, whether it is today, the start or the end of a range, and why it cannot be picked. Such days
+          use <code>aria-disabled</code> and stay focusable. A selected day reports its state with <code>aria-pressed</code>, so it is not also
+          written into the label.
         </li>
         <li>Selections, rejected picks and loading are written to a live region (an invisible aria-live area that screen readers read out when it changes).</li>
         <li>
-          Each day cell and weekday header carries its column position (<code>aria-colindex</code>), so a day stays under its own weekday header even
-          though the empty cells before the 1st are hidden from assistive technology.
+          The empty cells before the 1st stay in the grid as empty cells, so a day sits under its own weekday header; day cells and weekday headers
+          also carry their column position (<code>aria-colindex</code>).
         </li>
         <li>Moving focus past the months shown changes the month; adding or removing months never loses focus.</li>
         <li>Trapping focus in a dialog and returning focus when it closes are the app&apos;s job; the calendar only moves focus inside its own grid.</li>
