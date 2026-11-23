@@ -43,7 +43,7 @@ export function Testing() {
       <Section title="Not verified yet">
         <Note>
           <p>
-            Safari, Firefox, real mobile devices (touch) and screen readers (VoiceOver, NVDA, TalkBack) have not been tested. The stylesheet needs container query
+            Safari, Firefox and real mobile devices (touch) have not been tested. Screen readers: only VoiceOver with Safari on macOS has been tested; iOS VoiceOver, NVDA, JAWS and TalkBack have not (see <a href="#/accessibility">Keyboard &amp; accessibility</a>). The stylesheet needs container query
             units and <code>color-mix()</code>, so browsers older than roughly Chrome/Edge 111, Safari 16.2 and Firefox 113 are not expected to work; newer
             versions of Safari and Firefox are untested, not confirmed.
           </p>

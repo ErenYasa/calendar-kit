@@ -800,9 +800,34 @@ export function Accessibility() {
         <li>Odağı gösterilen ayların ötesine taşımak ayı değiştirir; ay eklemek veya kaldırmak odağı asla kaybettirmez.</li>
         <li>Odağı bir diyalogda tutmak ve kapanınca geri vermek uygulamanın işidir; takvim odağı yalnızca kendi ızgarasının içinde taşır.</li>
       </ul>
-      <Note>
-        <p>Gerçek ekran okuyucularla davranış (VoiceOver, NVDA, TalkBack) henüz test edilmedi; işaretleme ARIA ızgara (grid) desenini izler.</p>
-      </Note>
+      <Section title="Ekran okuyucu uyumluluğu">
+        <p>
+          <strong>Gerçek ekran okuyucuyla test edildi:</strong> macOS 26.6.2, Safari 26.6.2 ve VoiceOver (Türkçe ses), 2026-11-24. Aşağıdaki sonuçlar
+          VoiceOver’ın gerçekten söylediği metne dayanır:
+        </p>
+        <ul>
+          <li>
+            Tarih seçimi: tekli tarihler ve aralıklar fareyle seçildi, sonra ok tuşlarıyla üzerlerine gelindi. Seçili gün bir kez seçili olarak
+            duyurulur; aralığın başlangıcı ve bitişi &quot;start date&quot; ve &quot;end date&quot;, aradaki günler &quot;in selected range&quot; diye okunur.
+          </li>
+          <li>
+            Sütunlar: bir günden yukarı çıkınca, ayın ilk haftasında da, günün kendi hafta günü başlığına gelinir (1 Aralık 2026’dan
+            &quot;Tuesday&quot;).
+          </li>
+          <li>Marker açıklamaları: etiketli marker’ı olan bir gün, etiket açıklama olarak okunarak duyurulur (ör. &quot;Partly booked&quot;).</li>
+        </ul>
+        <Note>
+          <p>
+            <strong>Henüz test edilmedi:</strong> iOS Safari ile VoiceOver, NVDA, JAWS ve TalkBack. Bu ortamlarda doğrulanmış bir uyumluluk yoktur:
+            işaretleme ARIA ızgara (grid) desenini izler, ancak bu ekran okuyucuların ne duyurduğu kontrol edilmedi.
+          </p>
+        </Note>
+        <p>
+          <strong>Otomatik DOM/ARIA testleri</strong> (paketin test takımı, jsdom’da çalışır) yalnızca işaretlemeyi kontrol eder, ekran okuyucunun ne
+          söylediğini değil: her satır yedi hücreyi hafta günü sırasıyla ve <code>aria-colindex</code> ile sunar, seçili gün <code>aria-pressed</code>
+          taşır ve etiketinde ayrıca &quot;selected&quot; kelimesi yoktur, marker etiketleri günün <code>aria-describedby</code> açıklamasının parçasıdır.
+        </p>
+      </Section>
     </Page>
   );
 }

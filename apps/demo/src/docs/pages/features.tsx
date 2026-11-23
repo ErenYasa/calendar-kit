@@ -795,9 +795,34 @@ export function Accessibility() {
         <li>Moving focus past the months shown changes the month; adding or removing months never loses focus.</li>
         <li>Trapping focus in a dialog and returning focus when it closes are the app&apos;s job; the calendar only moves focus inside its own grid.</li>
       </ul>
-      <Note>
-        <p>Behaviour with real screen readers (VoiceOver, NVDA, TalkBack) has not been tested yet; the markup follows the ARIA grid pattern.</p>
-      </Note>
+      <Section title="Screen reader compatibility">
+        <p>
+          <strong>Tested with a real screen reader:</strong> macOS 26.6.2, Safari 26.6.2 and VoiceOver (Turkish voice), on 2026-11-24. The results
+          below are what VoiceOver actually said:
+        </p>
+        <ul>
+          <li>
+            Selecting dates: single dates and ranges were selected with the mouse, then reached with the arrow keys. A selected day is announced as
+            selected once; a range start and end are read as &quot;start date&quot; and &quot;end date&quot;, the days between as &quot;in selected range&quot;.
+          </li>
+          <li>
+            Columns: moving up from a day reaches its own weekday header, also in the first week of a month (from December 1, 2026 to
+            &quot;Tuesday&quot;).
+          </li>
+          <li>Marker descriptions: a day with a labelled marker is read with the label as its description (for example &quot;Partly booked&quot;).</li>
+        </ul>
+        <Note>
+          <p>
+            <strong>Not tested yet:</strong> iOS Safari with VoiceOver, NVDA, JAWS and TalkBack. No compatibility is verified in these environments: the
+            markup follows the ARIA grid pattern, but what these screen readers announce has not been checked.
+          </p>
+        </Note>
+        <p>
+          <strong>Automated DOM/ARIA tests</strong> (the package test suite, run in jsdom) check the markup only, not what a screen reader says: every
+          row exposes seven cells in weekday order with <code>aria-colindex</code>, a selected day has <code>aria-pressed</code> and no extra
+          &quot;selected&quot; word in its label, and marker labels are part of the day&apos;s <code>aria-describedby</code> description.
+        </p>
+      </Section>
     </Page>
   );
 }

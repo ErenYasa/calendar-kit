@@ -73,7 +73,7 @@ export function Introduction() {
             <a href="#/react-nextjs">React &amp; Next.js</a>).
           </li>
           <li>
-            Browsers: the automated tests run in Google Chrome only. Safari, Firefox, real mobile devices and screen readers have not been tested yet — see{' '}
+            Browsers: the automated tests run in Google Chrome only. Safari, Firefox and real mobile devices have not been tested yet; of the screen readers, only VoiceOver on macOS has been tested — see{' '}
             <a href="#/testing">Testing &amp; compatibility</a>.
           </li>
         </ul>

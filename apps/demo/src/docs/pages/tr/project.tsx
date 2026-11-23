@@ -52,7 +52,7 @@ export function Testing() {
       <Section title="Henüz doğrulanmayanlar">
         <Note>
           <p>
-            Safari, Firefox, gerçek mobil cihazlar (dokunmatik) ve ekran okuyucular (VoiceOver, NVDA, TalkBack) test edilmedi. Stil dosyası container query
+            Safari, Firefox ve gerçek mobil cihazlar (dokunmatik) test edilmedi. Ekran okuyucular: yalnızca macOS’ta Safari ile VoiceOver test edildi; iOS VoiceOver, NVDA, JAWS ve TalkBack test edilmedi (bkz. <a href="#/accessibility">Klavye ve erişilebilirlik</a>). Stil dosyası container query
             birimlerine ve <code>color-mix()</code>’e ihtiyaç duyduğundan, kabaca Chrome/Edge 111, Safari 16.2 ve Firefox 113’ten eski tarayıcıların çalışması
             beklenmez; Safari ve Firefox’un daha yeni sürümleri de test edilmedi; çalıştıkları doğrulanmış değildir.
           </p>
