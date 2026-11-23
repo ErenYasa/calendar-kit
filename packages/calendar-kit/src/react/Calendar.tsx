@@ -1443,7 +1443,10 @@ function CalendarInner<TDayData, TContext>(props: CalendarProps<TDayData, TConte
       weeks.push(
         <div role="row" key={r} className={cx(p('week'), cn?.week)}>
           {row.map((d, c) => {
-            if (!d) return <div key={`e${c}`} role="gridcell" aria-hidden="true" className={p('day-empty')} />;
+            // Empty cells stay in the accessibility tree (S04): VoiceOver in Safari
+            // places cells by their order in the row and ignores aria-colindex, so
+            // hiding the cells before day 1 moved that row under the wrong headers.
+            if (!d) return <div key={`e${c}`} role="gridcell" aria-colindex={c + 1} className={p('day-empty')} />;
             const day = dayStates.get(d)!;
             const data = dayData.get(d);
             const description = dayDescription(data, !props.renderDay && !props.renderDayContent);
